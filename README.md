@@ -60,7 +60,7 @@ There is also an **O(N) short-circuit**: if the sample shows the data is already
 
 ---
 
-## ⚡ Quickstart
+## Quickstart
 
 **C++ — drop in one header:**
 
@@ -90,7 +90,7 @@ qi_sort.sort(my_list)   # in-place, 2.32× faster than list.sort()
 
 ---
 
-## 📊 Real-World Benchmarks
+## Real-World Benchmarks
 
 > **No synthetic data.** All sources are public, downloadable, verifiable.
 > Re-run: `g++ -O3 -std=c++17 -march=native benchmarks/real_data_benchmark.cpp -o bench && ./bench`
@@ -117,7 +117,7 @@ QI picks R-16. Timestamps have moderate entropy — Radix-16 is the correct choi
 | `std::sort` (Introsort) | 19.59 ms | baseline | 0.23× |
 | `std::stable_sort` (Timsort) | 14.75 ms | 1.32× | 0.31× |
 | Plain Radix-16 | 4.60 ms | 4.25× | baseline |
-| **`qi::sort`** | **3.25 ms** | **🏆 6.02×** | **1.41× faster** |
+| **`qi::sort`** | **3.25 ms** | **6.02×** | **1.41× faster** |
 
 QI picks **R-11** over R-16. CRC-32 hashes of English words have high per-byte entropy, making Radix-16's 64 K bucket footprint exceed L2 cache capacity. The QI cost model detects this and switches to Radix-11 — **beating plain Radix-16 by 1.41×**.
 
@@ -180,7 +180,7 @@ Against an optimal plain Radix-16, it is 22% slower in aggregate (airport datase
 
 ---
 
-## 🔬 Honest Analysis
+## Honest Analysis
 
 | Scenario | Faster? | Why |
 | :--- | :---: | :--- |
@@ -196,7 +196,7 @@ Against an optimal plain Radix-16, it is 22% slower in aggregate (airport datase
 
 ---
 
-## 🚀 Installation
+## Installation
 
 ### C++ — Header Only
 
@@ -227,7 +227,7 @@ g++ -O3 -shared -fPIC -std=c++17 -march=native src/qi_c_api.cpp -o libqisort.so
 
 ---
 
-## 💡 Usage
+## Usage
 
 ### C++
 
@@ -292,7 +292,7 @@ qi_sort_u32(data, 6);
 
 ---
 
-## 📖 API Reference
+## API Reference
 
 ### `qi::sort`
 
@@ -333,7 +333,7 @@ qi::State qi::analyze(const uint32_t* data, size_t n, size_t sampleSize = 8192);
 
 ---
 
-## 🛠 CLI Utility — `qsort-db`
+## CLI Utility — `qsort-db`
 
 A production binary for benchmarking real binary disk files.
 
@@ -350,7 +350,7 @@ g++ -O3 -std=c++17 -march=native src/qsort_cli.cpp -o qsort-db
 
 ---
 
-## 🗺 Where to Use qi-sort
+## Where to Use qi-sort
 
 | Domain | Use Case |
 | :--- | :--- |
@@ -363,7 +363,7 @@ g++ -O3 -std=c++17 -march=native src/qsort_cli.cpp -o qsort-db
 
 ---
 
-## ⚙️ How It Works
+## How It Works
 
 **Step 1 — Sample & Sense.**
 On a sample of `sampleSize` elements, qi-sort builds per-byte histograms and computes probability amplitudes and concentration using quantum-physics-derived metrics:
@@ -387,7 +387,7 @@ The selected kernel runs with heap-allocated count arrays, 4-way loop unrolling,
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```
 qi-sort/
@@ -424,13 +424,13 @@ qi-sort/
 
 ---
 
-## 📜 License
+## License
 
 Licensed under the **GNU General Public License v2.0** — the same license as the Linux Kernel. See [LICENSE](LICENSE).
 
 ---
 
-## 📚 Citation
+## Citation
 
 If you use qi-sort in academic work:
 
@@ -446,7 +446,7 @@ If you use qi-sort in academic work:
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Issues and pull requests are welcome.
 When submitting a performance claim, please include output from `benchmarks/verify_implementation.cpp` and `benchmarks/real_data_benchmark.cpp`.
