@@ -1,0 +1,22 @@
+# Build Binaries
+qi_radix
+db_benchmark
+basic_usage
+analytical_inspection
+database_column_sort
+spatial_morton_sort
+qsort-db
+
+# Data Files & Logs
+*.bin
+*.out
+*.o
+*.a
+*.so
+*.dylib
+
+# IDE & OS Artifacts
+.DS_Store
+.vscode/
+.idea/
+build/
