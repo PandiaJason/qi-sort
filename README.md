@@ -1,19 +1,53 @@
 # ⚡ QI-Sort
 
-> **Ultra-Fast, Cache-Aware Adaptive Radix Sorting in C++17**
+> **Ultra-Fast, Cache-Aware Adaptive Radix Sorting Library for C++, Python, Java & C**
 > 
-> *A modular, header-only library that processes up to **198 Million Keys/sec**—delivering **2.7x to 4.7x faster performance** than `std::sort`.*
+> *Processes up to **198 Million Keys/sec**—delivering **2.5x to 4.7x faster performance** than native standard library sorting in C++ and Python.*
 
 [![C++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg?style=flat-square)](include/qi_radix.hpp)
-[![Header Only](https://img.shields.io/badge/Header--Only-Yes-brightgreen.svg?style=flat-square)](include/qi_radix.hpp)
+[![Python](https://img.shields.io/badge/Python-3.7%2B-yellow.svg?style=flat-square)](bindings/python/qi_sort.py)
+[![Java](https://img.shields.io/badge/Java-JNI-red.svg?style=flat-square)](bindings/java/com/qisort/QiSort.java)
 [![License: GPL v2](https://img.shields.io/badge/License-GPL_v2-orange.svg?style=flat-square)](LICENSE)
-[![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero-success.svg?style=flat-square)](include/qi_radix.hpp)
 
 ---
 
-## ⚡ 3-Line Quickstart
+## 🌎 Multi-Language Usage Guide
 
-Drop [`include/qi_radix.hpp`](file:///Users/admin/Jas%20Apps/QSORT/include/qi_radix.hpp) into your project and sort any vector or array instantly:
+### 🐍 Python Integration ([`bindings/python/qi_sort.py`](file:///Users/admin/Jas%20Apps/QSORT/bindings/python/qi_sort.py))
+
+```python
+import qi_sort
+
+# 1. Sort a standard Python list (2.5x faster than built-in Timsort!)
+data = [10543, 42, 999999, 12, 0, 8881]
+qi_sort.sort(data)
+print(data)  # [0, 12, 42, 8881, 10543, 999999]
+
+# 2. Non-destructive statistical inspection
+stats = qi_sort.analyze(data)
+print("Shannon Entropy:", stats["entropy"])
+```
+
+---
+
+### ☕ Java Integration ([`bindings/java/com/qisort/QiSort.java`](file:///Users/admin/Jas%20Apps/QSORT/bindings/java/com/qisort/QiSort.java))
+
+```java
+import com.qisort.QiSort;
+
+public class Main {
+    public static void main(String[] args) {
+        int[] data = new int[] {10543, 42, 999999, 12, 0, 8881};
+        
+        // High-performance JNI native sort
+        QiSort.sort(data);
+    }
+}
+```
+
+---
+
+### ⚡ C++ Quickstart ([`include/qi_radix.hpp`](file:///Users/admin/Jas%20Apps/QSORT/include/qi_radix.hpp))
 
 ```cpp
 #include "qi_radix.hpp"
@@ -24,20 +58,29 @@ qi::sort(data); // Sorted in microsecond execution time!
 
 ---
 
-## 🔥 Why QI-Sort?
+### 🔤 Pure C / Rust / Go Integration ([`include/qi_c_api.h`](file:///Users/admin/Jas%20Apps/QSORT/include/qi_c_api.h))
 
-* **🚀 Blazing Fast:** Achieves **198.16 Million Keys/second throughput** on 100MB datasets.
-* **📦 Header-Only & Zero Dependencies:** Just copy `qi_radix.hpp` or use CMake. No external libraries required.
-* **🧠 Quantum-Inspired Adaptive Sensing:** Senses dataset distribution features ($\psi_i = \sqrt{p_i}$, Inverse Participation Ratio, Shannon entropy) in microsecond time to automatically select the optimal radix strategy (Radix-8, Radix-11, or Radix-16).
-* **🛡 CPU Cache-Thrashing Prevention:** Dynamically predicts L2 cache capacity bottlenecks to prevent high-entropy cache misses.
-* **🔍 Non-Destructive Inspection (`qi::analyze`):** Senses data complexity, effective states ($N_{\text{eff}}$), and duplicate ratios without modifying memory.
-* **⚡ $O(N)$ Short-Circuits:** Instant zero-cost returns for pre-sorted or reverse-sorted data.
+```c
+#include "qi_c_api.h"
+
+uint32_t data[] = {10543, 42, 999999, 12, 0, 8881};
+qi_sort_u32(data, 6);
+```
 
 ---
 
-## 📊 Benchmarks at a Glance
+## 📊 Multi-Language Benchmarks
 
-### 1. Real Disk Dataset Benchmark ($25,000,000$ uint32 Keys / 95 MB File)
+### 1. Python Benchmark ($1,000,000$ Integer List)
+
+| Algorithm | Execution Time (ms) | Speedup vs Python default | Correctness |
+| :--- | :---: | :---: | :---: |
+| `list.sort()` (Python Timsort) | 299.61 ms | 1.00x *(Baseline)* | PASS |
+| **`qi_sort.sort()` (Our Native Engine)** | **119.65 ms** | **`2.50x` FASTER** | **PASS** |
+
+---
+
+### 2. C++ Real Disk Dataset Benchmark ($25,000,000$ Keys / 95 MB File)
 
 | Algorithm | Execution Time (ms) | Throughput (MKeys/sec) | Speedup vs `std::sort` | Correctness |
 | :--- | :---: | :---: | :---: | :---: |
@@ -47,7 +90,7 @@ qi::sort(data); // Sorted in microsecond execution time!
 
 ---
 
-### 2. Columnar Database Engine Benchmark ($10,000,000$ Rows per Column)
+### 3. Columnar Database Engine Benchmark ($10,000,000$ Rows per Column)
 
 | Column | Data Pattern | `std::sort` | `std::stable_sort` | `qi::sort` | Speedup vs `std::sort` |
 | :--- | :--- | :---: | :---: | :---: | :---: |
@@ -58,122 +101,20 @@ qi::sort(data); // Sorted in microsecond execution time!
 
 ---
 
-## 📦 Installation & Integration
+## 📦 Building Shared Library (`libqisort`)
 
-### Option A: Single Header Copy
-Copy [`include/qi_radix.hpp`](file:///Users/admin/Jas%20Apps/QSORT/include/qi_radix.hpp) to your `include/` directory:
-```cpp
-#include "qi_radix.hpp"
-```
-
-### Option B: CMake Integration
-Add to your `CMakeLists.txt`:
-```cmake
-add_subdirectory(path/to/QSORT)
-target_link_libraries(your_target PRIVATE qi_radix)
-```
-
----
-
-## 💻 Developer API Reference
-
-### 1. `qi::sort` — Adaptive Vector & Array Sorting
-
-```cpp
-// Sort std::vector<uint32_t>
-std::vector<uint32_t> numbers = {99, 11, 44, 22, 77, 33};
-qi::sort(numbers);
-
-// Sort raw C-style pointer range
-uint32_t rawArr[6] = {500, 20, 100, 5, 200, 10};
-qi::sort(rawArr, 6);
-
-// Sort via iterators
-qi::sort(numbers.begin(), numbers.end());
-
-// Options: enable telemetry
-qi::SortOptions options;
-options.verbose = true;
-qi::sort(numbers, options);
-```
-
----
-
-### 2. `qi::analyze` — Non-Destructive Distribution Inspection
-
-Inspect dataset entropy, Inverse Participation Ratio (IPR), effective states ($N_{\text{eff}}$), and duplicate ratios **without modifying or sorting memory**:
-
-```cpp
-qi::State state = qi::analyze(numbers);
-
-std::cout << "Shannon Entropy   : " << state.averageEntropy << "\n";
-std::cout << "Effective Buckets : " << state.effectiveStates << " buckets/byte\n";
-std::cout << "Duplicate Ratio   : " << state.duplicateRatio * 100.0 << "%\n";
-std::cout << "Recommended Radix : " 
-          << (state.recommendedRadix == qi::Radix::R16 ? "RADIX-16" : "RADIX-11") << "\n";
-```
-
----
-
-## 💡 Real-World Use Cases
-
-### 1. Columnar Databases (DuckDB / ClickHouse Style)
-Accelerate `ORDER BY` and `GROUP BY` surrogate join keys in zero-copy columnar buffers ([`examples/database_column_sort.cpp`](file:///Users/admin/Jas%20Apps/QSORT/examples/database_column_sort.cpp)):
-```cpp
-// Sort 500,000 database join keys in ~4.1 ms
-qi::sort(user_id_column);
-```
-
-### 2. 3D Graphics & Spatial BVH Ray-Tracing
-Sort 30-bit Morton Z-order curve keys for Bounding Volume Hierarchy (BVH) tree construction in game engines ([`examples/spatial_morton_sort.cpp`](file:///Users/admin/Jas%20Apps/QSORT/examples/spatial_morton_sort.cpp)):
-```cpp
-// Sort 1,000,000 3D spatial Morton keys in ~5.6 ms
-qi::sort(mortonKeys);
-```
-
----
-
-## 🛠 CLI Utility (`qsort-db`)
-
-The project includes a production command-line tool [`src/qsort_cli.cpp`](file:///Users/admin/Jas%20Apps/QSORT/src/qsort_cli.cpp) for sorting binary disk files:
+To build the native shared library for Python, Java, or C integration:
 
 ```bash
-# Build CLI tool
-g++ -O3 -std=c++17 -march=native src/qsort_cli.cpp -o qsort-db
+# macOS
+g++ -O3 -shared -fPIC -std=c++17 -march=native src/qi_c_api.cpp -o libqisort.dylib
 
-# Generate a 25,000,000 integer binary file (95.37 MB) on disk:
-./qsort-db --generate 25000000 data.bin
-
-# Benchmark real binary file sorting (reports MKeys/sec throughput):
-./qsort-db --benchmark data.bin
+# Linux
+g++ -O3 -shared -fPIC -std=c++17 -march=native src/qi_c_api.cpp -o libqisort.so
 ```
-
----
-
-## 🔬 Under the Hood: Quantum-Inspired Math
-
-QI-Sort converts sampled frequency counts $C_{b,i}$ for byte $b$ and symbol $i \in [0, 255]$ into probability amplitude magnitudes:
-
-$$\psi_{b,i} = \sqrt{p_{b,i}}, \quad \text{where} \quad \sum_{i=0}^{255} |\psi_{b,i}|^2 = 1$$
-
-It measures state vector concentration via the **Inverse Participation Ratio (IPR)** and **Effective States ($N_{\text{eff}}$)**:
-
-$$\text{IPR}_b = \sum_{i=0}^{255} |\psi_{b,i}|^4 = \sum_{i=0}^{255} p_{b,i}^2, \qquad N_{\text{eff},b} = \frac{1}{\text{IPR}_b}$$
-
-When active buckets $B_{16} = \min(65536, N_{\text{eff},0} \times N_{\text{eff},1})$ threaten to exceed L2 cache limits (~256KB-512KB), the QI cost model dynamically shifts execution to **Radix-11**, preventing cache thrashing.
 
 ---
 
 ## 📄 License & Citation
 
 Licensed under the **GNU General Public License v2.0 (GPL-2.0)** — original Linux Kernel License. See [LICENSE](LICENSE) for details.
-
-```bibtex
-@article{pandia2026qisort,
-  title={QI-Sort: Probability-Amplitude-Inspired Distribution Analysis for Adaptive Radix Sorting},
-  author={Pandia, Jason},
-  journal={GitHub Repository},
-  url={https://github.com/PandiaJason/qi-sort},
-  year={2026}
-}
-```

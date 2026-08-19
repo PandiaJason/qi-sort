@@ -1,0 +1,27 @@
+#include "../include/qi_c_api.h"
+#include "../include/qi_radix.hpp"
+
+extern "C" {
+
+void qi_sort_u32(uint32_t* data, size_t n) {
+    if (!data || n <= 1) return;
+    qi::sort(data, n);
+}
+
+void qi_analyze_u32(
+    const uint32_t* data,
+    size_t n,
+    double* out_entropy,
+    double* out_ipr,
+    double* out_neff,
+    double* out_duplicate_ratio
+) {
+    if (!data || n == 0) return;
+    qi::State state = qi::analyze(data, n);
+    if (out_entropy) *out_entropy = state.averageEntropy;
+    if (out_ipr) *out_ipr = state.amplitudeConcentration;
+    if (out_neff) *out_neff = state.effectiveStates;
+    if (out_duplicate_ratio) *out_duplicate_ratio = state.duplicateRatio;
+}
+
+}
