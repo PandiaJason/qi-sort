@@ -38,6 +38,28 @@ and dispatches to the optimal radix kernel — up to <b>6.02× faster than <code
 
 ---
 
+## What is QI Sort?
+
+Most sorting libraries give you one algorithm and hope it fits your data. **QI Sort does something different** — before sorting a single element, it *reads the data's character* and picks the best strategy for that exact input.
+
+It does this using math borrowed from **quantum physics**: the same Inverse Participation Ratio (IPR) metric used in condensed-matter physics to measure how spread out a wavefunction is across energy states. Applied to byte histograms of your data, IPR tells us how many buckets a radix pass will *actually* touch — which directly predicts L2 cache pressure.
+
+From that measurement, QI Sort dispatches to one of three built-in radix kernels:
+
+| Kernel | Bucket width | Passes | Best for |
+| :--- | :---: | :---: | :--- |
+| **Radix-16** | 16 bits | 2 | Low-entropy, few unique values, timestamps |
+| **Radix-11** | 11 bits | 3 | High-entropy data where R-16 would trash L2 cache |
+| **Radix-8** | 8 bits | 4 | Very narrow value ranges |
+
+There is also an **O(N) short-circuit**: if the sample shows the data is already sorted or reverse-sorted, qi-sort returns immediately — 22× faster than running full radix passes.
+
+**What it is not:** There is no quantum computer involved. No qubits, no superposition, no entanglement. The algorithm runs on a classical CPU. The "quantum-inspired" label refers specifically to the IPR formula $\sum p_i^2$ and amplitude representation $\psi_i = \sqrt{p_i}$, which come from quantum mechanics but are applied here as a cache-pressure estimator. You could call it *"collision-entropy-based adaptive radix dispatch"* and it would be equally accurate.
+
+**The result in one line:** Always faster than `std::sort`. Usually faster than a fixed radix. Occasionally misfires on one known distribution class (moderate-duplicate clustered data) — documented honestly in the [benchmark section](#-real-world-benchmarks).
+
+---
+
 ## ⚡ Quickstart
 
 **C++ — drop in one header:**
