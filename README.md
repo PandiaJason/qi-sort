@@ -24,12 +24,13 @@ and dispatches to the optimal radix kernel — up to <b>6.02× faster than <code
 </p>
 
 <p>
-  <a href="#-quickstart">Quickstart</a> ·
-  <a href="#-real-world-benchmarks">Benchmarks</a> ·
-  <a href="#-api-reference">API</a> ·
-  <a href="#-how-it-works">How It Works</a> ·
-  <a href="#-honest-analysis">Honest Analysis</a> ·
-  <a href="#-where-to-use-qi-sort">Use Cases</a>
+  <a href="#about">About</a> ·
+  <a href="#quickstart">Quickstart</a> ·
+  <a href="#real-world-benchmarks">Benchmarks</a> ·
+  <a href="#api-reference">API</a> ·
+  <a href="#how-it-works">How It Works</a> ·
+  <a href="#honest-analysis">Honest Analysis</a> ·
+  <a href="#where-to-use-qi-sort">Use Cases</a>
 </p>
 
 </div>
@@ -38,7 +39,7 @@ and dispatches to the optimal radix kernel — up to <b>6.02× faster than <code
 
 ---
 
-## What is QI Sort?
+## About
 
 Most sorting libraries give you one algorithm and hope it fits your data. **QI Sort does something different** — before sorting a single element, it *reads the data's character* and picks the best strategy for that exact input.
 
@@ -56,7 +57,7 @@ There is also an **O(N) short-circuit**: if the sample shows the data is already
 
 **What it is not:** There is no quantum computer involved. No qubits, no superposition, no entanglement. The algorithm runs on a classical CPU. The "quantum-inspired" label refers specifically to the IPR formula $\sum p_i^2$ and amplitude representation $\psi_i = \sqrt{p_i}$, which come from quantum mechanics but are applied here as a cache-pressure estimator. You could call it *"collision-entropy-based adaptive radix dispatch"* and it would be equally accurate.
 
-**The result in one line:** Always faster than `std::sort`. Usually faster than a fixed radix. Occasionally misfires on one known distribution class (moderate-duplicate clustered data) — documented honestly in the [benchmark section](#-real-world-benchmarks).
+**The result in one line:** Always faster than `std::sort`. Usually faster than a fixed radix. Occasionally misfires on one known distribution class (moderate-duplicate clustered data) — documented honestly in the [benchmark section](#real-world-benchmarks).
 
 ---
 
