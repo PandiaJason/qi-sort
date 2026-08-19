@@ -199,7 +199,12 @@ static inline State analyzeData(const u32* data, size_t n, size_t targetSampleSi
 
     if (state.orderedness > 0.98) { costR16 *= 0.05; costR11 *= 0.05; costR8 *= 0.05; }
 
-    if (costR11 < costR16 && costR11 < costR8) {
+    // Cardinality guard: high duplicate ratio means very few unique values.
+    // The real R-16 bucket footprint is tiny regardless of what N_eff estimates,
+    // so R-16 is always cache-safe. Skip the cost comparison entirely.
+    if (state.duplicateRatio > 0.90) {
+        state.recommendedRadix = Radix::R16;
+    } else if (costR11 < costR16 && costR11 < costR8) {
         state.recommendedRadix = Radix::R11;
     } else if (costR8 < costR16 && costR8 < costR11) {
         state.recommendedRadix = Radix::R8;
