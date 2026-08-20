@@ -7,34 +7,31 @@
 <h3>Quantum-Inspired Adaptive Radix Sorting Engine</h3>
 
 <p>
-A <b>header-only</b> C++17 sorting library that senses data distribution at runtime<br/>
-and dispatches to the optimal radix kernel — up to <b>5.88× faster than <code>std::sort</code></b> on real data,<br/>
-up to <b>3.6× faster than DuckDB's native sorter</b>, and up to <b>18.6× faster (814 MKeys/s)</b> in parallel multi-threaded mode.
+A <b>zero-dependency, single-header</b> C++17 sorting engine that senses data entropy at runtime<br/>
+and auto-dispatches to the optimal radix pass count — <b>3.0×–7.7× faster than Google <code>vqsort</code></b>,<br/>
+<b>4.48× faster than DuckDB's native sorter</b>, and <b>2.4×–6.1× faster than <code>std::sort</code> & <code>std::stable_sort</code></b> across 3M–50M row workloads.
 </p>
 
 <p>
 
 [![License: GPL v2](https://img.shields.io/badge/License-GPL_v2-blue.svg?style=flat-square)](LICENSE)
 [![C++17](https://img.shields.io/badge/C%2B%2B-17-00599C?style=flat-square&logo=c%2B%2B)](include/qi_radix.hpp)
-[![Python](https://img.shields.io/badge/Python-3.7%2B-3776AB?style=flat-square&logo=python&logoColor=white)](bindings/python/qi_sort.py)
-[![Java](https://img.shields.io/badge/Java-JNI-ED8B00?style=flat-square&logo=openjdk&logoColor=white)](bindings/java/com/qisort/QiSort.java)
-[![DuckDB Ready](https://img.shields.io/badge/DuckDB--Integration-3.6x_Faster-yellow?style=flat-square)](examples/duckdb_block_sorter.cpp)
+[![PyPI Package](https://img.shields.io/badge/pip_install-qi--sort-3776AB?style=flat-square&logo=python&logoColor=white)](setup.py)
+[![Java JNI](https://img.shields.io/badge/Java-JNI-ED8B00?style=flat-square&logo=openjdk&logoColor=white)](bindings/java/com/qisort/QiSort.java)
+[![DuckDB Ready](https://img.shields.io/badge/DuckDB--Integration-4.48x_Faster-yellow?style=flat-square)](benchmarks/duckdb_orderby_benchmark.cpp)
+[![Google vqsort](https://img.shields.io/badge/Google_vqsort-3.4x_Faster-red?style=flat-square)](benchmarks/google_vqsort_real_benchmark.cpp)
 [![Header Only](https://img.shields.io/badge/header--only-yes-brightgreen?style=flat-square)](include/qi_radix.hpp)
 [![Zero Dependencies](https://img.shields.io/badge/dependencies-zero-success?style=flat-square)](include/qi_radix.hpp)
-[![Audit](https://img.shields.io/badge/audit-25%2F25_pass-success?style=flat-square)](benchmarks/verify_implementation.cpp)
 
 </p>
 
 <p>
   <a href="#what-is-qi-sort">What is QI Sort?</a> ·
+  <a href="#the-fixed-radix-trap">The Fixed Radix Trap</a> ·
   <a href="#quickstart">Quickstart</a> ·
+  <a href="#master-production-sorter-benchmark-matrix-qisort-vs-11-global-daily-production-sorters-n--3000000">Master Benchmark Matrix</a> ·
   <a href="#duckdb-source-level-benchmark">DuckDB Benchmark</a> ·
-  <a href="#multi-dataset-benchmark-matrix">Multi-Dataset Matrix</a> ·
-  <a href="#real-world-benchmarks">Real-World Benchmarks</a> ·
-  <a href="#head-to-head-competitors">Head-to-Head</a> ·
-  <a href="#kernel-selection-ablation">Ablation Study</a> ·
-  <a href="#api-reference">API</a> ·
-  <a href="#how-it-works">How It Works</a>
+  <a href="#api-reference">API</a>
 </p>
 
 </div>
@@ -45,9 +42,63 @@ up to <b>3.6× faster than DuckDB's native sorter</b>, and up to <b>18.6× faste
 
 ## What is QI Sort?
 
-Most sorting libraries give you one static algorithm and hope it fits your data. **QI Sort does something different** — before sorting a single element, it *reads the data's distribution state* and dispatches to the optimal radix kernel for that exact input.
+Sorting integer, float, timestamp, and string data is the single most expensive operation inside databases, analytical query engines, dataframes, and LSM-tree storage systems.
 
-It does this using math derived from **quantum mechanics**: the Inverse Participation Ratio (IPR) metric used in condensed-matter physics to measure wavefunction concentration across energy states:
+Most sorting libraries give you one static comparison algorithm and hope it fits your data. **`qi::sort` does something different** — before sorting a single element, it *reads the data's distribution state* in $\approx 0.2\text{ ms}$ and dispatches to the optimal radix pass count for that exact input.
+
+It does this using math derived from **quantum mechanics**: the Inverse Participation Ratio (IPR) metric ($N_{\text{eff}} = 1 / \sum p_i^2$) used in condensed-matter physics to measure wavefunction concentration across energy states, combined with Shannon entropy analysis across key bytes.
+
+---
+
+## The "Fixed Radix Trap" (Why `qi::sort` Wins)
+
+For decades, performance engineers faced a brutal tradeoff between comparison sorting and radix sorting:
+
+1. **Comparison Sorters (`std::sort`, `pdqsort`, Google `vqsort`)**: Bound by $O(N \log N)$ comparison lower bounds. Even with 512-bit SIMD vectorization (`vqsort`), comparing keys in scalar or vector registers wastes CPU memory bandwidth.
+2. **Fixed Radix Sorters (Radix-8, Radix-11, Radix-16)**: Non-comparison $O(k \cdot N)$ speed, but trapped by **fixed pass counts**:
+   - Hardcoding **Radix-16** creates $65,536$ histogram buckets ($512\text{ KB}$), overflowing CPU L1 cache ($32\text{ KB}$) and causing massive cache misses on random high-entropy data.
+   - Hardcoding **Radix-11** requires 3 full memory passes, running 3.18× slower on duplicate data.
+   - Hardcoding **Radix-8** requires 4 full memory passes, running up to 4.34× slower.
+
+**How `qi::sort` Solves It:**
+* **High Byte-Entropy (Uniform Random & Hash Keys)** $\rightarrow$ Auto-selects `Radix-11` to fit within CPU L1 cache bounds ($32\text{ KB}$).
+* **Low Effective States (Heavy Duplicates & Category IDs)** $\rightarrow$ Auto-selects `Radix-16` to reduce memory passes from 3 to 2.
+* **Ordered / Pre-Sorted Runs** $\rightarrow$ Auto-selects fallback Insertion/QuickSort.
+
+---
+
+## Quickstart
+
+### 1. C++ (Single-Header, Zero Dependencies)
+No build steps or CMake configuration required. Simply include `include/qi_radix.hpp` in your C++17 project:
+
+```cpp
+#include "qi_radix.hpp"
+#include <vector>
+#include <iostream>
+
+int main() {
+    std::vector<uint32_t> data = {42, 10, 100, 5, 9999, 12};
+    
+    // Drop-in replacement for std::sort
+    qi::sort(data);
+
+    for (auto val : data) std::cout << val << " ";
+    return 0;
+}
+```
+
+### 2. Python (`pip install`)
+```bash
+pip install .
+```
+```python
+import qi_sort
+
+data = [42, 10, 100, 5, 9999, 12]
+qi_sort.sort(data)
+print(data) # [5, 10, 12, 42, 100, 9999]
+```
 
 $$\psi_i = \sqrt{p_i}, \qquad \text{IPR} = \sum p_i^2, \qquad N_{\text{eff}} = \frac{1}{\text{IPR}}$$
 
