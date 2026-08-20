@@ -103,23 +103,23 @@ All algorithms compiled with the same `g++ -O3 -std=c++17 -march=native`, best o
 
 | Dataset | `std::sort` | pdqsort | ska_sort | **qi::sort** | Winner |
 | :--- | ---: | ---: | ---: | ---: | :--- |
-| Uniform Random 32-bit | 229.54 ms | 224.50 ms | 179.65 ms | **45.87 ms** | **qi::sort (5.0×)** |
-| Nearly Sorted (95%) | 120.91 ms | 122.60 ms | 163.04 ms | **106.80 ms** | **qi::sort** |
-| Few Unique (1000 values) | 128.23 ms | **71.65 ms** | 78.87 ms | 100.60 ms | **pdqsort** |
-| Pipe Organ Pattern | 584.76 ms | 245.45 ms | 163.00 ms | **98.78 ms** | **qi::sort (5.9×)** |
-| Random 0–65535 (16-bit) | 147.60 ms | 112.93 ms | **69.98 ms** | 70.95 ms | **ska_sort (by 1%)** |
+| Uniform Random 32-bit | 228.49 ms | 220.72 ms | 178.85 ms | **42.17 ms** | **qi::sort (5.4×)** |
+| Nearly Sorted (95%) | 122.73 ms | 119.98 ms | 160.74 ms | **98.31 ms** | **qi::sort (1.2×)** |
+| Few Unique (1000 values) | 95.33 ms | 70.22 ms | 76.88 ms | **31.37 ms** | **qi::sort (3.0×)** |
+| Pipe Organ Pattern | 572.85 ms | 237.60 ms | 157.90 ms | **99.03 ms** | **qi::sort (5.8×)** |
+| Random 0–65535 (16-bit) | 138.80 ms | 113.09 ms | 79.96 ms | **43.55 ms** | **qi::sort (3.2×)** |
 
-**Single-threaded scorecard: qi::sort wins 3/5, pdqsort 1/5, ska_sort 1/5, std::sort 0/5.**
+**Single-threaded scorecard: qi::sort wins 5/5 — undefeated across all distributions.**
 
 #### Parallel Results (all CPU cores)
 
 | Dataset | Best Single-Thread | **qi::sort Parallel** | vs `std::sort` | MKeys/s |
 | :--- | ---: | ---: | :---: | ---: |
-| Uniform Random 32-bit | 45.87 ms (qi scalar) | **12.27 ms** | **18.7×** | **814 MKeys/s** |
-| Nearly Sorted (95%) | 106.80 ms (qi scalar) | **27.36 ms** | **4.4×** | 365 MKeys/s |
-| Few Unique (1000 values) | 71.65 ms (pdqsort) | **22.27 ms** | **5.8×** | 448 MKeys/s |
-| Pipe Organ Pattern | 98.78 ms (qi scalar) | **27.99 ms** | **20.9×** | 357 MKeys/s |
-| Random 0–65535 (16-bit) | 69.98 ms (ska_sort) | **15.94 ms** | **9.3×** | 627 MKeys/s |
+| Uniform Random 32-bit | 42.17 ms (qi scalar) | **12.28 ms** | **18.6×** | **814 MKeys/s** |
+| Nearly Sorted (95%) | 98.31 ms (qi scalar) | **28.33 ms** | **4.3×** | 352 MKeys/s |
+| Few Unique (1000 values) | 31.37 ms (qi scalar) | **14.76 ms** | **6.5×** | 677 MKeys/s |
+| Pipe Organ Pattern | 99.03 ms (qi scalar) | **30.57 ms** | **18.7×** | 327 MKeys/s |
+| Random 0–65535 (16-bit) | 43.55 ms (qi scalar) | **22.44 ms** | **6.2×** | 445 MKeys/s |
 
 **Parallel scorecard: qi::sort wins 5/5 — undefeated across all distributions.**
 
