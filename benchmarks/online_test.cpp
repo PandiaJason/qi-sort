@@ -1,12 +1,13 @@
 /*
 ===============================================================================
-QI-SORT vs QUICKSORT vs TIMSORT vs STDSORT (Single-File Online Benchmark)
+QI-SORT 5-WAY BENCHMARK: qi::sort vs Plain Radix-16 vs std::sort vs Timsort vs QuickSort
 ===============================================================================
 Compares:
   1. std::sort          — Introsort (QuickSort + HeapSort)
   2. std::stable_sort   — Timsort / MergeSort
   3. Classic QuickSort  — Hoare-partitioned recursive QuickSort
-  4. qi::sort           — Quantum-Inspired Adaptive Radix Engine
+  4. Plain Radix-16     — Fixed 2-pass LSD Radix Sort (No Sensing)
+  5. qi::sort           — Quantum-Inspired Adaptive Radix Engine
 ===============================================================================
 */
 
@@ -48,7 +49,7 @@ static void classic_quicksort(uint32_t* arr, int low, int high) {
     }
 }
 
-// ─── QI-SORT ENGINE DEFINITIONS ──────────────────────────────────────────────
+// ─── QI-SORT & PLAIN RADIX SORT ENGINE DEFINITIONS ─────────────────────────
 namespace qi {
 
 using u32 = uint32_t;
@@ -265,6 +266,12 @@ static inline void radixSort8(u32* data, size_t n, bool allowShortcuts) {
 
 } // namespace detail
 
+// Standard Plain Radix-16 (Fixed Radix, No Sensing)
+inline void plain_radix16(u32* data, size_t n) {
+    detail::radixSort16(data, n, false);
+}
+
+// Adaptive qi::sort Engine
 inline void sort(u32* data, size_t n, SortOptions options = SortOptions{}) {
     if (n <= 1) return;
     State state = detail::analyzeData(data, n, options.sampleSize);
@@ -291,7 +298,7 @@ inline void sort(std::vector<u32>& data, SortOptions options = SortOptions{}) {
 } // namespace qi
 
 // ===============================================================================
-// BENCHMARK MAIN FUNCTION (4-WAY ALGORITHM COMPARISON)
+// BENCHMARK MAIN FUNCTION (5-WAY ALGORITHM COMPARISON)
 // ===============================================================================
 
 using Clock = std::chrono::high_resolution_clock;
@@ -305,7 +312,7 @@ static inline double run_timing(std::function<void()> fn) {
 static void print_result_row(const std::string& name, double t, double t_std, size_t N, bool ok) {
     double mk = N / t / 1000.0;
     double vs = t_std / t;
-    std::cout << std::left << std::setw(30) << name
+    std::cout << std::left << std::setw(32) << name
               << std::setw(14) << std::fixed << std::setprecision(2) << t
               << std::setw(16) << (std::to_string((int)mk) + " MKeys/s")
               << std::setw(16) << (std::to_string(vs).substr(0, 4) + "x")
@@ -316,7 +323,7 @@ int main() {
     const size_t N = 3000000; // 3 Million keys
 
     std::cout << "=================================================================\n";
-    std::cout << "  4-WAY BENCHMARK: qi::sort vs std::sort vs Timsort vs QuickSort\n";
+    std::cout << "  5-WAY BENCHMARK: qi::sort vs Plain Radix vs QuickSort vs Timsort\n";
     std::cout << "  N = " << N << " 32-bit unsigned integers\n";
     std::cout << "=================================================================\n\n";
 
@@ -337,34 +344,41 @@ int main() {
     auto d_qsort = data;
     double t_qsort = run_timing([&]() { classic_quicksort(d_qsort.data(), 0, (int)N - 1); });
 
-    // 4. Quantum-Inspired qi::sort
+    // 4. Plain Radix-16 (Fixed 2-pass Radix Sort)
+    auto d_pradix = data;
+    double t_pradix = run_timing([&]() { qi::plain_radix16(d_pradix.data(), N); });
+
+    // 5. Quantum-Inspired qi::sort (Adaptive Engine)
     auto d_qi = data;
     qi::SortOptions opts;
     opts.verbose = true;
     double t_qi = run_timing([&]() { qi::sort(d_qi, opts); });
 
-    // 5. Correctness Check
-    bool ok_tim   = (d_tim == d_std);
-    bool ok_qsort = (d_qsort == d_std);
-    bool ok_qi    = (d_qi == d_std);
+    // Correctness Checks
+    bool ok_tim    = (d_tim == d_std);
+    bool ok_qsort  = (d_qsort == d_std);
+    bool ok_pradix = (d_pradix == d_std);
+    bool ok_qi     = (d_qi == d_std);
 
     std::cout << "\n-----------------------------------------------------------------\n";
-    std::cout << std::left << std::setw(30) << "Algorithm"
+    std::cout << std::left << std::setw(32) << "Algorithm"
               << std::setw(14) << "Time (ms)"
               << std::setw(16) << "Throughput"
               << std::setw(16) << "vs std::sort"
               << "Status\n";
     std::cout << "-----------------------------------------------------------------\n";
 
-    print_result_row("std::sort (Introsort)",      t_std,   t_std, N, true);
-    print_result_row("std::stable_sort (Timsort)", t_tim,   t_std, N, ok_tim);
-    print_result_row("Classic QuickSort (Hoare)",  t_qsort, t_std, N, ok_qsort);
-    print_result_row("qi::sort (Adaptive Engine)", t_qi,    t_std, N, ok_qi);
+    print_result_row("std::sort (Introsort)",         t_std,    t_std, N, true);
+    print_result_row("std::stable_sort (Timsort)",    t_tim,    t_std, N, ok_tim);
+    print_result_row("Classic QuickSort (Hoare)",     t_qsort,  t_std, N, ok_qsort);
+    print_result_row("Plain Radix-16 (Fixed 2-Pass)", t_pradix, t_std, N, ok_pradix);
+    print_result_row("qi::sort (Adaptive Engine)",    t_qi,     t_std, N, ok_qi);
 
     std::cout << "-----------------------------------------------------------------\n";
     std::cout << "qi::sort Speedup vs std::sort      : " << std::setprecision(2) << (t_std / t_qi) << "x FASTER\n";
     std::cout << "qi::sort Speedup vs Timsort       : " << std::setprecision(2) << (t_tim / t_qi) << "x FASTER\n";
     std::cout << "qi::sort Speedup vs QuickSort     : " << std::setprecision(2) << (t_qsort / t_qi) << "x FASTER\n";
+    std::cout << "qi::sort Speedup vs Plain Radix   : " << std::setprecision(2) << (t_pradix / t_qi) << "x FASTER\n";
     std::cout << "=================================================================\n\n";
 
     return 0;
