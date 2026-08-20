@@ -27,6 +27,7 @@ quick_bench
 radix_test
 real_bench
 real_qsort_bench
+redis_real_benchmark
 rocksdb_memtable_sorter
 rocksdb_real_benchmark
 spatial_morton_sort
