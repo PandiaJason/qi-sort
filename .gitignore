@@ -55,6 +55,8 @@ verify_vqsort_head2head
 # ──── Build Directories ────
 build/
 cmake-build-*/
+*.egg-info/
+dist/
 
 # ──── IDE & OS Artifacts ────
 .DS_Store
