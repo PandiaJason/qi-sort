@@ -18,6 +18,7 @@ ex_basic
 ex_db
 ex_spatial
 global_bench
+google_vqsort_real_benchmark
 head2head
 hft_orderbook_sorter
 online_test

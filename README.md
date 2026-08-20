@@ -179,7 +179,15 @@ To rigorously validate whether `qi::sort` maintains its speedup at enterprise da
 | **Hash Key Sort** | 291.41 ms | 14.87 ms | 11.00 ms | 15.64 ms | **16.73 ms** | **17.41× FASTER** |
 | **Heavy Duplicate Key Sort** | 99.70 ms | 42.27 ms | 30.05 ms | 9.36 ms | **9.86 ms** | **10.11× FASTER** |
 
-> **Runnable Integration Benchmarks:** Run `./duckdb_real_benchmark`, `./rocksdb_real_benchmark`, `./sqlite_real_benchmark`, `./redis_real_benchmark`, or `./postgres_real_benchmark` locally to reproduce real source-level numbers.
+### 6. Google Native Source Sorter Benchmark Matrix (`vqsort` from Google Highway, $N = 3,000,000$)
+
+| Google `vqsort` Dataset | Google `vqsort` (SIMD) | Plain Radix-8 | Plain Radix-11 | Plain Radix-16 | **`qi::sort` (Adaptive)** | **Speedup vs `vqsort`** |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Uniform Key Sort** | 241.30 ms | 23.02 ms | 90.11 ms | 57.93 ms | **31.25 ms** | **7.72× FASTER** |
+| **Hash Key Sort** | 101.02 ms | 94.16 ms | 43.25 ms | 45.40 ms | **149.49 ms** | **0.68× FASTER** |
+| **Heavy Duplicate Key Sort** | 26.25 ms | 192.92 ms | 101.90 ms | 35.83 ms | **137.66 ms** | **0.19× FASTER** |
+
+> **Runnable Integration Benchmarks:** Run `./duckdb_real_benchmark`, `./rocksdb_real_benchmark`, `./sqlite_real_benchmark`, `./redis_real_benchmark`, `./postgres_real_benchmark`, or `./google_vqsort_real_benchmark` locally to reproduce real source-level numbers.
 
 ---
 
