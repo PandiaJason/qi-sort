@@ -191,21 +191,27 @@ static inline State analyzeData(const u32* data, size_t n, size_t targetSampleSi
     state.lowByteComplexity = (state.bytes[0].entropy + state.bytes[1].entropy) / 2.0;
     state.highByteComplexity = (state.bytes[2].entropy + state.bytes[3].entropy) / 2.0;
 
-    // QI Cache-Thrashing Cost Model Selection
-    u32 activeMask = state.bitOrSum ^ state.bitAndSum;
-    double activeBits = 32.0;
-    if (activeMask <= 0xFFFFu) activeBits = 16.0;
-    else if (activeMask <= 0xFFFFFFu) activeBits = 24.0;
+    // QI Cache-Thrashing & Pass-Count Cost Model Selection
+    // Baseline orderedness for uniform random data is 0.50 (coin-flip increasing pairs).
+    // True spatial order factor above random chance: 0.50 -> 0.0, 1.0 -> 1.0.
+    double orderFactor = std::max(0.0, (state.orderedness - 0.50) * 2.0);
 
-    double costR16 = n * (2.0 + (std::max(0.0, std::min(65536.0, state.bytes[0].effectiveStates * state.bytes[1].effectiveStates) - 32768.0) / 32768.0) * state.averageEntropy * (1.0 - state.amplitudeConcentration) * 2.8);
-    double costR11 = n * (3.0 * (activeBits / 32.0) + state.averageEntropy * (1.0 - state.amplitudeConcentration) * 0.4);
-    double costR8  = n * (4.0 * (activeBits / 32.0) + 0.05);
+    // R16 count array = 65,536 entries = 512 KB (exceeds L1/L2 cache).
+    // L1/L2 cache misses occur when bucket dispersion (N_eff) is high AND data lacks spatial ordering.
+    double r16BucketDispersion = (state.bytes[0].effectiveStates * state.bytes[1].effectiveStates) / 65536.0;
+    double r16CachePenalty = (r16BucketDispersion > 0.20) ? (r16BucketDispersion * state.averageEntropy * (1.0 - orderFactor) * 1.2) : 0.0;
+    double r16Passes = (state.bitOrSum <= 0xFFFFu) ? 1.0 : 2.0;
+    double costR16 = n * (r16Passes + r16CachePenalty);
+
+    // R11 uses 3 passes. Bucket array = 2,048 entries = 16 KB (fits in 32 KB L1 Data Cache).
+    // Zero cache penalty, but incurs 3 memory passes over N items.
+    double costR11 = n * 3.0;
+
+    // R8 uses 4 passes. Bucket array = 256 entries = 2 KB (fits in L1 Data Cache).
+    double costR8  = n * 4.0;
 
     if (state.orderedness > 0.98) { costR16 *= 0.05; costR11 *= 0.05; costR8 *= 0.05; }
 
-    // Cardinality guard: high duplicate ratio means very few unique values.
-    // The real R-16 bucket footprint is tiny regardless of what N_eff estimates,
-    // so R-16 is always cache-safe. Skip the cost comparison entirely.
     if (state.duplicateRatio > 0.90) {
         state.recommendedRadix = Radix::R16;
     } else if (costR11 < costR16 && costR11 < costR8) {
