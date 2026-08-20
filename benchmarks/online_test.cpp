@@ -1,8 +1,8 @@
 /*
 ===============================================================================
-QI-SORT 7-WAY BENCHMARK: qi::sort vs All Plain Radix Variations vs Standard Sorts
+QI-SORT MULTI-TRIAL 7-WAY BENCHMARK (5-RUN STATISTICAL AVERAGING)
 ===============================================================================
-Compares:
+Runs 5 trials per algorithm to measure Average, Min, and Max execution times:
   1. std::sort          — Introsort (QuickSort + HeapSort)
   2. std::stable_sort   — Timsort / MergeSort
   3. Classic QuickSort  — Hoare-partitioned recursive QuickSort
@@ -26,6 +26,7 @@ Compares:
 #include <memory>
 #include <functional>
 #include <string>
+#include <numeric>
 
 // ─── CLASSIC HOARE QUICKSORT IMPLEMENTATION ─────────────────────────────────
 static void classic_quicksort(uint32_t* arr, int low, int high) {
@@ -62,7 +63,7 @@ enum class Radix : int { R8 = 8, R11 = 11, R16 = 16 };
 struct SortOptions {
     size_t sampleSize = 8192;
     bool allowShortcuts = true;
-    bool verbose = true;
+    bool verbose = false; // Turned off per-trial verbose logging for multi-run table cleanliness
 };
 
 struct ByteState {
@@ -300,102 +301,142 @@ inline void sort(std::vector<u32>& data, SortOptions options = SortOptions{}) {
 } // namespace qi
 
 // ===============================================================================
-// BENCHMARK MAIN FUNCTION (7-WAY ALGORITHM COMPARISON)
+// BENCHMARK MAIN FUNCTION (MULTI-TRIAL 5-RUN STATISTICAL BENCHMARK)
 // ===============================================================================
 
 using Clock = std::chrono::high_resolution_clock;
 
-static inline double run_timing(std::function<void()> fn) {
-    auto t = Clock::now();
-    fn();
-    return std::chrono::duration<double, std::milli>(Clock::now() - t).count();
-}
+struct BenchmarkResult {
+    std::string name;
+    double avgMs = 0.0;
+    double minMs = 0.0;
+    double maxMs = 0.0;
+    bool allPassed = true;
+};
 
-static void print_result_row(const std::string& name, double t, double t_std, size_t N, bool ok) {
-    double mk = N / t / 1000.0;
-    double vs = t_std / t;
-    std::cout << std::left << std::setw(34) << name
-              << std::setw(14) << std::fixed << std::setprecision(2) << t
-              << std::setw(16) << (std::to_string((int)mk) + " MKeys/s")
-              << std::setw(16) << (std::to_string(vs).substr(0, 4) + "x")
-              << (ok ? "PASS" : "FAIL") << "\n";
+static BenchmarkResult run_multi_trial(const std::string& name, size_t N, int numTrials,
+                                       const std::vector<uint32_t>& referenceData,
+                                       std::function<void(std::vector<uint32_t>&)> sortFn) {
+    BenchmarkResult res;
+    res.name = name;
+    std::vector<double> times;
+
+    for (int t = 0; t < numTrials; ++t) {
+        auto d = referenceData; // fresh copy per trial
+        auto start = Clock::now();
+        sortFn(d);
+        auto end = Clock::now();
+
+        double elapsed = std::chrono::duration<double, std::milli>(end - start).count();
+        times.push_back(elapsed);
+
+        // Verification against std::sort
+        static std::vector<uint32_t> expected;
+        if (t == 0) {
+            expected = referenceData;
+            std::sort(expected.begin(), expected.end());
+        }
+        if (d != expected) {
+            res.allPassed = false;
+        }
+    }
+
+    res.minMs = *std::min_element(times.begin(), times.end());
+    res.maxMs = *std::max_element(times.begin(), times.end());
+    double sum = std::accumulate(times.begin(), times.end(), 0.0);
+    res.avgMs = sum / times.size();
+
+    return res;
 }
 
 int main() {
-    const size_t N = 3000000; // 3 Million keys
+    const size_t N = 3000000;  // 3 Million keys
+    const int TRIALS = 5;       // 5 iterations for statistical accuracy
 
     std::cout << "=================================================================\n";
-    std::cout << "  7-WAY BENCHMARK: qi::sort vs All Plain Radix Variations & Sorts\n";
+    std::cout << "  QI-SORT MULTI-TRIAL BENCHMARK (STATISTICAL AVERAGING OVER " << TRIALS << " RUNS)\n";
     std::cout << "  N = " << N << " 32-bit unsigned integers\n";
     std::cout << "=================================================================\n\n";
 
+    // Run one initial sensing display call to show parameters
     std::mt19937_64 rng(42);
-    std::vector<uint32_t> data(N);
+    std::vector<uint32_t> initData(N);
     std::uniform_int_distribution<uint32_t> dist(0, UINT32_MAX);
-    for (auto& x : data) x = dist(rng);
-
-    // 1. std::sort (Introsort)
-    auto d_std = data;
-    double t_std = run_timing([&]() { std::sort(d_std.begin(), d_std.end()); });
-
-    // 2. std::stable_sort (Timsort / MergeSort)
-    auto d_tim = data;
-    double t_tim = run_timing([&]() { std::stable_sort(d_tim.begin(), d_tim.end()); });
-
-    // 3. Classic QuickSort (Hoare Partitioning)
-    auto d_qsort = data;
-    double t_qsort = run_timing([&]() { classic_quicksort(d_qsort.data(), 0, (int)N - 1); });
-
-    // 4. Plain Radix-8 (Fixed 4-Pass)
-    auto d_pradix8 = data;
-    double t_pradix8 = run_timing([&]() { qi::plain_radix8(d_pradix8.data(), N); });
-
-    // 5. Plain Radix-11 (Fixed 3-Pass)
-    auto d_pradix11 = data;
-    double t_pradix11 = run_timing([&]() { qi::plain_radix11(d_pradix11.data(), N); });
-
-    // 6. Plain Radix-16 (Fixed 2-Pass)
-    auto d_pradix16 = data;
-    double t_pradix16 = run_timing([&]() { qi::plain_radix16(d_pradix16.data(), N); });
-
-    // 7. Quantum-Inspired qi::sort (Adaptive Engine)
-    auto d_qi = data;
+    for (auto& x : initData) x = dist(rng);
+    
     qi::SortOptions opts;
     opts.verbose = true;
-    double t_qi = run_timing([&]() { qi::sort(d_qi, opts); });
+    auto sensingCopy = initData;
+    qi::sort(sensingCopy, opts);
+    std::cout << "\nRunning " << TRIALS << " trials per algorithm...\n\n";
 
-    // Correctness Checks
-    bool ok_tim     = (d_tim == d_std);
-    bool ok_qsort   = (d_qsort == d_std);
-    bool ok_pradix8 = (d_pradix8 == d_std);
-    bool ok_pradix11= (d_pradix11 == d_std);
-    bool ok_pradix16= (d_pradix16 == d_std);
-    bool ok_qi      = (d_qi == d_std);
+    // 1. std::sort (Introsort)
+    auto r_std = run_multi_trial("std::sort (Introsort)", N, TRIALS, initData, [](std::vector<uint32_t>& d) {
+        std::sort(d.begin(), d.end());
+    });
 
-    std::cout << "\n-----------------------------------------------------------------\n";
-    std::cout << std::left << std::setw(34) << "Algorithm"
-              << std::setw(14) << "Time (ms)"
-              << std::setw(16) << "Throughput"
-              << std::setw(16) << "vs std::sort"
+    // 2. std::stable_sort (Timsort)
+    auto r_tim = run_multi_trial("std::stable_sort (Timsort)", N, TRIALS, initData, [](std::vector<uint32_t>& d) {
+        std::stable_sort(d.begin(), d.end());
+    });
+
+    // 3. Classic QuickSort
+    auto r_qsort = run_multi_trial("Classic QuickSort (Hoare)", N, TRIALS, initData, [](std::vector<uint32_t>& d) {
+        classic_quicksort(d.data(), 0, (int)d.size() - 1);
+    });
+
+    // 4. Plain Radix-8
+    auto r_pradix8 = run_multi_trial("Plain Radix-8 (Fixed 4-Pass)", N, TRIALS, initData, [](std::vector<uint32_t>& d) {
+        qi::plain_radix8(d.data(), d.size());
+    });
+
+    // 5. Plain Radix-11
+    auto r_pradix11 = run_multi_trial("Plain Radix-11 (Fixed 3-Pass)", N, TRIALS, initData, [](std::vector<uint32_t>& d) {
+        qi::plain_radix11(d.data(), d.size());
+    });
+
+    // 6. Plain Radix-16
+    auto r_pradix16 = run_multi_trial("Plain Radix-16 (Fixed 2-Pass)", N, TRIALS, initData, [](std::vector<uint32_t>& d) {
+        qi::plain_radix16(d.data(), d.size());
+    });
+
+    // 7. qi::sort Adaptive Engine
+    qi::SortOptions silentOpts;
+    silentOpts.verbose = false;
+    auto r_qi = run_multi_trial("qi::sort (Adaptive Engine)", N, TRIALS, initData, [silentOpts](std::vector<uint32_t>& d) {
+        qi::sort(d, silentOpts);
+    });
+
+    std::vector<BenchmarkResult> results = { r_std, r_tim, r_qsort, r_pradix8, r_pradix11, r_pradix16, r_qi };
+
+    std::cout << "----------------------------------------------------------------------------------------\n";
+    std::cout << std::left << std::setw(32) << "Algorithm"
+              << std::setw(14) << "Avg (ms)"
+              << std::setw(12) << "Min (ms)"
+              << std::setw(12) << "Max (ms)"
+              << std::setw(14) << "Avg Speed"
               << "Status\n";
-    std::cout << "-----------------------------------------------------------------\n";
+    std::cout << "----------------------------------------------------------------------------------------\n";
 
-    print_result_row("std::sort (Introsort)",         t_std,      t_std, N, true);
-    print_result_row("std::stable_sort (Timsort)",    t_tim,      t_std, N, ok_tim);
-    print_result_row("Classic QuickSort (Hoare)",     t_qsort,    t_std, N, ok_qsort);
-    print_result_row("Plain Radix-8  (Fixed 4-Pass)", t_pradix8,  t_std, N, ok_pradix8);
-    print_result_row("Plain Radix-11 (Fixed 3-Pass)", t_pradix11, t_std, N, ok_pradix11);
-    print_result_row("Plain Radix-16 (Fixed 2-Pass)", t_pradix16, t_std, N, ok_pradix16);
-    print_result_row("qi::sort (Adaptive Engine)",    t_qi,       t_std, N, ok_qi);
+    for (const auto& r : results) {
+        double mk = N / r.avgMs / 1000.0;
+        double vs = r_std.avgMs / r.avgMs;
+        std::cout << std::left << std::setw(32) << r.name
+                  << std::setw(14) << std::fixed << std::setprecision(2) << r.avgMs
+                  << std::setw(12) << std::fixed << std::setprecision(2) << r.minMs
+                  << std::setw(12) << std::fixed << std::setprecision(2) << r.maxMs
+                  << std::setw(14) << (std::to_string(vs).substr(0, 4) + "x")
+                  << (r.allPassed ? "PASS" : "FAIL") << "\n";
+    }
 
-    std::cout << "-----------------------------------------------------------------\n";
-    std::cout << "qi::sort Speedup vs std::sort      : " << std::setprecision(2) << (t_std / t_qi) << "x FASTER\n";
-    std::cout << "qi::sort Speedup vs Timsort       : " << std::setprecision(2) << (t_tim / t_qi) << "x FASTER\n";
-    std::cout << "qi::sort Speedup vs QuickSort     : " << std::setprecision(2) << (t_qsort / t_qi) << "x FASTER\n";
-    std::cout << "qi::sort Speedup vs Plain Radix-8 : " << std::setprecision(2) << (t_pradix8 / t_qi) << "x FASTER\n";
-    std::cout << "qi::sort Speedup vs Plain Radix-11: " << std::setprecision(2) << (t_pradix11 / t_qi) << "x FASTER\n";
-    std::cout << "qi::sort Speedup vs Plain Radix-16: " << std::setprecision(2) << (t_pradix16 / t_qi) << "x FASTER\n";
-    std::cout << "=================================================================\n\n";
+    std::cout << "----------------------------------------------------------------------------------------\n";
+    std::cout << "qi::sort Average Speedup vs std::sort      : " << std::setprecision(2) << (r_std.avgMs / r_qi.avgMs) << "x FASTER\n";
+    std::cout << "qi::sort Average Speedup vs Timsort       : " << std::setprecision(2) << (r_tim.avgMs / r_qi.avgMs) << "x FASTER\n";
+    std::cout << "qi::sort Average Speedup vs QuickSort     : " << std::setprecision(2) << (r_qsort.avgMs / r_qi.avgMs) << "x FASTER\n";
+    std::cout << "qi::sort Average Speedup vs Plain Radix-8 : " << std::setprecision(2) << (r_pradix8.avgMs / r_qi.avgMs) << "x FASTER\n";
+    std::cout << "qi::sort Average Speedup vs Plain Radix-11: " << std::setprecision(2) << (r_pradix11.avgMs / r_qi.avgMs) << "x FASTER\n";
+    std::cout << "qi::sort Average Speedup vs Plain Radix-16: " << std::setprecision(2) << (r_pradix16.avgMs / r_qi.avgMs) << "x FASTER\n";
+    std::cout << "========================================================================================\n\n";
 
     return 0;
 }
