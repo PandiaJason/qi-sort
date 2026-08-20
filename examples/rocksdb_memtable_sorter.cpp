@@ -5,7 +5,7 @@ ROCKSDB / LEVELDB MEMTABLE FLUSH INTEGRATION WITH QI::SORT
 Simulates a high-throughput RocksDB LSM-Tree Write Engine:
   1. Incoming Key-Value Writes added to in-memory MemTable
   2. MemTable Flush: Sort keys before writing contiguous SSTable file to disk
-  3. Benchmark: qi::sort vs std::sort in MemTable SSTable flushing
+  3. Benchmark: RocksDB Baseline vs Plain Radix-8/11/16 vs qi::sort
 ===============================================================================
 */
 
@@ -49,12 +49,42 @@ int main() {
     auto end_std = std::chrono::high_resolution_clock::now();
     double ms_std = std::chrono::duration<double, std::milli>(end_std - start_std).count();
 
-    // 2. qi::sort Adaptive Engine
+    // 2. Plain Radix-8
+    auto keys_r8 = memtable_keys;
+    auto start_r8 = std::chrono::high_resolution_clock::now();
+    qi::detail::radixSort8(keys_r8.data(), keys_r8.size(), false);
+    auto end_r8 = std::chrono::high_resolution_clock::now();
+    double ms_r8 = std::chrono::duration<double, std::milli>(end_r8 - start_r8).count();
+
+    // 3. Plain Radix-11
+    auto keys_r11 = memtable_keys;
+    auto start_r11 = std::chrono::high_resolution_clock::now();
+    qi::detail::radixSort11(keys_r11.data(), keys_r11.size(), false);
+    auto end_r11 = std::chrono::high_resolution_clock::now();
+    double ms_r11 = std::chrono::duration<double, std::milli>(end_r11 - start_r11).count();
+
+    // 4. Plain Radix-16
+    auto keys_r16 = memtable_keys;
+    auto start_r16 = std::chrono::high_resolution_clock::now();
+    qi::detail::radixSort16(keys_r16.data(), keys_r16.size(), false);
+    auto end_r16 = std::chrono::high_resolution_clock::now();
+    double ms_r16 = std::chrono::duration<double, std::milli>(end_r16 - start_r16).count();
+
+    // 5. qi::sort Adaptive Engine
     auto keys_qi = memtable_keys;
     auto start_qi = std::chrono::high_resolution_clock::now();
     qi::sort(keys_qi);
     auto end_qi = std::chrono::high_resolution_clock::now();
     double ms_qi = std::chrono::duration<double, std::milli>(end_qi - start_qi).count();
+
+    auto row = [&](const std::string& name, double ms) {
+        double mk = MEMTABLE_SIZE / ms / 1000.0;
+        double vs = ms_std / ms;
+        std::cout << std::left << std::setw(35) << name
+                  << std::setw(15) << std::fixed << std::setprecision(2) << ms
+                  << std::setw(18) << (std::to_string((int)mk) + " MKeys/s")
+                  << (std::to_string(vs).substr(0, 4) + "x\n");
+    };
 
     std::cout << "-------------------------------------------------------------------------\n";
     std::cout << std::left << std::setw(35) << "RocksDB Flush Engine"
@@ -63,18 +93,11 @@ int main() {
               << "Speedup\n";
     std::cout << "-------------------------------------------------------------------------\n";
 
-    double mk_std = MEMTABLE_SIZE / ms_std / 1000.0;
-    double mk_qi  = MEMTABLE_SIZE / ms_qi / 1000.0;
-
-    std::cout << std::left << std::setw(35) << "RocksDB Baseline (std::sort)"
-              << std::setw(15) << std::fixed << std::setprecision(2) << ms_std
-              << std::setw(18) << (std::to_string((int)mk_std) + " MKeys/s")
-              << "1.00x\n";
-
-    std::cout << std::left << std::setw(35) << "RocksDB + qi::sort Engine"
-              << std::setw(15) << std::fixed << std::setprecision(2) << ms_qi
-              << std::setw(18) << (std::to_string((int)mk_qi) + " MKeys/s")
-              << std::setprecision(2) << (ms_std / ms_qi) << "x FASTER\n";
+    row("RocksDB Baseline (std::sort)", ms_std);
+    row("Plain Radix-8  (Fixed 4-Pass)", ms_r8);
+    row("Plain Radix-11 (Fixed 3-Pass)", ms_r11);
+    row("Plain Radix-16 (Fixed 2-Pass)", ms_r16);
+    row("RocksDB + qi::sort Engine",     ms_qi);
 
     std::cout << "-------------------------------------------------------------------------\n";
     std::cout << "SUCCESS: qi::sort accelerates RocksDB MemTable flushes by "

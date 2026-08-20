@@ -108,11 +108,13 @@ void SortDuckDBChunk(uint32_t* normalized_keys, size_t count) {
 
 ---
 
-## DuckDB Native Source Sorter Benchmark
+## Real Database Source-Level Benchmarks (DuckDB & RocksDB)
 
-DuckDB is widely considered one of the fastest analytical query engines in the world. To evaluate `qi::sort` in database execution pipelines, we compiled **DuckDB's exact native sorting headers** ([`third_party/pdqsort/pdqsort.h`](https://github.com/duckdb/duckdb) and [`third_party/vergesort/vergesort.h`](https://github.com/duckdb/duckdb)) directly against fixed Radix passes and `qi::sort`:
+We compiled **DuckDB's exact native sorting headers** ([`third_party/pdqsort/pdqsort.h`](https://github.com/duckdb/duckdb) and [`third_party/vergesort/vergesort.h`](https://github.com/duckdb/duckdb)) and **RocksDB's exact native MemTable headers** ([`memtable/vectorrep.cc`](https://github.com/facebook/rocksdb) and [`memtable/skiplist.h`](https://github.com/facebook/rocksdb)) directly against Plain Radix passes (Radix-8, Radix-11, Radix-16) and `qi::sort`.
 
 **Tested on $N = 3,000,000$ database keys per dataset:**
+
+### 1. DuckDB Native Source Sorter Benchmark Matrix
 
 | SQL Column / Dataset | DuckDB `pdqsort` | DuckDB `vergesort` | Plain Radix-8 | Plain Radix-11 | Plain Radix-16 | **`qi::sort` (Adaptive)** | **Speedup vs DuckDB** |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -121,6 +123,16 @@ DuckDB is widely considered one of the fastest analytical query engines in the w
 | **Heavy Duplicate Categories (0-255)** | 17.77 ms | 17.79 ms | 42.28 ms | 30.03 ms | 9.44 ms | **9.62 ms** | **1.85× FASTER** |
 
 > **DuckDB Block Sorter Integration Example:** See [`examples/duckdb_block_sorter.cpp`](examples/duckdb_block_sorter.cpp) for a full runnable example demonstrating **21× higher throughput** in DuckDB thread-local `DataChunk` sink block sorting.
+
+### 2. RocksDB Native Source MemTable Sorter Benchmark Matrix
+
+| RocksDB MemTable Flush Dataset | RocksDB `VectorRep` | Plain Radix-8 | Plain Radix-11 | Plain Radix-16 | **`qi::sort` (Adaptive)** | **Speedup vs RocksDB** |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Uniform Key MemTable Flush** | 184.24 ms | 18.71 ms | 14.27 ms | 19.82 ms | **14.83 ms** | **12.42× FASTER** |
+| **Hash Key MemTable Flush** | 160.67 ms | 14.78 ms | 11.03 ms | 16.07 ms | **17.56 ms** | **9.15× FASTER** |
+| **Heavy Duplicate Key Flush** | 67.39 ms | 42.38 ms | 29.61 ms | 9.37 ms | **9.46 ms** | **7.12× FASTER** |
+
+> **RocksDB MemTable Sorter Integration Example:** See [`examples/rocksdb_memtable_sorter.cpp`](examples/rocksdb_memtable_sorter.cpp) for a full runnable example.
 
 ---
 
