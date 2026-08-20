@@ -161,7 +161,7 @@ static inline State analyzeData(const u32* data, size_t n, size_t targetSampleSi
 
     double orderFactor = std::max(0.0, (state.orderedness - 0.50) * 2.0);
     double r16BucketDispersion = (state.bytes[0].effectiveStates * state.bytes[1].effectiveStates) / 65536.0;
-    double r16CachePenalty = (r16BucketDispersion > 0.20) ? (r16BucketDispersion * state.averageEntropy * (1.0 - orderFactor) * 0.45) : 0.0;
+    double r16CachePenalty = (r16BucketDispersion > 0.20) ? (r16BucketDispersion * state.averageEntropy * (1.0 - orderFactor) * 1.15) : 0.0;
     double r16Passes = (state.bitOrSum <= 0xFFFFu) ? 1.0 : 2.0;
     double costR16 = n * (r16Passes + r16CachePenalty);
     double costR11 = n * 3.0;

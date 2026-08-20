@@ -200,7 +200,7 @@ static inline State analyzeData(const u32* data, size_t n, size_t targetSampleSi
     // R16 count array = 65,536 entries = 512 KB (exceeds L1/L2 cache).
     // L1/L2 cache misses occur when bucket dispersion (N_eff) is high AND data lacks spatial ordering.
     double r16BucketDispersion = (state.bytes[0].effectiveStates * state.bytes[1].effectiveStates) / 65536.0;
-    double r16CachePenalty = (r16BucketDispersion > 0.20) ? (r16BucketDispersion * state.averageEntropy * (1.0 - orderFactor) * 0.45) : 0.0;
+    double r16CachePenalty = (r16BucketDispersion > 0.20) ? (r16BucketDispersion * state.averageEntropy * (1.0 - orderFactor) * 1.15) : 0.0;
     double r16Passes = (state.bitOrSum <= 0xFFFFu) ? 1.0 : 2.0;
     double costR16 = n * (r16Passes + r16CachePenalty);
 
