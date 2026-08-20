@@ -41,3 +41,7 @@ libqisort.so
 *.o
 *.bin
 100mb_data.bin
+ablation_test
+db_bench
+head2head
+real_bench
