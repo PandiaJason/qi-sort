@@ -20,3 +20,24 @@ qsort-db
 .vscode/
 .idea/
 build/
+# Compiled binaries
+global_bench
+parallel_bench
+quick_bench
+real_qsort_bench
+verify
+cost_compare
+ex_basic
+ex_analyze
+ex_db
+ex_spatial
+real_bench
+db_benchmark
+algo_test
+radix_test
+qsort-db
+libqisort.dylib
+libqisort.so
+*.o
+*.bin
+100mb_data.bin
