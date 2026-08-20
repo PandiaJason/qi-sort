@@ -8,6 +8,8 @@ cost_compare
 database_column_sort
 db_bench
 db_benchmark
+duckdb_block_sorter
+duckdb_real_benchmark
 ex_analyze
 ex_basic
 ex_db
