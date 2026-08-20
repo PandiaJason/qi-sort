@@ -20,6 +20,7 @@ head2head
 hft_orderbook_sorter
 online_test
 parallel_bench
+postgres_real_benchmark
 qi_radix
 qi_radix_final
 qsort-db

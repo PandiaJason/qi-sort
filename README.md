@@ -108,9 +108,9 @@ void SortDuckDBChunk(uint32_t* normalized_keys, size_t count) {
 
 ---
 
-## Real Database Source-Level Benchmarks (DuckDB, RocksDB, SQLite & Redis)
+## Real Database Source-Level Benchmarks (DuckDB, RocksDB, SQLite, Redis & PostgreSQL)
 
-We compiled **DuckDB's exact native sorting headers** ([`third_party/pdqsort/pdqsort.h`](https://github.com/duckdb/duckdb)), **RocksDB's exact native MemTable headers** ([`memtable/vectorrep.cc`](https://github.com/facebook/rocksdb)), **SQLite's exact VDBE sorter engine** ([`src/vdbesort.c`](https://github.com/sqlite/sqlite)), and **Redis's exact native sorting engine** ([`src/pqsort.c`](https://github.com/redis/redis)) directly against Plain Radix passes (Radix-8, Radix-11, Radix-16) and `qi::sort`.
+We compiled **DuckDB's exact native sorting headers** ([`third_party/pdqsort/pdqsort.h`](https://github.com/duckdb/duckdb)), **RocksDB's exact native MemTable headers** ([`memtable/vectorrep.cc`](https://github.com/facebook/rocksdb)), **SQLite's exact VDBE sorter engine** ([`src/vdbesort.c`](https://github.com/sqlite/sqlite)), **Redis's exact native sorting engine** ([`src/pqsort.c`](https://github.com/redis/redis)), and **PostgreSQL's exact native sorting engine** ([`src/port/qsort.c`](https://github.com/postgres/postgres)) directly against Plain Radix passes (Radix-8, Radix-11, Radix-16) and `qi::sort`.
 
 ### 1. DuckDB Native Source Sorter Benchmark Matrix ($N = 3,000,000$)
 
@@ -144,7 +144,15 @@ We compiled **DuckDB's exact native sorting headers** ([`third_party/pdqsort/pdq
 | **Hash Key Sort** | 294.56 ms | 14.80 ms | 11.24 ms | 15.49 ms | **17.52 ms** | **16.81× FASTER** |
 | **Heavy Duplicate Key Sort** | 105.45 ms | 42.58 ms | 29.78 ms | 9.64 ms | **9.59 ms** | **10.99× FASTER** |
 
-> **Runnable Integration Benchmarks:** Run `./duckdb_real_benchmark`, `./rocksdb_real_benchmark`, `./sqlite_real_benchmark`, or `./redis_real_benchmark` locally to reproduce real source-level numbers.
+### 5. PostgreSQL Native Source Sorter Benchmark Matrix ($N = 3,000,000$)
+
+| PostgreSQL Sorter Dataset | PostgreSQL `pg_qsort` | Plain Radix-8 | Plain Radix-11 | Plain Radix-16 | **`qi::sort` (Adaptive)** | **Speedup vs PostgreSQL** |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Uniform Key Sort** | 302.53 ms | 17.95 ms | 13.90 ms | 17.38 ms | **14.44 ms** | **20.96× FASTER** |
+| **Hash Key Sort** | 291.41 ms | 14.87 ms | 11.00 ms | 15.64 ms | **16.73 ms** | **17.41× FASTER** |
+| **Heavy Duplicate Key Sort** | 99.70 ms | 42.27 ms | 30.05 ms | 9.36 ms | **9.86 ms** | **10.11× FASTER** |
+
+> **Runnable Integration Benchmarks:** Run `./duckdb_real_benchmark`, `./rocksdb_real_benchmark`, `./sqlite_real_benchmark`, `./redis_real_benchmark`, or `./postgres_real_benchmark` locally to reproduce real source-level numbers.
 
 ---
 
