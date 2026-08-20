@@ -512,6 +512,33 @@ qi::State qi::analyze(const uint32_t* data, size_t n, size_t sampleSize = 8192);
 | `analysisTimeMs` | `double` | Time spent in sensing phase (ms) |
 | `recommendedRadix` | `qi::Radix` | `R8`, `R11`, or `R16` |
 
+### Extended Production C++ API
+
+```cpp
+// 1. Signed Integers (int32_t, int64_t with negative values)
+void qi::sort(int32_t* data, size_t n);
+void qi::sort(std::vector<int32_t>& data);
+
+// 2. IEEE 754 Floats & Doubles (float, double with negative values)
+void qi::sort(float* data, size_t n);
+void qi::sort(std::vector<float>& data);
+
+// 3. Database Key-Payload (Tuple) Sorting (Co-sort row_id alongside keys)
+template <typename Key, typename Payload>
+void qi::sort_pairs(Key* keys, Payload* payloads, size_t n);
+
+template <typename Key, typename Payload>
+void qi::sort_pairs(std::vector<Key>& keys, std::vector<Payload>& payloads);
+
+// 4. String Prefix Radix Sorting (Text / VARCHAR Columns)
+void qi::sort_strings(std::string* strings, size_t n);
+void qi::sort_strings(std::vector<std::string>& strings);
+
+// 5. Multi-Threaded Parallel Execution Engine
+void qi::parallel_sort(uint32_t* data, size_t n, unsigned int numThreads = 0);
+void qi::parallel_sort(std::vector<uint32_t>& data, unsigned int numThreads = 0);
+```
+
 ### `qi::SortOptions`
 
 | Field | Default | Description |

@@ -36,6 +36,7 @@ rocksdb_memtable_sorter
 rocksdb_real_benchmark
 spatial_morton_sort
 sqlite_real_benchmark
+test_all_new_features
 ultimate_production_benchmark
 verify
 verify_vqsort_head2head

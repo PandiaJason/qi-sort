@@ -7,7 +7,8 @@ QI-RADIX: Quantum-Inspired Adaptive Radix Sorting Library (Header-Only)
 ===============================================================================
 
 A modular, production-ready C++17 header-only library for ultra-fast adaptive
-32-bit integer sorting using probability-amplitude distribution sensing.
+sorting of uint32_t, int32_t, uint64_t, int64_t, float, double, Key-Payload pairs,
+and text strings using probability-amplitude distribution sensing.
 
 Usage:
     #include "qi_radix.hpp"
@@ -15,8 +16,10 @@ Usage:
     std::vector<uint32_t> data = {5, 2, 9, 1, 5, 6};
     qi::sort(data);
 
-    // Or with iterators:
-    qi::sort(data.begin(), data.end());
+    // Key-Payload Tuple Sorting (Database ORDER BY):
+    std::vector<uint32_t> keys = {40, 10, 30};
+    std::vector<uint64_t> row_ids = {101, 102, 103};
+    qi::sort_pairs(keys.data(), row_ids.data(), keys.size());
 
 ===============================================================================
 */
@@ -34,6 +37,7 @@ Usage:
 #include <memory>
 #include <numeric>
 #include <random>
+#include <string>
 #include <thread>
 #include <type_traits>
 #include <vector>
@@ -41,7 +45,9 @@ Usage:
 namespace qi {
 
 using u32 = uint32_t;
+using i32 = int32_t;
 using u64 = uint64_t;
+using i64 = int64_t;
 
 // ============================================================================
 // ENUMS & CONFIGURATION
@@ -92,413 +98,387 @@ struct State {
 };
 
 // ============================================================================
+// KEY ENCODING & DECODING (RADIX BIT TRANSFORMATIONS)
+// ============================================================================
+
+namespace key_traits {
+
+// Unsigned 32-bit int
+static inline u32 encode(u32 v) { return v; }
+static inline u32 decode(u32 v) { return v; }
+
+// Signed 32-bit int
+static inline u32 encode(i32 v) { return static_cast<u32>(v) ^ 0x80000000u; }
+static inline i32 decode_i32(u32 v) { return static_cast<i32>(v ^ 0x80000000u); }
+
+// IEEE 754 Float (32-bit)
+static inline u32 encode(float f) {
+    u32 bits;
+    std::memcpy(&bits, &f, sizeof(float));
+    return (bits & 0x80000000u) ? ~bits : (bits ^ 0x80000000u);
+}
+static inline float decode_float(u32 bits) {
+    u32 raw = (bits & 0x80000000u) ? (bits ^ 0x80000000u) : ~bits;
+    float f;
+    std::memcpy(&f, &raw, sizeof(float));
+    return f;
+}
+
+// Unsigned 64-bit int
+static inline u64 encode(u64 v) { return v; }
+
+// Signed 64-bit int
+static inline u64 encode(i64 v) { return static_cast<u64>(v) ^ 0x8000000000000000ULL; }
+
+// IEEE 754 Double (64-bit)
+static inline u64 encode(double d) {
+    u64 bits;
+    std::memcpy(&bits, &d, sizeof(double));
+    return (bits & 0x8000000000000000ULL) ? ~bits : (bits ^ 0x8000000000000000ULL);
+}
+
+} // namespace key_traits
+
+// ============================================================================
 // INTERNAL DETAIL IMPLEMENTATION
 // ============================================================================
 
 namespace detail {
 
 static inline uint8_t getByte(u32 value, int byte) {
-    return static_cast<uint8_t>((value >> (byte * 8)) & 0xFFu);
+    return static_cast<uint8_t>((value >> (byte * 8)) & 0xFF);
 }
 
-static inline double calculateEntropy(const std::array<u64, 256>& counts, size_t n) {
-    if (n == 0) return 0.0;
-    double h = 0.0;
-    for (u64 c : counts) {
-        if (c == 0) continue;
-        double p = static_cast<double>(c) / static_cast<double>(n);
-        h -= p * std::log2(p);
-    }
-    return h / 8.0;
-}
-
-
-static inline State analyzeData(const u32* data, size_t n, size_t targetSampleSize = 8192) {
-    auto start = std::chrono::steady_clock::now();
+inline State analyzeData(const u32* data, size_t n, size_t sampleSize = 8192) {
     State state;
-    size_t sampleSize = std::min<size_t>(targetSampleSize, n);
-    state.sampleSize = sampleSize;
+    if (n == 0) return state;
 
-    std::array<std::array<u64, 256>, 4> counts{};
-    u32 bitOr = 0;
-    u32 bitAnd = ~0u;
-    size_t orderedCount = 0;
+    size_t actualSamples = std::min(n, sampleSize);
+    state.sampleSize = actualSamples;
 
-    size_t step = std::max<size_t>(1, n / sampleSize);
-    u32 prevVal = 0;
+    auto start = std::chrono::high_resolution_clock::now();
 
-    std::vector<u32> sampleBuf(sampleSize);
+    std::array<std::array<size_t, 256>, 4> byteCounts{};
+    size_t step = std::max<size_t>(1, n / actualSamples);
 
-    for (size_t i = 0; i < sampleSize; ++i) {
-        size_t idx = (i * step);
-        if (idx >= n) idx = n - 1;
-        u32 val = data[idx];
-        sampleBuf[i] = val;
+    size_t orderedPairs = 0;
+    size_t totalPairs = 0;
+    u32 prevVal = data[0];
 
-        bitOr |= val;
-        bitAnd &= val;
+    for (size_t i = 0; i < n && totalPairs < actualSamples; i += step) {
+        u32 val = data[i];
+        state.bitOrSum |= val;
+        state.bitAndSum &= val;
 
-        if (i > 0 && prevVal <= val) orderedCount++;
+        byteCounts[0][(val) & 0xFF]++;
+        byteCounts[1][(val >> 8) & 0xFF]++;
+        byteCounts[2][(val >> 16) & 0xFF]++;
+        byteCounts[3][(val >> 24) & 0xFF]++;
+
+        if (i > 0) {
+            if (val >= prevVal) orderedPairs++;
+            totalPairs++;
+        }
         prevVal = val;
-
-        counts[0][val & 0xFFu]++;
-        counts[1][(val >> 8) & 0xFFu]++;
-        counts[2][(val >> 16) & 0xFFu]++;
-        counts[3][(val >> 24) & 0xFFu]++;
     }
 
-    state.bitOrSum = bitOr;
-    state.bitAndSum = bitAnd;
-    state.orderedness = (sampleSize > 1) ? static_cast<double>(orderedCount) / (sampleSize - 1) : 1.0;
+    state.orderedness = (totalPairs > 0) ? static_cast<double>(orderedPairs) / totalPairs : 1.0;
     state.disorder = 1.0 - state.orderedness;
 
-    std::sort(sampleBuf.begin(), sampleBuf.end());
-    size_t uniqueCount = 0;
-    for (size_t i = 0; i < sampleSize; ++i) {
-        if (i == 0 || sampleBuf[i] != sampleBuf[i - 1]) uniqueCount++;
-    }
-    state.duplicateRatio = 1.0 - static_cast<double>(uniqueCount) / sampleSize;
-
-    double entropySum = 0.0;
-    double concentrationSum = 0.0;
-    double effectiveSum = 0.0;
+    double totalEntropy = 0.0;
+    double totalIPR = 0.0;
 
     for (int b = 0; b < 4; ++b) {
         ByteState& bs = state.bytes[b];
-        bs.entropy = calculateEntropy(counts[b], sampleSize);
-
-        double conc = 0.0;
+        double entropy = 0.0;
+        double ipr = 0.0;
         int occ = 0;
+
         for (int i = 0; i < 256; ++i) {
-            if (counts[b][i] == 0) continue;
-            occ++;
-            double p = static_cast<double>(counts[b][i]) / sampleSize;
-            bs.probability[i] = p;
-            bs.amplitude[i] = std::sqrt(p);
-            conc += p * p;
+            size_t c = byteCounts[b][i];
+            if (c > 0) {
+                occ++;
+                double p = static_cast<double>(c) / actualSamples;
+                bs.probability[i] = p;
+                bs.amplitude[i] = std::sqrt(p);
+                entropy -= p * (std::log2(p) / 8.0);
+                ipr += p * p;
+            }
         }
-        bs.amplitudeConcentration = conc;
-        bs.effectiveStates = (conc > 0.0) ? (1.0 / conc) : 0.0;
+        bs.entropy = std::max(0.0, std::min(1.0, entropy));
+        bs.amplitudeConcentration = ipr;
+        bs.effectiveStates = (ipr > 0.0) ? (1.0 / ipr) : 256.0;
         bs.occupied = occ;
 
-        entropySum += bs.entropy;
-        concentrationSum += conc;
-        effectiveSum += bs.effectiveStates;
+        totalEntropy += bs.entropy;
+        totalIPR += ipr;
     }
 
-    state.averageEntropy = entropySum / 4.0;
-    state.amplitudeConcentration = concentrationSum / 4.0;
-    state.effectiveStates = effectiveSum / 4.0;
+    state.averageEntropy = totalEntropy / 4.0;
+    state.amplitudeConcentration = totalIPR / 4.0;
+    state.effectiveStates = (state.amplitudeConcentration > 0.0) ? (1.0 / state.amplitudeConcentration) : 256.0;
+
+    size_t lsbOccupied = state.bytes[0].occupied;
+    state.duplicateRatio = (lsbOccupied > 0) ? (1.0 - static_cast<double>(lsbOccupied) / 256.0) : 1.0;
+
     state.lowByteComplexity = (state.bytes[0].entropy + state.bytes[1].entropy) / 2.0;
     state.highByteComplexity = (state.bytes[2].entropy + state.bytes[3].entropy) / 2.0;
 
-    // QI Cache-Thrashing & Pass-Count Cost Model Selection
-    // Baseline orderedness for uniform random data is 0.50 (coin-flip increasing pairs).
-    // True spatial order factor above random chance: 0.50 -> 0.0, 1.0 -> 1.0.
-    double orderFactor = std::max(0.0, (state.orderedness - 0.50) * 2.0);
-
-    // R16 count array = 65,536 entries = 512 KB (exceeds L1/L2 cache).
-    // L1/L2 cache misses occur when bucket dispersion (N_eff) is high AND data lacks spatial ordering.
-    double r16BucketDispersion = (state.bytes[0].effectiveStates * state.bytes[1].effectiveStates) / 65536.0;
-    double r16CachePenalty = (r16BucketDispersion > 0.20) ? (r16BucketDispersion * state.averageEntropy * (1.0 - orderFactor) * 1.15) : 0.0;
-    double r16Passes = (state.bitOrSum <= 0xFFFFu) ? 1.0 : 2.0;
-    double costR16 = n * (r16Passes + r16CachePenalty);
-
-    // R11 uses 3 passes. Bucket array = 2,048 entries = 16 KB (fits in 32 KB L1 Data Cache).
-    // Zero cache penalty, but incurs 3 memory passes over N items.
-    double costR11 = n * 3.0;
-
-    // R8 uses 4 passes. Bucket array = 256 entries = 2 KB (fits in L1 Data Cache).
-    double costR8  = n * 4.0;
-
-    if (state.orderedness > 0.98) { costR16 *= 0.05; costR11 *= 0.05; costR8 *= 0.05; }
-
-    if (state.duplicateRatio > 0.90) {
+    if (state.effectiveStates <= 16.0 || state.duplicateRatio >= 0.70) {
         state.recommendedRadix = Radix::R16;
-    } else if (costR11 < costR16 && costR11 < costR8) {
+    } else if (state.highByteComplexity > 0.60 || state.effectiveStates >= 64.0) {
         state.recommendedRadix = Radix::R11;
-    } else if (costR8 < costR16 && costR8 < costR11) {
-        state.recommendedRadix = Radix::R8;
     } else {
         state.recommendedRadix = Radix::R16;
     }
 
-    auto end = std::chrono::steady_clock::now();
+    auto end = std::chrono::high_resolution_clock::now();
     state.analysisTimeMs = std::chrono::duration<double, std::milli>(end - start).count();
 
     return state;
 }
 
-// Ultra-fast Radix-16 implementation
-static inline void radixSort16(u32* data, size_t n, bool allowShortcuts) {
-    if (n <= 1) return;
-
-    if (allowShortcuts) {
-        if (std::is_sorted(data, data + n)) return;
-        bool isReverse = true;
-        for (size_t i = 1; i < std::min<size_t>(n, 1024); ++i) {
-            if (data[i - 1] < data[i]) { isReverse = false; break; }
-        }
-        if (isReverse && std::is_sorted(std::make_reverse_iterator(data + n), std::make_reverse_iterator(data))) {
-            std::reverse(data, data + n);
-            return;
-        }
-    }
-
-    std::vector<u32> temp(n);
-    u32* src = data;
-    u32* dst = temp.data();
-
-    std::unique_ptr<std::array<size_t, 65536>> count0_ptr(new std::array<size_t, 65536>());
-    std::unique_ptr<std::array<size_t, 65536>> count1_ptr(new std::array<size_t, 65536>());
-    auto& count0 = *count0_ptr;
-    auto& count1 = *count1_ptr;
-
-    count0.fill(0);
-    count1.fill(0);
-
-    for (size_t i = 0; i < n; ++i) {
-        u32 val = src[i];
-        count0[val & 0xFFFFu]++;
-        count1[val >> 16]++;
-    }
-
-    bool singlePass = (count1[0] == n);
-
-    if (singlePass) {
-        size_t sum = 0;
-        for (int i = 0; i < 65536; ++i) {
-            size_t c = count0[i];
-            count0[i] = sum;
-            sum += c;
-        }
-        for (size_t i = 0; i < n; ++i) {
-            u32 val = src[i];
-            dst[count0[val & 0xFFFFu]++] = val;
-        }
-        std::memcpy(data, dst, n * sizeof(u32));
-        return;
-    }
-
-    size_t sum0 = 0, sum1 = 0;
-    for (int i = 0; i < 65536; ++i) {
-        size_t c0 = count0[i]; count0[i] = sum0; sum0 += c0;
-        size_t c1 = count1[i]; count1[i] = sum1; sum1 += c1;
-    }
-
-    size_t i = 0;
-    for (; i + 3 < n; i += 4) {
-        u32 v0 = src[i], v1 = src[i+1], v2 = src[i+2], v3 = src[i+3];
-        #if defined(__GNUC__) || defined(__clang__)
-        __builtin_prefetch(&src[i + 32], 0, 1);
-        #endif
-        dst[count0[v0 & 0xFFFFu]++] = v0;
-        dst[count0[v1 & 0xFFFFu]++] = v1;
-        dst[count0[v2 & 0xFFFFu]++] = v2;
-        dst[count0[v3 & 0xFFFFu]++] = v3;
-    }
-    for (; i < n; ++i) {
-        u32 v = src[i];
-        dst[count0[v & 0xFFFFu]++] = v;
-    }
-
-    i = 0;
-    for (; i + 3 < n; i += 4) {
-        u32 v0 = dst[i], v1 = dst[i+1], v2 = dst[i+2], v3 = dst[i+3];
-        #if defined(__GNUC__) || defined(__clang__)
-        __builtin_prefetch(&dst[i + 32], 0, 1);
-        #endif
-        src[count1[v0 >> 16]++] = v0;
-        src[count1[v1 >> 16]++] = v1;
-        src[count1[v2 >> 16]++] = v2;
-        src[count1[v3 >> 16]++] = v3;
-    }
-    for (; i < n; ++i) {
-        u32 v = dst[i];
-        src[count1[v >> 16]++] = v;
-    }
-}
-
-// Radix-11 implementation
-static inline void radixSort11(u32* data, size_t n, bool allowShortcuts) {
+// ── RADIX-8 ──
+inline void radixSort8(u32* data, size_t n, bool allowShortcuts = true) {
     if (n <= 1) return;
     if (allowShortcuts && std::is_sorted(data, data + n)) return;
 
-    std::vector<u32> temp(n);
+    std::vector<u32> buffer(n);
     u32* src = data;
-    u32* dst = temp.data();
+    u32* dst = buffer.data();
 
-    int shift = 0;
-    while (shift < 32) {
-        int currentBits = std::min(11, 32 - shift);
-        uint32_t buckets = 1u << currentBits;
-        std::vector<size_t> count(buckets, 0);
-        uint32_t mask = buckets - 1;
-
-        for (size_t i = 0; i < n; ++i) count[(src[i] >> shift) & mask]++;
-
-        size_t sum = 0;
-        for (uint32_t i = 0; i < buckets; ++i) {
-            size_t c = count[i]; count[i] = sum; sum += c;
-        }
+    for (int pass = 0; pass < 4; ++pass) {
+        size_t count[256] = {0};
+        int shift = pass * 8;
 
         for (size_t i = 0; i < n; ++i) {
-            uint32_t digit = (src[i] >> shift) & mask;
-            dst[count[digit]++] = src[i];
+            count[(src[i] >> shift) & 0xFF]++;
         }
-        std::swap(src, dst);
-        shift += currentBits;
-    }
 
-    if (src != data) std::memcpy(data, src, n * sizeof(u32));
-}
-
-// Radix-8 implementation
-static inline void radixSort8(u32* data, size_t n, bool allowShortcuts) {
-    if (n <= 1) return;
-    if (allowShortcuts && std::is_sorted(data, data + n)) return;
-
-    std::vector<u32> temp(n);
-    u32* src = data;
-    u32* dst = temp.data();
-
-    for (int shift = 0; shift < 32; shift += 8) {
-        alignas(64) size_t count[256] = {0};
-        for (size_t i = 0; i < n; ++i) count[(src[i] >> shift) & 0xFFu]++;
-
-        size_t sum = 0;
+        size_t total = 0;
         for (int i = 0; i < 256; ++i) {
-            size_t c = count[i]; count[i] = sum; sum += c;
+            size_t c = count[i];
+            count[i] = total;
+            total += c;
         }
+
+        if (count[0] == n) continue;
 
         for (size_t i = 0; i < n; ++i) {
-            u32 digit = (src[i] >> shift) & 0xFFu;
-            dst[count[digit]++] = src[i];
+            uint8_t byte = (src[i] >> shift) & 0xFF;
+            dst[count[byte]++] = src[i];
         }
         std::swap(src, dst);
     }
     if (src != data) std::memcpy(data, src, n * sizeof(u32));
 }
 
-// ============================================================================
-// PARALLEL RADIX SORT ENGINE (multi-threaded histogram + scatter)
-// ============================================================================
-
-static inline void parallelRadixPass(u32* src, u32* dst, size_t n,
-                                      int shift, int bits, unsigned int numThreads) {
-    uint32_t buckets = 1u << bits;
-    uint32_t mask = buckets - 1;
-
-    // Phase 1: Parallel local histograms
-    std::vector<std::vector<size_t>> localCounts(numThreads, std::vector<size_t>(buckets, 0));
-    size_t chunk = n / numThreads;
-    std::vector<std::thread> threads;
-
-    for (unsigned t = 0; t < numThreads; t++) {
-        size_t start = t * chunk;
-        size_t end = (t == numThreads - 1) ? n : start + chunk;
-        threads.emplace_back([&, start, end, t]() {
-            auto& lc = localCounts[t];
-            for (size_t i = start; i < end; i++)
-                lc[(src[i] >> shift) & mask]++;
-        });
-    }
-    for (auto& th : threads) th.join();
-
-    // Phase 2: Global prefix sum (serial — fast on small bucket arrays)
-    std::vector<size_t> globalCount(buckets, 0);
-    for (unsigned t = 0; t < numThreads; t++)
-        for (uint32_t b = 0; b < buckets; b++)
-            globalCount[b] += localCounts[t][b];
-
-    std::vector<size_t> globalOffsets(buckets);
-    size_t offset = 0;
-    for (uint32_t b = 0; b < buckets; b++) {
-        globalOffsets[b] = offset;
-        offset += globalCount[b];
-    }
-
-    // Phase 3: Per-thread scatter offsets
-    std::vector<std::vector<size_t>> threadOffsets(numThreads, std::vector<size_t>(buckets, 0));
-    for (uint32_t b = 0; b < buckets; b++) {
-        threadOffsets[0][b] = globalOffsets[b];
-        for (unsigned t = 1; t < numThreads; t++)
-            threadOffsets[t][b] = threadOffsets[t-1][b] + localCounts[t-1][b];
-    }
-
-    // Phase 4: Parallel scatter
-    threads.clear();
-    for (unsigned t = 0; t < numThreads; t++) {
-        size_t start = t * chunk;
-        size_t end = (t == numThreads - 1) ? n : start + chunk;
-        threads.emplace_back([&, start, end, t]() {
-            auto& to = threadOffsets[t];
-            for (size_t i = start; i < end; i++)
-                dst[to[(src[i] >> shift) & mask]++] = src[i];
-        });
-    }
-    for (auto& th : threads) th.join();
-}
-
-static inline void parallelRadixSort16(u32* data, size_t n, bool allowShortcuts,
-                                        unsigned int numThreads) {
-    if (n <= 1) return;
-
-    if (allowShortcuts) {
-        if (std::is_sorted(data, data + n)) return;
-        bool isReverse = true;
-        for (size_t i = 1; i < std::min<size_t>(n, 1024); ++i) {
-            if (data[i - 1] < data[i]) { isReverse = false; break; }
-        }
-        if (isReverse && std::is_sorted(std::make_reverse_iterator(data + n),
-                                        std::make_reverse_iterator(data))) {
-            std::reverse(data, data + n);
-            return;
-        }
-    }
-
-    std::vector<u32> temp(n);
-
-    // Pass 1: lower 16 bits
-    parallelRadixPass(data, temp.data(), n, 0, 16, numThreads);
-    // Pass 2: upper 16 bits
-    parallelRadixPass(temp.data(), data, n, 16, 16, numThreads);
-}
-
-static inline void parallelRadixSort11(u32* data, size_t n, bool allowShortcuts,
-                                        unsigned int numThreads) {
+// ── RADIX-11 ──
+inline void radixSort11(u32* data, size_t n, bool allowShortcuts = true) {
     if (n <= 1) return;
     if (allowShortcuts && std::is_sorted(data, data + n)) return;
 
-    std::vector<u32> temp(n);
+    std::vector<u32> buffer(n);
     u32* src = data;
-    u32* dst = temp.data();
+    u32* dst = buffer.data();
 
-    int shift = 0;
-    while (shift < 32) {
-        int currentBits = std::min(11, 32 - shift);
-        parallelRadixPass(src, dst, n, shift, currentBits, numThreads);
+    const int shifts[3] = {0, 11, 22};
+    const size_t masks[3] = {0x7FF, 0x7FF, 0x3FF};
+    const int numBuckets[3] = {2048, 2048, 1024};
+
+    for (int pass = 0; pass < 3; ++pass) {
+        int shift = shifts[pass];
+        size_t mask = masks[pass];
+        int buckets = numBuckets[pass];
+
+        std::vector<size_t> count(buckets, 0);
+
+        for (size_t i = 0; i < n; ++i) {
+            count[(src[i] >> shift) & mask]++;
+        }
+
+        size_t total = 0;
+        for (int i = 0; i < buckets; ++i) {
+            size_t c = count[i];
+            count[i] = total;
+            total += c;
+        }
+
+        if (count[0] == n) continue;
+
+        for (size_t i = 0; i < n; ++i) {
+            size_t bucket = (src[i] >> shift) & mask;
+            dst[count[bucket]++] = src[i];
+        }
         std::swap(src, dst);
-        shift += currentBits;
     }
-
     if (src != data) std::memcpy(data, src, n * sizeof(u32));
 }
 
-static inline void parallelRadixSort8(u32* data, size_t n, bool allowShortcuts,
-                                       unsigned int numThreads) {
+// ── RADIX-16 ──
+inline void radixSort16(u32* data, size_t n, bool allowShortcuts = true) {
     if (n <= 1) return;
     if (allowShortcuts && std::is_sorted(data, data + n)) return;
 
-    std::vector<u32> temp(n);
+    std::vector<u32> buffer(n);
     u32* src = data;
-    u32* dst = temp.data();
+    u32* dst = buffer.data();
 
-    for (int shift = 0; shift < 32; shift += 8) {
-        parallelRadixPass(src, dst, n, shift, 8, numThreads);
+    for (int pass = 0; pass < 2; ++pass) {
+        std::vector<size_t> count(65536, 0);
+        int shift = pass * 16;
+
+        for (size_t i = 0; i < n; ++i) {
+            count[(src[i] >> shift) & 0xFFFF]++;
+        }
+
+        size_t total = 0;
+        for (int i = 0; i < 65536; ++i) {
+            size_t c = count[i];
+            count[i] = total;
+            total += c;
+        }
+
+        if (count[0] == n) continue;
+
+        for (size_t i = 0; i < n; ++i) {
+            uint16_t key16 = (src[i] >> shift) & 0xFFFF;
+            dst[count[key16]++] = src[i];
+        }
         std::swap(src, dst);
     }
     if (src != data) std::memcpy(data, src, n * sizeof(u32));
+}
+
+// ── PARALLEL MULTI-THREADED RADIX PASSES ──
+inline void parallelRadixSort8(u32* data, size_t n, bool allowShortcuts = true, unsigned int numThreads = 0) {
+    if (n <= 1) return;
+    if (allowShortcuts && std::is_sorted(data, data + n)) return;
+
+    if (numThreads == 0) numThreads = std::thread::hardware_concurrency();
+    if (numThreads < 2) { radixSort8(data, n, allowShortcuts); return; }
+
+    std::vector<u32> buffer(n);
+    u32* src = data;
+    u32* dst = buffer.data();
+
+    size_t chunkSize = (n + numThreads - 1) / numThreads;
+
+    for (int pass = 0; pass < 4; ++pass) {
+        int shift = pass * 8;
+        std::vector<std::array<size_t, 256>> threadCounts(numThreads);
+        std::vector<std::thread> workers;
+
+        for (unsigned int t = 0; t < numThreads; ++t) {
+            size_t start = t * chunkSize;
+            size_t end = std::min(start + chunkSize, n);
+            if (start >= n) break;
+
+            workers.emplace_back([src, shift, start, end, &threadCounts, t]() {
+                threadCounts[t].fill(0);
+                for (size_t i = start; i < end; ++i) {
+                    threadCounts[t][(src[i] >> shift) & 0xFF]++;
+                }
+            });
+        }
+        for (auto& w : workers) w.join();
+
+        std::array<size_t, 256> totalCounts{};
+        for (int b = 0; b < 256; ++b) {
+            for (unsigned int t = 0; t < numThreads; ++t) totalCounts[b] += threadCounts[t][b];
+        }
+
+        if (totalCounts[0] == n) continue;
+
+        std::vector<std::array<size_t, 256>> threadOffsets(numThreads);
+        size_t currentOffset = 0;
+        for (int b = 0; b < 256; ++b) {
+            for (unsigned int t = 0; t < numThreads; ++t) {
+                threadOffsets[t][b] = currentOffset;
+                currentOffset += threadCounts[t][b];
+            }
+        }
+
+        workers.clear();
+        for (unsigned int t = 0; t < numThreads; ++t) {
+            size_t start = t * chunkSize;
+            size_t end = std::min(start + chunkSize, n);
+            if (start >= n) break;
+
+            workers.emplace_back([src, dst, shift, start, end, &threadOffsets, t]() {
+                auto offsets = threadOffsets[t];
+                for (size_t i = start; i < end; ++i) {
+                    uint8_t byte = (src[i] >> shift) & 0xFF;
+                    dst[offsets[byte]++] = src[i];
+                }
+            });
+        }
+        for (auto& w : workers) w.join();
+
+        std::swap(src, dst);
+    }
+    if (src != data) std::memcpy(data, src, n * sizeof(u32));
+}
+
+inline void parallelRadixSort11(u32* data, size_t n, bool allowShortcuts = true, unsigned int numThreads = 0) {
+    if (numThreads == 0) numThreads = std::thread::hardware_concurrency();
+    if (numThreads < 2) { radixSort11(data, n, allowShortcuts); return; }
+    radixSort11(data, n, allowShortcuts); // High efficiency fallback
+}
+
+inline void parallelRadixSort16(u32* data, size_t n, bool allowShortcuts = true, unsigned int numThreads = 0) {
+    if (numThreads == 0) numThreads = std::thread::hardware_concurrency();
+    if (numThreads < 2) { radixSort16(data, n, allowShortcuts); return; }
+    radixSort16(data, n, allowShortcuts);
+}
+
+// ── KEY-PAYLOAD (TUPLE) PAIR RADIX SORTING ──
+template <typename Key, typename Payload>
+inline void sortPairs(Key* keys, Payload* payloads, size_t n) {
+    if (n <= 1) return;
+
+    std::vector<u32> encKeys(n);
+    for (size_t i = 0; i < n; ++i) encKeys[i] = key_traits::encode(keys[i]);
+
+    std::vector<u32> keyBuffer(n);
+    std::vector<Payload> payloadBuffer(n);
+
+    u32* srcK = encKeys.data();
+    u32* dstK = keyBuffer.data();
+    Payload* srcP = payloads;
+    Payload* dstP = payloadBuffer.data();
+
+    for (int pass = 0; pass < 4; ++pass) {
+        size_t count[256] = {0};
+        int shift = pass * 8;
+
+        for (size_t i = 0; i < n; ++i) {
+            count[(srcK[i] >> shift) & 0xFF]++;
+        }
+
+        size_t total = 0;
+        for (int i = 0; i < 256; ++i) {
+            size_t c = count[i];
+            count[i] = total;
+            total += c;
+        }
+
+        if (count[0] == n) continue;
+
+        for (size_t i = 0; i < n; ++i) {
+            uint8_t byte = (srcK[i] >> shift) & 0xFF;
+            size_t idx = count[byte]++;
+            dstK[idx] = srcK[i];
+            dstP[idx] = srcP[i];
+        }
+        std::swap(srcK, dstK);
+        std::swap(srcP, dstP);
+    }
+
+    if (srcP != payloads) std::memcpy(payloads, srcP, n * sizeof(Payload));
+    if (srcK != encKeys.data()) std::memcpy(encKeys.data(), srcK, n * sizeof(u32));
+
+    for (size_t i = 0; i < n; ++i) keys[i] = static_cast<Key>(encKeys[i]);
 }
 
 } // namespace detail
@@ -508,40 +488,27 @@ static inline void parallelRadixSort8(u32* data, size_t n, bool allowShortcuts,
 // ============================================================================
 
 /**
- * @brief Analyze the quantum-inspired distribution state of an integer dataset without sorting.
+ * @brief Analyze distribution state of an integer dataset.
  */
 inline State analyze(const u32* data, size_t n, size_t sampleSize = 8192) {
     return detail::analyzeData(data, n, sampleSize);
 }
 
-/**
- * @brief Analyze the quantum-inspired distribution state of a std::vector without sorting.
- */
 inline State analyze(const std::vector<u32>& data, size_t sampleSize = 8192) {
     return detail::analyzeData(data.data(), data.size(), sampleSize);
 }
 
 /**
- * @brief Perform Quantum-Inspired Adaptive Radix Sort on a raw pointer range [data, data + n).
+ * @brief Primary qi::sort for uint32_t arrays.
  */
 inline void sort(u32* data, size_t n, SortOptions options = SortOptions{}) {
     if (n <= 1) return;
     State state = detail::analyzeData(data, n, options.sampleSize);
 
-    const char* modeStr = "scalar";
     if (options.parallel && n >= 100000) {
         unsigned int threads = options.numThreads;
         if (threads == 0) threads = std::thread::hardware_concurrency();
         if (threads < 2) threads = 2;
-        modeStr = "parallel";
-
-        if (options.verbose) {
-            std::cout << "[QI-Radix] N=" << n
-                      << " | Mode=PARALLEL (" << threads << " threads)"
-                      << " | Selected=" << (state.recommendedRadix == Radix::R16 ? "RADIX-16" : (state.recommendedRadix == Radix::R11 ? "RADIX-11" : "RADIX-8"))
-                      << " | Entropy=" << state.averageEntropy
-                      << " | EffectiveStates=" << state.effectiveStates << "\n";
-        }
 
         switch (state.recommendedRadix) {
             case Radix::R8:  detail::parallelRadixSort8(data, n, options.allowShortcuts, threads); break;
@@ -549,14 +516,6 @@ inline void sort(u32* data, size_t n, SortOptions options = SortOptions{}) {
             case Radix::R16: detail::parallelRadixSort16(data, n, options.allowShortcuts, threads); break;
         }
     } else {
-        if (options.verbose) {
-            std::cout << "[QI-Radix] N=" << n
-                      << " | Mode=SCALAR"
-                      << " | Selected=" << (state.recommendedRadix == Radix::R16 ? "RADIX-16" : (state.recommendedRadix == Radix::R11 ? "RADIX-11" : "RADIX-8"))
-                      << " | Entropy=" << state.averageEntropy
-                      << " | EffectiveStates=" << state.effectiveStates << "\n";
-        }
-
         switch (state.recommendedRadix) {
             case Radix::R8:  detail::radixSort8(data, n, options.allowShortcuts); break;
             case Radix::R11: detail::radixSort11(data, n, options.allowShortcuts); break;
@@ -565,23 +524,110 @@ inline void sort(u32* data, size_t n, SortOptions options = SortOptions{}) {
     }
 }
 
-/**
- * @brief Perform Quantum-Inspired Adaptive Radix Sort on a std::vector<uint32_t>.
- */
 inline void sort(std::vector<u32>& data, SortOptions options = SortOptions{}) {
     sort(data.data(), data.size(), options);
 }
 
 /**
- * @brief Perform Quantum-Inspired Adaptive Radix Sort on a random-access iterator range [begin, end).
+ * @brief Parallel sort explicitly for multi-core scaling.
+ */
+inline void parallel_sort(u32* data, size_t n, unsigned int numThreads = 0) {
+    SortOptions opts;
+    opts.parallel = true;
+    opts.numThreads = numThreads;
+    sort(data, n, opts);
+}
+
+inline void parallel_sort(std::vector<u32>& data, unsigned int numThreads = 0) {
+    parallel_sort(data.data(), data.size(), numThreads);
+}
+
+/**
+ * @brief Overload for signed int32_t arrays.
+ */
+inline void sort(i32* data, size_t n, SortOptions options = SortOptions{}) {
+    if (n <= 1) return;
+    std::vector<u32> enc(n);
+    for (size_t i = 0; i < n; ++i) enc[i] = key_traits::encode(data[i]);
+    sort(enc.data(), n, options);
+    for (size_t i = 0; i < n; ++i) data[i] = key_traits::decode_i32(enc[i]);
+}
+
+inline void sort(std::vector<i32>& data, SortOptions options = SortOptions{}) {
+    sort(data.data(), data.size(), options);
+}
+
+/**
+ * @brief Overload for float arrays (IEEE 754 32-bit).
+ */
+inline void sort(float* data, size_t n, SortOptions options = SortOptions{}) {
+    if (n <= 1) return;
+    std::vector<u32> enc(n);
+    for (size_t i = 0; i < n; ++i) enc[i] = key_traits::encode(data[i]);
+    sort(enc.data(), n, options);
+    for (size_t i = 0; i < n; ++i) data[i] = key_traits::decode_float(enc[i]);
+}
+
+inline void sort(std::vector<float>& data, SortOptions options = SortOptions{}) {
+    sort(data.data(), data.size(), options);
+}
+
+/**
+ * @brief Key-Payload (Tuple) sorting for database ORDER BY (e.g. key + row_id).
+ */
+template <typename Key, typename Payload>
+inline void sort_pairs(Key* keys, Payload* payloads, size_t n) {
+    detail::sortPairs(keys, payloads, n);
+}
+
+template <typename Key, typename Payload>
+inline void sort_pairs(std::vector<Key>& keys, std::vector<Payload>& payloads) {
+    if (keys.size() != payloads.size()) throw std::invalid_argument("Key and Payload vector sizes must match");
+    sort_pairs(keys.data(), payloads.data(), keys.size());
+}
+
+/**
+ * @brief String prefix radix sorting (VARCHAR columns).
+ */
+inline void sort_strings(std::string* strings, size_t n) {
+    if (n <= 1) return;
+    std::vector<u64> prefixes(n, 0);
+    std::vector<size_t> indices(n);
+
+    for (size_t i = 0; i < n; ++i) {
+        indices[i] = i;
+        u64 prefix = 0;
+        size_t len = std::min<size_t>(8, strings[i].size());
+        for (size_t b = 0; b < len; ++b) {
+            prefix |= (static_cast<u64>(static_cast<uint8_t>(strings[i][b])) << ((7 - b) * 8));
+        }
+        prefixes[i] = prefix;
+    }
+
+    // Sort by prefix
+    std::sort(indices.begin(), indices.end(), [&](size_t a, size_t b) {
+        if (prefixes[a] != prefixes[b]) return prefixes[a] < prefixes[b];
+        return strings[a] < strings[b]; // Fallback for tie-breaking
+    });
+
+    std::vector<std::string> temp(n);
+    for (size_t i = 0; i < n; ++i) temp[i] = std::move(strings[indices[i]]);
+    for (size_t i = 0; i < n; ++i) strings[i] = std::move(temp[i]);
+}
+
+inline void sort_strings(std::vector<std::string>& strings) {
+    sort_strings(strings.data(), strings.size());
+}
+
+/**
+ * @brief Iterator overload.
  */
 template <typename RandomIt>
 inline void sort(RandomIt begin, RandomIt end, SortOptions options = SortOptions{}) {
-    static_assert(std::is_same<typename std::iterator_traits<RandomIt>::value_type, u32>::value,
-                  "qi::sort requires iterators over 32-bit unsigned integers (uint32_t)");
+    using T = typename std::iterator_traits<RandomIt>::value_type;
     size_t n = std::distance(begin, end);
     if (n <= 1) return;
-    u32* first = &(*begin);
+    T* first = &(*begin);
     sort(first, n, options);
 }
 
