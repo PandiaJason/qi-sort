@@ -241,7 +241,18 @@ inline State analyzeData(const u32* data, size_t n, size_t sampleSize = 8192) {
 // ── RADIX-8 ──
 inline void radixSort8(u32* data, size_t n, bool allowShortcuts = true) {
     if (n <= 1) return;
-    if (allowShortcuts && std::is_sorted(data, data + n)) return;
+    if (allowShortcuts) {
+        if (std::is_sorted(data, data + n)) return;
+        // O(N) reverse-sorted shortcut
+        bool isReverse = true;
+        for (size_t i = 1; i < std::min<size_t>(n, 1024); ++i) {
+            if (data[i - 1] < data[i]) { isReverse = false; break; }
+        }
+        if (isReverse && std::is_sorted(std::make_reverse_iterator(data + n), std::make_reverse_iterator(data))) {
+            std::reverse(data, data + n);
+            return;
+        }
+    }
 
     std::vector<u32> buffer(n);
     u32* src = data;
@@ -276,7 +287,18 @@ inline void radixSort8(u32* data, size_t n, bool allowShortcuts = true) {
 // ── RADIX-11 ──
 inline void radixSort11(u32* data, size_t n, bool allowShortcuts = true) {
     if (n <= 1) return;
-    if (allowShortcuts && std::is_sorted(data, data + n)) return;
+    if (allowShortcuts) {
+        if (std::is_sorted(data, data + n)) return;
+        // O(N) reverse-sorted shortcut
+        bool isReverse = true;
+        for (size_t i = 1; i < std::min<size_t>(n, 1024); ++i) {
+            if (data[i - 1] < data[i]) { isReverse = false; break; }
+        }
+        if (isReverse && std::is_sorted(std::make_reverse_iterator(data + n), std::make_reverse_iterator(data))) {
+            std::reverse(data, data + n);
+            return;
+        }
+    }
 
     std::vector<u32> buffer(n);
     u32* src = data;
@@ -318,7 +340,18 @@ inline void radixSort11(u32* data, size_t n, bool allowShortcuts = true) {
 // ── RADIX-16 ──
 inline void radixSort16(u32* data, size_t n, bool allowShortcuts = true) {
     if (n <= 1) return;
-    if (allowShortcuts && std::is_sorted(data, data + n)) return;
+    if (allowShortcuts) {
+        if (std::is_sorted(data, data + n)) return;
+        // O(N) reverse-sorted shortcut
+        bool isReverse = true;
+        for (size_t i = 1; i < std::min<size_t>(n, 1024); ++i) {
+            if (data[i - 1] < data[i]) { isReverse = false; break; }
+        }
+        if (isReverse && std::is_sorted(std::make_reverse_iterator(data + n), std::make_reverse_iterator(data))) {
+            std::reverse(data, data + n);
+            return;
+        }
+    }
 
     std::vector<u32> buffer(n);
     u32* src = data;
