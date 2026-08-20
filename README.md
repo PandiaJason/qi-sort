@@ -143,7 +143,7 @@ qi::sort(data, opts);
 
 ```python
 import qi_sort
-qi_sort.sort(my_list)   # 2.32× faster than built-in list.sort()
+qi_sort.sort(my_list)   # Up to 65.9× faster on NumPy & 11.0× faster on Python lists vs list.sort()
 ```
 
 **DuckDB Query Engine Block Sorting:**
