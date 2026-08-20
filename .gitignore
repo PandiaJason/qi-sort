@@ -2,6 +2,7 @@
 ablation_test
 algo_test
 analytical_inspection
+arrow_dataframe_sorter
 basic_usage
 c_example
 cost_compare
@@ -16,6 +17,7 @@ ex_db
 ex_spatial
 global_bench
 head2head
+hft_orderbook_sorter
 online_test
 parallel_bench
 qi_radix
@@ -25,6 +27,7 @@ quick_bench
 radix_test
 real_bench
 real_qsort_bench
+rocksdb_memtable_sorter
 spatial_morton_sort
 verify
 
