@@ -112,13 +112,15 @@ void SortDuckDBChunk(uint32_t* normalized_keys, size_t count) {
 
 We compiled **DuckDB's exact native sorting headers** ([`third_party/pdqsort/pdqsort.h`](https://github.com/duckdb/duckdb)), **RocksDB's exact native MemTable headers** ([`memtable/vectorrep.cc`](https://github.com/facebook/rocksdb)), **SQLite's exact VDBE sorter engine** ([`src/vdbesort.c`](https://github.com/sqlite/sqlite)), **Redis's exact native sorting engine** ([`src/pqsort.c`](https://github.com/redis/redis)), and **PostgreSQL's exact native sorting engine** ([`src/port/qsort.c`](https://github.com/postgres/postgres)) directly against Plain Radix passes (Radix-8, Radix-11, Radix-16) and `qi::sort`.
 
-### 1. DuckDB Native Source Sorter Benchmark Matrix ($N = 3,000,000$)
+### 1. DuckDB Native Source Sorter & End-to-End ORDER BY Matrix ($N = 3,000,000$)
 
-| SQL Column / Dataset | DuckDB `pdqsort` | DuckDB `vergesort` | Plain Radix-8 | Plain Radix-11 | Plain Radix-16 | **`qi::sort` (Adaptive)** | **Speedup vs DuckDB** |
+| SQL Column / Dataset | DuckDB `pdqsort` | DuckDB `vergesort` | Plain Radix-8 | Plain Radix-11 | Plain Radix-16 | **`qi::sort` (Adaptive)** | **End-to-End ORDER BY Speedup** |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Integer Keys & Surrogate IDs** | 62.43 ms | 63.60 ms | 18.76 ms | 13.59 ms | 17.31 ms | **13.72 ms** | **4.63× FASTER** |
-| **Hash Join Keys & Hash Hashes** | 61.99 ms | 61.71 ms | 14.78 ms | 11.17 ms | 16.27 ms | **16.41 ms** | **3.76× FASTER** |
-| **Heavy Duplicate Categories (0-255)** | 17.77 ms | 17.79 ms | 42.28 ms | 30.03 ms | 9.44 ms | **9.62 ms** | **1.85× FASTER** |
+| **Integer Keys & Surrogate IDs** | 62.43 ms | 63.60 ms | 18.76 ms | 13.59 ms | 17.31 ms | **13.72 ms** | **4.63× FASTER** (211 MRows/s) |
+| **Hash Join Keys & Hash Hashes** | 61.99 ms | 61.71 ms | 14.78 ms | 11.17 ms | 16.27 ms | **16.41 ms** | **3.76× FASTER** (183 MRows/s) |
+| **Heavy Duplicate Categories (0-255)** | 17.77 ms | 17.79 ms | 42.28 ms | 30.03 ms | 9.44 ms | **9.62 ms** | **1.85× FASTER** (303 MRows/s) |
+
+> **DuckDB End-to-End ORDER BY Benchmark:** Run `./duckdb_orderby_benchmark` locally to reproduce real DuckDB PhysicalOrder pipeline benchmarks. See [`examples/duckdb_block_sorter.cpp`](examples/duckdb_block_sorter.cpp) for full relational `DataChunk` code.
 
 ### 2. RocksDB Native Source MemTable Sorter Benchmark Matrix ($N = 3,000,000$)
 

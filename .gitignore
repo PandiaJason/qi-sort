@@ -10,6 +10,7 @@ database_column_sort
 db_bench
 db_benchmark
 duckdb_block_sorter
+duckdb_orderby_benchmark
 duckdb_real_benchmark
 ex_analyze
 ex_basic
