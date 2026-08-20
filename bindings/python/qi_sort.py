@@ -51,16 +51,18 @@ _lib.qi_analyze_u32.argtypes = [
 _lib.qi_analyze_u32.restype = None
 
 
+import array
+
 def sort(data: Union[List[int], any]) -> Union[List[int], any]:
     """
-    Sort a Python list of non-negative 32-bit integers or NumPy uint32 array in-place.
+    Sort a Python list of non-negative 32-bit integers, array.array, or NumPy uint32 array in-place.
     
     Example:
         import qi_sort
         data = [10, 5, 20, 1]
         qi_sort.sort(data)
     """
-    # Check if NumPy array
+    # 1. NumPy Array (Zero-Copy C Pointer)
     try:
         import numpy as np
         if isinstance(data, np.ndarray):
@@ -72,20 +74,29 @@ def sort(data: Union[List[int], any]) -> Union[List[int], any]:
     except ImportError:
         pass
 
-    # Standard Python list handling
+    # 2. Python array.array('I') (Zero-Copy C Pointer)
+    if isinstance(data, array.array):
+        if data.typecode != 'I':
+            raise TypeError("array.array must be of typecode 'I' (unsigned 32-bit int)")
+        c_ptr = (ctypes.c_uint32 * len(data)).from_buffer(data)
+        _lib.qi_sort_u32(c_ptr, len(data))
+        return data
+
+    # 3. Standard Python list handling (Optimized via C array buffer)
     if not isinstance(data, list):
-        raise TypeError("Input must be a list of integers or a uint32 NumPy array.")
+        raise TypeError("Input must be a list of integers, array.array('I'), or a uint32 NumPy array.")
 
     n = len(data)
     if n <= 1:
         return data
 
-    c_array = (ctypes.c_uint32 * n)(*data)
-    _lib.qi_sort_u32(c_array, n)
+    # Fast conversion to C array via array.array buffer
+    arr_buf = array.array('I', data)
+    c_ptr = (ctypes.c_uint32 * n).from_buffer(arr_buf)
+    _lib.qi_sort_u32(c_ptr, n)
     
-    for i in range(n):
-        data[i] = c_array[i]
-
+    # Update Python list in-place
+    data[:] = arr_buf.tolist()
     return data
 
 
