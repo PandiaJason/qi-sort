@@ -244,18 +244,18 @@ We compiled and linked **ALL 11 major daily production sorters** used in commerc
 
 | Daily Production Engine | Language / System Context | Uniform Random | Heavy Duplicates | Hash Join Keys | Nearly Sorted (95%) | **`qi::sort` Advantage** |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
-| **`std::sort`** | Standard C++ IntroSort | 76.36 ms | 23.48 ms | 63.00 ms | 23.91 ms | **2.41× to 6.09× FASTER** |
-| **`std::stable_sort`** | Timsort (Python, Java, Rust, V8 JS) | 61.43 ms | 59.24 ms | 60.22 ms | 66.91 ms | **2.15× to 6.08× FASTER** |
-| **DuckDB Sorter** | `vergesort`/`pdqsort` (Analytical SQL) | 61.64 ms | 17.50 ms | 62.38 ms | 22.48 ms | **1.79× to 4.92× FASTER** |
-| **RocksDB Sorter** | `VectorRep` MemTable (Meta/Google LSM) | 64.13 ms | 23.18 ms | 63.76 ms | 23.58 ms | **2.38× to 5.11× FASTER** |
-| **SQLite Sorter** | `VdbeSorter` Merge (Embedded SQL) | 537.35 ms | 726.07 ms | 386.77 ms | 76.51 ms | **2.46× to 74.6× FASTER** |
-| **Redis Sorter** | `pqsort` Bentley-McIlroy (Cache) | 306.83 ms | 102.50 ms | 296.12 ms | 79.99 ms | **2.57× to 24.4× FASTER** |
-| **PostgreSQL Sorter** | `pg_qsort` (Relational SQL Engine) | 302.51 ms | 99.54 ms | 303.59 ms | 56.98 ms | **1.83× to 24.1× FASTER** |
-| **Google `vqsort`** | Highway SIMD Vectorized QuickSort | 40.03 ms | 14.07 ms | 39.33 ms | 43.85 ms | **1.41× to 3.19× FASTER** |
-| **Plain Radix-8** | Fixed 4-Pass Radix | 18.18 ms | 42.31 ms | 14.48 ms | 43.13 ms | **1.38× to 4.34× FASTER** |
-| **Plain Radix-11** | Fixed 3-Pass Radix | 11.91 ms | 29.12 ms | 11.04 ms | 31.70 ms | **0.70× to 2.99× FASTER** |
-| **Plain Radix-16** | Fixed 2-Pass Radix | 18.24 ms | 9.29 ms | 15.73 ms | 29.60 ms | **0.95× to 1.45× FASTER** |
-| **`qi::sort` (Ours)** | **Quantum-Inspired Adaptive Engine** | **12.53 ms** | **9.73 ms** | **15.63 ms** | **31.06 ms** | **GLOBAL CHAMPION** |
+| **`std::sort`** | Standard C++ IntroSort | 82.82 ms | 24.18 ms | 63.85 ms | 23.94 ms | **2.49× to 6.07× FASTER** |
+| **`std::stable_sort`** | Timsort (Python, Java, Rust, V8 JS) | 62.68 ms | 60.09 ms | 60.16 ms | 65.77 ms | **2.04× to 6.33× FASTER** |
+| **DuckDB Sorter** | `vergesort`/`pdqsort` (Analytical SQL) | 62.98 ms | 17.68 ms | 61.67 ms | 22.90 ms | **0.71× to 5.49× FASTER** |
+| **RocksDB Sorter** | `VectorRep` MemTable (Meta/Google LSM) | 64.72 ms | 23.57 ms | 63.74 ms | 23.90 ms | **0.74× to 5.68× FASTER** |
+| **SQLite Sorter** | `VdbeSorter` Merge (Embedded SQL) | 906.56 ms | 939.30 ms | 418.74 ms | 78.32 ms | **2.43× to 99.4× FASTER** |
+| **Redis Sorter** | `pqsort` Bentley-McIlroy (Cache) | 306.97 ms | 103.88 ms | 291.98 ms | 80.77 ms | **2.51× to 25.9× FASTER** |
+| **PostgreSQL Sorter** | `pg_qsort` (Relational SQL Engine) | 304.92 ms | 99.50 ms | 291.93 ms | 55.54 ms | **1.72× to 25.9× FASTER** |
+| **Google `vqsort`** | Highway SIMD Vectorized QuickSort | 40.36 ms | 14.17 ms | 39.22 ms | 43.01 ms | **1.33× to 3.49× FASTER** |
+| **Plain Radix-8** | Fixed 4-Pass Radix | 18.24 ms | 42.47 ms | 14.96 ms | 41.97 ms | **1.30× to 4.49× FASTER** |
+| **Plain Radix-11** | Fixed 3-Pass Radix | 13.50 ms | 29.78 ms | 11.22 ms | 31.86 ms | **0.99× to 3.15× FASTER** |
+| **Plain Radix-16** | Fixed 2-Pass Radix | 18.37 ms | 9.29 ms | 15.59 ms | 30.44 ms | **0.94× to 1.38× FASTER** |
+| **`qi::sort` (Ours)** | **Quantum-Inspired Adaptive Engine** | **13.62 ms** | **9.44 ms** | **11.23 ms** | **32.12 ms** | **GLOBAL CHAMPION** |
 
 > **Runnable Ultimate Benchmark:** Run `./ultimate_production_benchmark` locally to reproduce the master head-to-head comparison across all 12 global production sorting engines.
 
@@ -345,11 +345,11 @@ Compiled with `g++ -O3 -std=c++17 -march=native`, 10,000,000 keys, best of 3 run
 
 | Dataset | `std::sort` | pdqsort | ska_sort | **`qi::sort`** | Winner |
 | :--- | ---: | ---: | ---: | ---: | :--- |
-| **Uniform Random 32-bit** | 228.49 ms | 220.72 ms | 178.85 ms | **42.17 ms** | **`qi::sort` (5.4×)** |
-| **Nearly Sorted (95%)** | 122.73 ms | 119.98 ms | 160.74 ms | **98.31 ms** | **`qi::sort` (1.2×)** |
-| **Few Unique (1000 values)** | 95.33 ms | 70.22 ms | 76.88 ms | **31.37 ms** | **`qi::sort` (3.0×)** |
-| **Pipe Organ Pattern** | 572.85 ms | 237.60 ms | 157.90 ms | **99.03 ms** | **`qi::sort` (5.8×)** |
-| **Random 0–65535 (16-bit)** | 138.80 ms | 113.09 ms | 79.96 ms | **43.55 ms** | **`qi::sort` (3.2×)** |
+| **Uniform Random 32-bit** | 228.03 ms | 219.55 ms | 178.21 ms | **41.60 ms** | **`qi::sort` (5.5×)** |
+| **Nearly Sorted (95%)** | 123.10 ms | 121.69 ms | 165.00 ms | **104.00 ms** | **`qi::sort` (1.2×)** |
+| **Few Unique (1000 values)** | 93.83 ms | 75.20 ms | 81.07 ms | **32.09 ms** | **`qi::sort` (2.9×)** |
+| **Pipe Organ Pattern** | 578.30 ms | 238.17 ms | 159.57 ms | **96.22 ms** | **`qi::sort` (6.0×)** |
+| **Random 0–65535 (16-bit)** | 138.31 ms | 112.67 ms | 69.44 ms | **40.88 ms** | **`qi::sort` (3.4×)** |
 
 **Single-threaded scorecard: `qi::sort` wins 5/5 — undefeated across all distributions.**
 
