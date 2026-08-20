@@ -108,13 +108,11 @@ void SortDuckDBChunk(uint32_t* normalized_keys, size_t count) {
 
 ---
 
-## Real Database Source-Level Benchmarks (DuckDB & RocksDB)
+## Real Database Source-Level Benchmarks (DuckDB, RocksDB & SQLite)
 
-We compiled **DuckDB's exact native sorting headers** ([`third_party/pdqsort/pdqsort.h`](https://github.com/duckdb/duckdb) and [`third_party/vergesort/vergesort.h`](https://github.com/duckdb/duckdb)) and **RocksDB's exact native MemTable headers** ([`memtable/vectorrep.cc`](https://github.com/facebook/rocksdb) and [`memtable/skiplist.h`](https://github.com/facebook/rocksdb)) directly against Plain Radix passes (Radix-8, Radix-11, Radix-16) and `qi::sort`.
+We compiled **DuckDB's exact native sorting headers** ([`third_party/pdqsort/pdqsort.h`](https://github.com/duckdb/duckdb)), **RocksDB's exact native MemTable headers** ([`memtable/vectorrep.cc`](https://github.com/facebook/rocksdb)), and **SQLite's exact VDBE sorter engine** ([`src/vdbesort.c`](https://github.com/sqlite/sqlite)) directly against Plain Radix passes (Radix-8, Radix-11, Radix-16) and `qi::sort`.
 
-**Tested on $N = 3,000,000$ database keys per dataset:**
-
-### 1. DuckDB Native Source Sorter Benchmark Matrix
+### 1. DuckDB Native Source Sorter Benchmark Matrix ($N = 3,000,000$)
 
 | SQL Column / Dataset | DuckDB `pdqsort` | DuckDB `vergesort` | Plain Radix-8 | Plain Radix-11 | Plain Radix-16 | **`qi::sort` (Adaptive)** | **Speedup vs DuckDB** |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -122,9 +120,7 @@ We compiled **DuckDB's exact native sorting headers** ([`third_party/pdqsort/pdq
 | **Hash Join Keys & Hash Hashes** | 61.99 ms | 61.71 ms | 14.78 ms | 11.17 ms | 16.27 ms | **16.41 ms** | **3.76× FASTER** |
 | **Heavy Duplicate Categories (0-255)** | 17.77 ms | 17.79 ms | 42.28 ms | 30.03 ms | 9.44 ms | **9.62 ms** | **1.85× FASTER** |
 
-> **DuckDB Block Sorter Integration Example:** See [`examples/duckdb_block_sorter.cpp`](examples/duckdb_block_sorter.cpp) for a full runnable example demonstrating **21× higher throughput** in DuckDB thread-local `DataChunk` sink block sorting.
-
-### 2. RocksDB Native Source MemTable Sorter Benchmark Matrix
+### 2. RocksDB Native Source MemTable Sorter Benchmark Matrix ($N = 3,000,000$)
 
 | RocksDB MemTable Flush Dataset | RocksDB `VectorRep` | Plain Radix-8 | Plain Radix-11 | Plain Radix-16 | **`qi::sort` (Adaptive)** | **Speedup vs RocksDB** |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -132,7 +128,15 @@ We compiled **DuckDB's exact native sorting headers** ([`third_party/pdqsort/pdq
 | **Hash Key MemTable Flush** | 160.67 ms | 14.78 ms | 11.03 ms | 16.07 ms | **17.56 ms** | **9.15× FASTER** |
 | **Heavy Duplicate Key Flush** | 67.39 ms | 42.38 ms | 29.61 ms | 9.37 ms | **9.46 ms** | **7.12× FASTER** |
 
-> **RocksDB MemTable Sorter Integration Example:** See [`examples/rocksdb_memtable_sorter.cpp`](examples/rocksdb_memtable_sorter.cpp) for a full runnable example.
+### 3. SQLite Native Source VDBE Sorter Benchmark Matrix ($N = 2,000,000$)
+
+| SQLite VDBE Sorter Dataset | SQLite `VdbeSorter` | Plain Radix-8 | Plain Radix-11 | Plain Radix-16 | **`qi::sort` (Adaptive)** | **Speedup vs SQLite** |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Uniform Key Index Sort** | 323.28 ms | 10.23 ms | 8.87 ms | 11.45 ms | **8.29 ms** | **39.01× FASTER** |
+| **Hash Key Index Sort** | 210.59 ms | 9.15 ms | 6.86 ms | 10.31 ms | **7.39 ms** | **28.50× FASTER** |
+| **Heavy Duplicate Key Sort** | 467.81 ms | 28.05 ms | 19.73 ms | 6.31 ms | **7.01 ms** | **66.77× FASTER** |
+
+> **Runnable Integration Benchmarks:** Run `./duckdb_real_benchmark`, `./rocksdb_real_benchmark`, or `./sqlite_real_benchmark` locally to reproduce real source-level numbers.
 
 ---
 

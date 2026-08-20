@@ -30,6 +30,7 @@ real_qsort_bench
 rocksdb_memtable_sorter
 rocksdb_real_benchmark
 spatial_morton_sort
+sqlite_real_benchmark
 verify
 
 # ──── Object Files & Libraries ────
