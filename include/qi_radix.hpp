@@ -342,7 +342,6 @@ inline void radixSort16(u32* data, size_t n, bool allowShortcuts = true) {
     if (n <= 1) return;
     if (allowShortcuts) {
         if (std::is_sorted(data, data + n)) return;
-        // O(N) reverse-sorted shortcut
         bool isReverse = true;
         for (size_t i = 1; i < std::min<size_t>(n, 1024); ++i) {
             if (data[i - 1] < data[i]) { isReverse = false; break; }
@@ -357,30 +356,67 @@ inline void radixSort16(u32* data, size_t n, bool allowShortcuts = true) {
     u32* src = data;
     u32* dst = buffer.data();
 
-    for (int pass = 0; pass < 2; ++pass) {
-        std::vector<size_t> count(65536, 0);
-        int shift = pass * 16;
+    auto count0_ptr = std::make_unique<std::array<size_t, 65536>>();
+    auto count1_ptr = std::make_unique<std::array<size_t, 65536>>();
+    auto& count0 = *count0_ptr;
+    auto& count1 = *count1_ptr;
+    count0.fill(0);
+    count1.fill(0);
 
-        for (size_t i = 0; i < n; ++i) {
-            count[(src[i] >> shift) & 0xFFFF]++;
-        }
-
-        size_t total = 0;
-        for (int i = 0; i < 65536; ++i) {
-            size_t c = count[i];
-            count[i] = total;
-            total += c;
-        }
-
-        if (count[0] == n) continue;
-
-        for (size_t i = 0; i < n; ++i) {
-            uint16_t key16 = (src[i] >> shift) & 0xFFFF;
-            dst[count[key16]++] = src[i];
-        }
-        std::swap(src, dst);
+    for (size_t i = 0; i < n; ++i) {
+        u32 val = src[i];
+        count0[val & 0xFFFFu]++;
+        count1[val >> 16]++;
     }
-    if (src != data) std::memcpy(data, src, n * sizeof(u32));
+
+    if (count1[0] == n) {
+        size_t sum = 0;
+        for (int i = 0; i < 65536; ++i) {
+            size_t c = count0[i];
+            count0[i] = sum;
+            sum += c;
+        }
+        for (size_t i = 0; i < n; ++i) {
+            u32 val = src[i];
+            dst[count0[val & 0xFFFFu]++] = val;
+        }
+        std::memcpy(data, dst, n * sizeof(u32));
+        return;
+    }
+
+    size_t sum0 = 0, sum1 = 0;
+    for (int i = 0; i < 65536; ++i) {
+        size_t c0 = count0[i]; count0[i] = sum0; sum0 += c0;
+        size_t c1 = count1[i]; count1[i] = sum1; sum1 += c1;
+    }
+
+    size_t i = 0;
+    for (; i + 3 < n; i += 4) {
+        u32 v0 = src[i], v1 = src[i+1], v2 = src[i+2], v3 = src[i+3];
+        __builtin_prefetch(&src[i+32], 0, 1);
+        dst[count0[v0 & 0xFFFFu]++] = v0;
+        dst[count0[v1 & 0xFFFFu]++] = v1;
+        dst[count0[v2 & 0xFFFFu]++] = v2;
+        dst[count0[v3 & 0xFFFFu]++] = v3;
+    }
+    for (; i < n; ++i) {
+        u32 v = src[i];
+        dst[count0[v & 0xFFFFu]++] = v;
+    }
+
+    i = 0;
+    for (; i + 3 < n; i += 4) {
+        u32 v0 = dst[i], v1 = dst[i+1], v2 = dst[i+2], v3 = dst[i+3];
+        __builtin_prefetch(&dst[i+32], 0, 1);
+        src[count1[v0 >> 16]++] = v0;
+        src[count1[v1 >> 16]++] = v1;
+        src[count1[v2 >> 16]++] = v2;
+        src[count1[v3 >> 16]++] = v3;
+    }
+    for (; i < n; ++i) {
+        u32 v = dst[i];
+        src[count1[v >> 16]++] = v;
+    }
 }
 
 // ── PARALLEL MULTI-THREADED RADIX PASSES ──
