@@ -5,6 +5,7 @@ analytical_inspection
 arrow_dataframe_sorter
 basic_usage
 c_example
+compare_qi_versions
 cost_compare
 database_column_sort
 db_bench
