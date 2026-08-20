@@ -28,6 +28,7 @@ Usage:
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <functional>
 #include <iostream>
 #include <limits>
 #include <memory>
@@ -248,8 +249,8 @@ static inline void radixSort16(u32* data, size_t n, bool allowShortcuts) {
     u32* src = data;
     u32* dst = temp.data();
 
-    auto count0_ptr = std::make_unique<std::array<size_t, 65536>>();
-    auto count1_ptr = std::make_unique<std::array<size_t, 65536>>();
+    std::unique_ptr<std::array<size_t, 65536>> count0_ptr(new std::array<size_t, 65536>());
+    std::unique_ptr<std::array<size_t, 65536>> count1_ptr(new std::array<size_t, 65536>());
     auto& count0 = *count0_ptr;
     auto& count1 = *count1_ptr;
 
