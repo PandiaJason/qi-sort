@@ -33,6 +33,7 @@ Usage:
 #include <memory>
 #include <numeric>
 #include <random>
+#include <thread>
 #include <type_traits>
 #include <vector>
 
@@ -55,6 +56,8 @@ struct SortOptions {
     size_t sampleSize = 8192;    // Number of elements sampled for state sensing
     bool allowShortcuts = true;   // Enable O(N) early exit for pre-sorted/reverse data
     bool verbose = false;         // Output debug/telemetry information to stdout
+    bool parallel = false;        // Enable multi-threaded parallel radix sorting
+    unsigned int numThreads = 0;  // 0 = auto-detect (hardware_concurrency)
 };
 
 // ============================================================================
@@ -107,6 +110,7 @@ static inline double calculateEntropy(const std::array<u64, 256>& counts, size_t
     }
     return h / 8.0;
 }
+
 
 static inline State analyzeData(const u32* data, size_t n, size_t targetSampleSize = 8192) {
     auto start = std::chrono::steady_clock::now();
@@ -369,6 +373,127 @@ static inline void radixSort8(u32* data, size_t n, bool allowShortcuts) {
     if (src != data) std::memcpy(data, src, n * sizeof(u32));
 }
 
+// ============================================================================
+// PARALLEL RADIX SORT ENGINE (multi-threaded histogram + scatter)
+// ============================================================================
+
+static inline void parallelRadixPass(u32* src, u32* dst, size_t n,
+                                      int shift, int bits, unsigned int numThreads) {
+    uint32_t buckets = 1u << bits;
+    uint32_t mask = buckets - 1;
+
+    // Phase 1: Parallel local histograms
+    std::vector<std::vector<size_t>> localCounts(numThreads, std::vector<size_t>(buckets, 0));
+    size_t chunk = n / numThreads;
+    std::vector<std::thread> threads;
+
+    for (unsigned t = 0; t < numThreads; t++) {
+        size_t start = t * chunk;
+        size_t end = (t == numThreads - 1) ? n : start + chunk;
+        threads.emplace_back([&, start, end, t]() {
+            auto& lc = localCounts[t];
+            for (size_t i = start; i < end; i++)
+                lc[(src[i] >> shift) & mask]++;
+        });
+    }
+    for (auto& th : threads) th.join();
+
+    // Phase 2: Global prefix sum (serial — fast on small bucket arrays)
+    std::vector<size_t> globalCount(buckets, 0);
+    for (unsigned t = 0; t < numThreads; t++)
+        for (uint32_t b = 0; b < buckets; b++)
+            globalCount[b] += localCounts[t][b];
+
+    std::vector<size_t> globalOffsets(buckets);
+    size_t offset = 0;
+    for (uint32_t b = 0; b < buckets; b++) {
+        globalOffsets[b] = offset;
+        offset += globalCount[b];
+    }
+
+    // Phase 3: Per-thread scatter offsets
+    std::vector<std::vector<size_t>> threadOffsets(numThreads, std::vector<size_t>(buckets, 0));
+    for (uint32_t b = 0; b < buckets; b++) {
+        threadOffsets[0][b] = globalOffsets[b];
+        for (unsigned t = 1; t < numThreads; t++)
+            threadOffsets[t][b] = threadOffsets[t-1][b] + localCounts[t-1][b];
+    }
+
+    // Phase 4: Parallel scatter
+    threads.clear();
+    for (unsigned t = 0; t < numThreads; t++) {
+        size_t start = t * chunk;
+        size_t end = (t == numThreads - 1) ? n : start + chunk;
+        threads.emplace_back([&, start, end, t]() {
+            auto& to = threadOffsets[t];
+            for (size_t i = start; i < end; i++)
+                dst[to[(src[i] >> shift) & mask]++] = src[i];
+        });
+    }
+    for (auto& th : threads) th.join();
+}
+
+static inline void parallelRadixSort16(u32* data, size_t n, bool allowShortcuts,
+                                        unsigned int numThreads) {
+    if (n <= 1) return;
+
+    if (allowShortcuts) {
+        if (std::is_sorted(data, data + n)) return;
+        bool isReverse = true;
+        for (size_t i = 1; i < std::min<size_t>(n, 1024); ++i) {
+            if (data[i - 1] < data[i]) { isReverse = false; break; }
+        }
+        if (isReverse && std::is_sorted(std::make_reverse_iterator(data + n),
+                                        std::make_reverse_iterator(data))) {
+            std::reverse(data, data + n);
+            return;
+        }
+    }
+
+    std::vector<u32> temp(n);
+
+    // Pass 1: lower 16 bits
+    parallelRadixPass(data, temp.data(), n, 0, 16, numThreads);
+    // Pass 2: upper 16 bits
+    parallelRadixPass(temp.data(), data, n, 16, 16, numThreads);
+}
+
+static inline void parallelRadixSort11(u32* data, size_t n, bool allowShortcuts,
+                                        unsigned int numThreads) {
+    if (n <= 1) return;
+    if (allowShortcuts && std::is_sorted(data, data + n)) return;
+
+    std::vector<u32> temp(n);
+    u32* src = data;
+    u32* dst = temp.data();
+
+    int shift = 0;
+    while (shift < 32) {
+        int currentBits = std::min(11, 32 - shift);
+        parallelRadixPass(src, dst, n, shift, currentBits, numThreads);
+        std::swap(src, dst);
+        shift += currentBits;
+    }
+
+    if (src != data) std::memcpy(data, src, n * sizeof(u32));
+}
+
+static inline void parallelRadixSort8(u32* data, size_t n, bool allowShortcuts,
+                                       unsigned int numThreads) {
+    if (n <= 1) return;
+    if (allowShortcuts && std::is_sorted(data, data + n)) return;
+
+    std::vector<u32> temp(n);
+    u32* src = data;
+    u32* dst = temp.data();
+
+    for (int shift = 0; shift < 32; shift += 8) {
+        parallelRadixPass(src, dst, n, shift, 8, numThreads);
+        std::swap(src, dst);
+    }
+    if (src != data) std::memcpy(data, src, n * sizeof(u32));
+}
+
 } // namespace detail
 
 // ============================================================================
@@ -396,17 +521,40 @@ inline void sort(u32* data, size_t n, SortOptions options = SortOptions{}) {
     if (n <= 1) return;
     State state = detail::analyzeData(data, n, options.sampleSize);
 
-    if (options.verbose) {
-        std::cout << "[QI-Radix] N=" << n
-                  << " | Selected=" << (state.recommendedRadix == Radix::R16 ? "RADIX-16" : (state.recommendedRadix == Radix::R11 ? "RADIX-11" : "RADIX-8"))
-                  << " | Entropy=" << state.averageEntropy
-                  << " | EffectiveStates=" << state.effectiveStates << "\n";
-    }
+    const char* modeStr = "scalar";
+    if (options.parallel && n >= 100000) {
+        unsigned int threads = options.numThreads;
+        if (threads == 0) threads = std::thread::hardware_concurrency();
+        if (threads < 2) threads = 2;
+        modeStr = "parallel";
 
-    switch (state.recommendedRadix) {
-        case Radix::R8:  detail::radixSort8(data, n, options.allowShortcuts); break;
-        case Radix::R11: detail::radixSort11(data, n, options.allowShortcuts); break;
-        case Radix::R16: detail::radixSort16(data, n, options.allowShortcuts); break;
+        if (options.verbose) {
+            std::cout << "[QI-Radix] N=" << n
+                      << " | Mode=PARALLEL (" << threads << " threads)"
+                      << " | Selected=" << (state.recommendedRadix == Radix::R16 ? "RADIX-16" : (state.recommendedRadix == Radix::R11 ? "RADIX-11" : "RADIX-8"))
+                      << " | Entropy=" << state.averageEntropy
+                      << " | EffectiveStates=" << state.effectiveStates << "\n";
+        }
+
+        switch (state.recommendedRadix) {
+            case Radix::R8:  detail::parallelRadixSort8(data, n, options.allowShortcuts, threads); break;
+            case Radix::R11: detail::parallelRadixSort11(data, n, options.allowShortcuts, threads); break;
+            case Radix::R16: detail::parallelRadixSort16(data, n, options.allowShortcuts, threads); break;
+        }
+    } else {
+        if (options.verbose) {
+            std::cout << "[QI-Radix] N=" << n
+                      << " | Mode=SCALAR"
+                      << " | Selected=" << (state.recommendedRadix == Radix::R16 ? "RADIX-16" : (state.recommendedRadix == Radix::R11 ? "RADIX-11" : "RADIX-8"))
+                      << " | Entropy=" << state.averageEntropy
+                      << " | EffectiveStates=" << state.effectiveStates << "\n";
+        }
+
+        switch (state.recommendedRadix) {
+            case Radix::R8:  detail::radixSort8(data, n, options.allowShortcuts); break;
+            case Radix::R11: detail::radixSort11(data, n, options.allowShortcuts); break;
+            case Radix::R16: detail::radixSort16(data, n, options.allowShortcuts); break;
+        }
     }
 }
 
