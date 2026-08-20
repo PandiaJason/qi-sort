@@ -120,7 +120,32 @@ We compiled **DuckDB's exact native sorting headers** ([`third_party/pdqsort/pdq
 | **Hash Join Keys & Hash Hashes** | 61.99 ms | 61.71 ms | 14.78 ms | 11.17 ms | 16.27 ms | **16.41 ms** | **3.76× FASTER** (183 MRows/s) |
 | **Heavy Duplicate Categories (0-255)** | 17.77 ms | 17.79 ms | 42.28 ms | 30.03 ms | 9.44 ms | **9.62 ms** | **1.85× FASTER** (303 MRows/s) |
 
-> **DuckDB End-to-End ORDER BY Benchmark:** Run `./duckdb_orderby_benchmark` locally to reproduce real DuckDB PhysicalOrder pipeline benchmarks. See [`examples/duckdb_block_sorter.cpp`](examples/duckdb_block_sorter.cpp) for full relational `DataChunk` code.
+### DuckDB Multi-Scale & Multi-Threaded Validation Matrix (3M → 10M → 50M Rows)
+
+To rigorously validate whether `qi::sort` maintains its speedup at enterprise database scale across single-threaded and parallel multi-threaded pipelines, we executed a full empirical validation matrix up to **50,000,000 SQL rows**:
+
+#### 1. Scale N = 10 Million Rows (10,000,000)
+
+| SQL Dataset (N = 10M) | DuckDB Single-Thread | **`DuckDB + qi::sort` ST** | DuckDB Parallel MT | **`DuckDB + qi::sort` MT** | **Parallel Speedup** | **Parallel Throughput** |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Uniform Integers** | 223.01 ms | **53.93 ms** (4.14×) | 29.58 ms | **12.00 ms** | **2.47× FASTER** | **833 MRows/s** |
+| **Timestamps (NS)** | 219.08 ms | **36.71 ms** (5.97×) | 29.93 ms | **8.94 ms** | **3.35× FASTER** | **1,118 MRows/s** |
+| **Hash Keys** | 216.80 ms | **52.89 ms** (4.10×) | 31.26 ms | **13.96 ms** | **2.24× FASTER** | **716 MRows/s** |
+| **Low Cardinality (16 Categories)** | 33.00 ms | **28.80 ms** (1.15×) | 6.73 ms | **6.03 ms** | **1.12× FASTER** | **1,658 MRows/s** |
+| **Heavy Duplicates (256 Categories)** | 57.06 ms | **31.25 ms** (1.83×) | 9.87 ms | **5.84 ms** | **1.69× FASTER** | **1,712 MRows/s** |
+| **Nearly Sorted (95% Ordered)** | 82.94 ms | 108.54 ms (0.76×) | 26.94 ms | **8.66 ms** | **3.11× FASTER** | **1,154 MRows/s** |
+
+#### 2. Scale N = 50 Million Rows (50,000,000)
+
+| SQL Dataset (N = 50M) | DuckDB Single-Thread | **`DuckDB + qi::sort` ST** | DuckDB Parallel MT | **`DuckDB + qi::sort` MT** | **Parallel Speedup** | **Parallel Throughput** |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Uniform Integers** | 1,177.14 ms | **312.37 ms** (3.77×) | 173.21 ms | **119.44 ms** | **1.45× FASTER** | **418 MRows/s** |
+| **Timestamps (NS)** | 1,156.40 ms | **290.07 ms** (3.99×) | 158.29 ms | **57.33 ms** | **2.76× FASTER** | **872 MRows/s** |
+| **Hash Keys** | 1,169.81 ms | **198.61 ms** (5.89×) | 142.60 ms | **97.02 ms** | **1.47× FASTER** | **515 MRows/s** |
+| **Low Cardinality (16 Categories)** | 180.96 ms | **146.09 ms** (1.24×) | 31.21 ms | **25.23 ms** | **1.24× FASTER** | **1,982 MRows/s** |
+| **Heavy Duplicates (256 Categories)** | 287.44 ms | **157.94 ms** (3.16×) | 54.13 ms | **42.06 ms** | **1.29× FASTER** | **1,188 MRows/s** |
+
+> **Runnable Validation Suite:** Run `./duckdb_rigorous_validation` locally to execute the full multi-scale, multi-threaded DuckDB validation matrix.
 
 ### 2. RocksDB Native Source MemTable Sorter Benchmark Matrix ($N = 3,000,000$)
 

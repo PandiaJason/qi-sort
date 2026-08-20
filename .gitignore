@@ -12,6 +12,7 @@ db_benchmark
 duckdb_block_sorter
 duckdb_orderby_benchmark
 duckdb_real_benchmark
+duckdb_rigorous_validation
 ex_analyze
 ex_basic
 ex_db
