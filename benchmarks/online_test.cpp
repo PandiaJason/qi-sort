@@ -355,6 +355,16 @@ static void run_pradix11(std::vector<uint32_t>& d) { qi::plain_radix11(d.data(),
 static void run_pradix16(std::vector<uint32_t>& d) { qi::plain_radix16(d.data(), d.size()); }
 static void run_qisort(std::vector<uint32_t>& d)   { qi::SortOptions opts; opts.verbose = false; qi::sort(d, opts); }
 
+static void print_dataset_row(const std::string& name, double t, double t_std, size_t N) {
+    double mk = N / t / 1000.0;
+    double vs = t_std / t;
+    std::cout << "  " << std::left << std::setw(32) << name
+              << std::setw(10) << std::fixed << std::setprecision(2) << t << " ms  "
+              << std::setw(16) << (std::to_string((int)mk) + " MKeys/s")
+              << std::setw(16) << (std::to_string(vs).substr(0, 4) + "x vs std::sort")
+              << "\n";
+}
+
 // ===============================================================================
 // MULTI-DATASET BENCHMARK ENGINE
 // ===============================================================================
@@ -390,7 +400,8 @@ int main() {
     std::cout << "  QI-SORT MULTI-DATASET BENCHMARK MATRIX (N = 2,000,000 Keys Across 5 Real-World Distributions)\n";
     std::cout << "====================================================================================================\n\n";
 
-    for (const auto& dsName : datasets) {
+    for (size_t d_idx = 0; d_idx < datasets.size(); ++d_idx) {
+        const auto& dsName = datasets[d_idx];
         auto data = generate_dataset(dsName, N);
 
         // Run sensing to report auto-selection
@@ -412,23 +423,13 @@ int main() {
         double t_pradix16= measure_time(run_pradix16, data);
         double t_qi      = measure_time(run_qisort, data);
 
-        auto row = [&](const std::string& name, double t) {
-            double mk = N / t / 1000.0;
-            double vs = t_std / t;
-            std::cout << "  " << std::left << std::setw(32) << name
-                      << std::setw(10) << std::fixed << std::setprecision(2) << t << " ms  "
-                      << std::setw(16) << (std::to_string((int)mk) + " MKeys/s")
-                      << std::setw(16) << (std::to_string(vs).substr(0, 4) + "x vs std::sort")
-                      << "\n";
-        };
-
-        row("std::sort (Introsort)",         t_std);
-        row("std::stable_sort (Timsort)",    t_tim);
-        row("Classic QuickSort (Hoare)",     t_qsort);
-        row("Plain Radix-8  (Fixed 4-Pass)", t_pradix8);
-        row("Plain Radix-11 (Fixed 3-Pass)", t_pradix11);
-        row("Plain Radix-16 (Fixed 2-Pass)", t_pradix16);
-        row("qi::sort (Adaptive Engine)",    t_qi);
+        print_dataset_row("std::sort (Introsort)",         t_std,    t_std, N);
+        print_dataset_row("std::stable_sort (Timsort)",    t_tim,    t_std, N);
+        print_dataset_row("Classic QuickSort (Hoare)",     t_qsort,  t_std, N);
+        print_dataset_row("Plain Radix-8  (Fixed 4-Pass)", t_pradix8, t_std, N);
+        print_dataset_row("Plain Radix-11 (Fixed 3-Pass)", t_pradix11, t_std, N);
+        print_dataset_row("Plain Radix-16 (Fixed 2-Pass)", t_pradix16, t_std, N);
+        print_dataset_row("qi::sort (Adaptive Engine)",    t_qi,     t_std, N);
 
         std::cout << "  --> qi::sort Speedup: " 
                   << std::setprecision(2) << (t_std / t_qi) << "x vs std::sort  |  "
