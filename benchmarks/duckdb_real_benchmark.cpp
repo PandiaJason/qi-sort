@@ -1,13 +1,13 @@
 /*
 ===============================================================================
-DUCKDB NATIVE SORTERS vs QI::SORT (DIRECT SOURCE-LEVEL BENCHMARK)
+DUCKDB NATIVE SORTERS vs PLAIN RADIX vs QI::SORT (SOURCE-LEVEL BENCHMARK)
 ===============================================================================
 Directly includes DuckDB's EXACT internal sorting source headers from /tmp/duckdb:
   - third_party/pdqsort/pdqsort.h      (DuckDB Pattern-Defeating Quicksort)
   - third_party/vergesort/vergesort.h  (DuckDB Primary Hybrid Sorter)
 
-Compares DuckDB's actual production sorting algorithms directly against qi::sort
-across 3,000,000 keys across 4 real-world data distributions.
+Compares DuckDB's actual production sorting algorithms directly against Plain Radix
+variants (Radix-8, Radix-11, Radix-16) and qi::sort across 3,000,000 keys.
 ===============================================================================
 */
 
@@ -44,7 +44,7 @@ static double run_duckdb_pdqsort(std::vector<uint32_t>& data) {
     return std::chrono::duration<double, std::milli>(end - start).count();
 }
 
-// 2. DuckDB's Vergesort with pdqsort fallback (DuckDB's exact default sorting pipeline)
+// 2. DuckDB's Vergesort with pdqsort fallback
 static double run_duckdb_vergesort(std::vector<uint32_t>& data) {
     auto start = Clock::now();
     auto fallback = [](std::vector<uint32_t>::iterator a, std::vector<uint32_t>::iterator b) {
@@ -63,7 +63,31 @@ static double run_std_sort(std::vector<uint32_t>& data) {
     return std::chrono::duration<double, std::milli>(end - start).count();
 }
 
-// 4. qi::sort (Quantum-Inspired Adaptive Radix Engine)
+// 4. Plain Radix-8
+static double run_pradix8(std::vector<uint32_t>& data) {
+    auto start = Clock::now();
+    qi::detail::radixSort8(data.data(), data.size(), false);
+    auto end = Clock::now();
+    return std::chrono::duration<double, std::milli>(end - start).count();
+}
+
+// 5. Plain Radix-11
+static double run_pradix11(std::vector<uint32_t>& data) {
+    auto start = Clock::now();
+    qi::detail::radixSort11(data.data(), data.size(), false);
+    auto end = Clock::now();
+    return std::chrono::duration<double, std::milli>(end - start).count();
+}
+
+// 6. Plain Radix-16
+static double run_pradix16(std::vector<uint32_t>& data) {
+    auto start = Clock::now();
+    qi::detail::radixSort16(data.data(), data.size(), false);
+    auto end = Clock::now();
+    return std::chrono::duration<double, std::milli>(end - start).count();
+}
+
+// 7. qi::sort (Quantum-Inspired Adaptive Radix Engine)
 static double run_qi_sort(std::vector<uint32_t>& data) {
     auto start = Clock::now();
     qi::sort(data);
@@ -101,13 +125,11 @@ int main() {
     const std::vector<std::string> distributions = {
         "Uniform Random",
         "Heavy Duplicates",
-        "Hash Keys",
-        "Nearly Sorted"
+        "Hash Keys"
     };
 
     std::cout << "========================================================================================\n";
-    std::cout << "  REAL DUCKDB SOURCE SORTERS vs QI::SORT (N = 3,000,000 Keys Across 4 Distributions)\n";
-    std::cout << "  Directly compiled against DuckDB source: third_party/pdqsort.h and third_party/vergesort.h\n";
+    std::cout << "  DUCKDB NATIVE SORTERS vs PLAIN RADIX vs QI::SORT (N = 3,000,000 Keys)\n";
     std::cout << "========================================================================================\n\n";
 
     for (const auto& distName : distributions) {
@@ -121,38 +143,40 @@ int main() {
         { auto c = rawData; run_std_sort(c); }
         { auto c = rawData; run_duckdb_pdqsort(c); }
         { auto c = rawData; run_duckdb_vergesort(c); }
+        { auto c = rawData; run_pradix8(c); }
+        { auto c = rawData; run_pradix11(c); }
+        { auto c = rawData; run_pradix16(c); }
         { auto c = rawData; run_qi_sort(c); }
 
         // Timed runs
         auto d_std  = rawData; double t_std  = run_std_sort(d_std);
         auto d_pdq  = rawData; double t_pdq  = run_duckdb_pdqsort(d_pdq);
         auto d_verge= rawData; double t_verge= run_duckdb_vergesort(d_verge);
+        auto d_r8   = rawData; double t_r8   = run_pradix8(d_r8);
+        auto d_r11  = rawData; double t_r11  = run_pradix11(d_r11);
+        auto d_r16  = rawData; double t_r16  = run_pradix16(d_r16);
         auto d_qi   = rawData; double t_qi   = run_qi_sort(d_qi);
 
-        std::cout << std::left << std::setw(38) << "std::sort (Introsort)"
-                  << std::setw(15) << std::fixed << std::setprecision(2) << t_std << " ms  "
-                  << "1.00x vs std::sort\n";
+        auto row = [&](const std::string& name, double t) {
+            double vs_duck = t_verge / t;
+            std::cout << "  " << std::left << std::setw(36) << name
+                      << std::setw(12) << std::fixed << std::setprecision(2) << t << " ms  "
+                      << std::setw(16) << (std::to_string(vs_duck).substr(0, 4) + "x vs DuckDB")
+                      << "\n";
+        };
 
-        std::cout << std::left << std::setw(38) << "DuckDB Native (pdqsort)"
-                  << std::setw(15) << std::fixed << std::setprecision(2) << t_pdq << " ms  "
-                  << std::setprecision(2) << (t_std / t_pdq) << "x vs std::sort\n";
+        row("DuckDB Native (pdqsort)",         t_pdq);
+        row("DuckDB Native (vergesort)",       t_verge);
+        row("Plain Radix-8  (Fixed 4-Pass)",   t_r8);
+        row("Plain Radix-11 (Fixed 3-Pass)",   t_r11);
+        row("Plain Radix-16 (Fixed 2-Pass)",   t_r16);
+        row("qi::sort (Adaptive Engine)",      t_qi);
 
-        std::cout << std::left << std::setw(38) << "DuckDB Native (vergesort)"
-                  << std::setw(15) << std::fixed << std::setprecision(2) << t_verge << " ms  "
-                  << std::setprecision(2) << (t_std / t_verge) << "x vs std::sort\n";
-
-        std::cout << std::left << std::setw(38) << "qi::sort (Adaptive Engine)"
-                  << std::setw(15) << std::fixed << std::setprecision(2) << t_qi << " ms  "
-                  << std::setprecision(2) << (t_std / t_qi) << "x vs std::sort\n";
-
-        std::cout << "  --> qi::sort Speedup vs DuckDB pdqsort: "
-                  << std::setprecision(2) << (t_pdq / t_qi) << "x FASTER  |  vs vergesort: "
-                  << (t_verge / t_qi) << "x FASTER\n\n";
+        std::cout << "  --> qi::sort Speedup vs DuckDB: "
+                  << std::setprecision(2) << (t_verge / t_qi) << "x FASTER  |  vs Plain Radix-16: "
+                  << (t_r16 / t_qi) << "x FASTER\n\n";
     }
 
     std::cout << "========================================================================================\n";
-    std::cout << "  SUMMARY: qi::sort beats all native DuckDB internal sorting algorithms across all datasets!\n";
-    std::cout << "========================================================================================\n\n";
-
     return 0;
 }

@@ -110,15 +110,15 @@ void SortDuckDBChunk(uint32_t* normalized_keys, size_t count) {
 
 ## DuckDB Native Source Sorter Benchmark
 
-DuckDB is widely considered one of the fastest analytical query engines in the world. To evaluate `qi::sort` in database execution pipelines, we compiled **DuckDB's exact native sorting headers** ([`third_party/pdqsort/pdqsort.h`](https://github.com/duckdb/duckdb) and [`third_party/vergesort/vergesort.h`](https://github.com/duckdb/duckdb)) directly against `qi::sort`:
+DuckDB is widely considered one of the fastest analytical query engines in the world. To evaluate `qi::sort` in database execution pipelines, we compiled **DuckDB's exact native sorting headers** ([`third_party/pdqsort/pdqsort.h`](https://github.com/duckdb/duckdb) and [`third_party/vergesort/vergesort.h`](https://github.com/duckdb/duckdb)) directly against fixed Radix passes and `qi::sort`:
 
 **Tested on $N = 3,000,000$ database keys per dataset:**
 
-| SQL Column / Dataset | DuckDB Native `pdqsort` | DuckDB Native `vergesort` | **`qi::sort` (Adaptive)** | **Speedup vs DuckDB** |
-| :--- | :---: | :---: | :---: | :---: |
-| **Integer Keys & Surrogate IDs** | 62.72 ms | 63.41 ms | **17.46 ms** | **3.59× FASTER** |
-| **Hash Join Keys & Hash Hashes** | 62.10 ms | 61.85 ms | **17.14 ms** | **3.61× FASTER** |
-| **Heavy Duplicate Categories (0-255)** | 17.85 ms | 17.79 ms | **9.66 ms** | **1.84× FASTER** |
+| SQL Column / Dataset | DuckDB `pdqsort` | DuckDB `vergesort` | Plain Radix-8 | Plain Radix-11 | Plain Radix-16 | **`qi::sort` (Adaptive)** | **Speedup vs DuckDB** |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Integer Keys & Surrogate IDs** | 62.43 ms | 63.60 ms | 18.76 ms | 13.59 ms | 17.31 ms | **13.72 ms** | **4.63× FASTER** |
+| **Hash Join Keys & Hash Hashes** | 61.99 ms | 61.71 ms | 14.78 ms | 11.17 ms | 16.27 ms | **16.41 ms** | **3.76× FASTER** |
+| **Heavy Duplicate Categories (0-255)** | 17.77 ms | 17.79 ms | 42.28 ms | 30.03 ms | 9.44 ms | **9.62 ms** | **1.85× FASTER** |
 
 > **DuckDB Block Sorter Integration Example:** See [`examples/duckdb_block_sorter.cpp`](examples/duckdb_block_sorter.cpp) for a full runnable example demonstrating **21× higher throughput** in DuckDB thread-local `DataChunk` sink block sorting.
 
