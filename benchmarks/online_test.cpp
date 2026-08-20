@@ -63,7 +63,7 @@ enum class Radix : int { R8 = 8, R11 = 11, R16 = 16 };
 struct SortOptions {
     size_t sampleSize = 8192;
     bool allowShortcuts = true;
-    bool verbose = false; // Turned off per-trial verbose logging for multi-run table cleanliness
+    bool verbose = false;
 };
 
 struct ByteState {
@@ -300,6 +300,31 @@ inline void sort(std::vector<u32>& data, SortOptions options = SortOptions{}) {
 
 } // namespace qi
 
+// ─── STANDALONE HELPER FUNCTIONS FOR BENCHMARK WRAPPERS ────────────────────
+static void run_std_sort(std::vector<uint32_t>& d) {
+    std::sort(d.begin(), d.end());
+}
+static void run_timsort(std::vector<uint32_t>& d) {
+    std::stable_sort(d.begin(), d.end());
+}
+static void run_quicksort(std::vector<uint32_t>& d) {
+    classic_quicksort(d.data(), 0, (int)d.size() - 1);
+}
+static void run_pradix8(std::vector<uint32_t>& d) {
+    qi::plain_radix8(d.data(), d.size());
+}
+static void run_pradix11(std::vector<uint32_t>& d) {
+    qi::plain_radix11(d.data(), d.size());
+}
+static void run_pradix16(std::vector<uint32_t>& d) {
+    qi::plain_radix16(d.data(), d.size());
+}
+static void run_qisort(std::vector<uint32_t>& d) {
+    qi::SortOptions opts;
+    opts.verbose = false;
+    qi::sort(d, opts);
+}
+
 // ===============================================================================
 // BENCHMARK MAIN FUNCTION (MULTI-TRIAL 5-RUN STATISTICAL BENCHMARK)
 // ===============================================================================
@@ -316,7 +341,7 @@ struct BenchmarkResult {
 
 static BenchmarkResult run_multi_trial(const std::string& name, size_t N, int numTrials,
                                        const std::vector<uint32_t>& referenceData,
-                                       std::function<void(std::vector<uint32_t>&)> sortFn) {
+                                       void (*sortFn)(std::vector<uint32_t>&)) {
     BenchmarkResult res;
     res.name = name;
     std::vector<double> times;
@@ -370,44 +395,23 @@ int main() {
     qi::sort(sensingCopy, opts);
     std::cout << "\nRunning " << TRIALS << " trials per algorithm...\n\n";
 
-    // 1. std::sort (Introsort)
-    auto r_std = run_multi_trial("std::sort (Introsort)", N, TRIALS, initData, [](std::vector<uint32_t>& d) {
-        std::sort(d.begin(), d.end());
-    });
+    // Run statistical trials using clean static helper function pointers
+    BenchmarkResult r_std     = run_multi_trial("std::sort (Introsort)",         N, TRIALS, initData, run_std_sort);
+    BenchmarkResult r_tim     = run_multi_trial("std::stable_sort (Timsort)",    N, TRIALS, initData, run_timsort);
+    BenchmarkResult r_qsort   = run_multi_trial("Classic QuickSort (Hoare)",     N, TRIALS, initData, run_quicksort);
+    BenchmarkResult r_pradix8 = run_multi_trial("Plain Radix-8 (Fixed 4-Pass)", N, TRIALS, initData, run_pradix8);
+    BenchmarkResult r_pradix11= run_multi_trial("Plain Radix-11 (Fixed 3-Pass)",N, TRIALS, initData, run_pradix11);
+    BenchmarkResult r_pradix16= run_multi_trial("Plain Radix-16 (Fixed 2-Pass)",N, TRIALS, initData, run_pradix16);
+    BenchmarkResult r_qi      = run_multi_trial("qi::sort (Adaptive Engine)",    N, TRIALS, initData, run_qisort);
 
-    // 2. std::stable_sort (Timsort)
-    auto r_tim = run_multi_trial("std::stable_sort (Timsort)", N, TRIALS, initData, [](std::vector<uint32_t>& d) {
-        std::stable_sort(d.begin(), d.end());
-    });
-
-    // 3. Classic QuickSort
-    auto r_qsort = run_multi_trial("Classic QuickSort (Hoare)", N, TRIALS, initData, [](std::vector<uint32_t>& d) {
-        classic_quicksort(d.data(), 0, (int)d.size() - 1);
-    });
-
-    // 4. Plain Radix-8
-    auto r_pradix8 = run_multi_trial("Plain Radix-8 (Fixed 4-Pass)", N, TRIALS, initData, [](std::vector<uint32_t>& d) {
-        qi::plain_radix8(d.data(), d.size());
-    });
-
-    // 5. Plain Radix-11
-    auto r_pradix11 = run_multi_trial("Plain Radix-11 (Fixed 3-Pass)", N, TRIALS, initData, [](std::vector<uint32_t>& d) {
-        qi::plain_radix11(d.data(), d.size());
-    });
-
-    // 6. Plain Radix-16
-    auto r_pradix16 = run_multi_trial("Plain Radix-16 (Fixed 2-Pass)", N, TRIALS, initData, [](std::vector<uint32_t>& d) {
-        qi::plain_radix16(d.data(), d.size());
-    });
-
-    // 7. qi::sort Adaptive Engine
-    qi::SortOptions silentOpts;
-    silentOpts.verbose = false;
-    auto r_qi = run_multi_trial("qi::sort (Adaptive Engine)", N, TRIALS, initData, [silentOpts](std::vector<uint32_t>& d) {
-        qi::sort(d, silentOpts);
-    });
-
-    std::vector<BenchmarkResult> results = { r_std, r_tim, r_qsort, r_pradix8, r_pradix11, r_pradix16, r_qi };
+    std::vector<BenchmarkResult> results;
+    results.push_back(r_std);
+    results.push_back(r_tim);
+    results.push_back(r_qsort);
+    results.push_back(r_pradix8);
+    results.push_back(r_pradix11);
+    results.push_back(r_pradix16);
+    results.push_back(r_qi);
 
     std::cout << "----------------------------------------------------------------------------------------\n";
     std::cout << std::left << std::setw(32) << "Algorithm"
@@ -418,7 +422,8 @@ int main() {
               << "Status\n";
     std::cout << "----------------------------------------------------------------------------------------\n";
 
-    for (const auto& r : results) {
+    for (size_t i = 0; i < results.size(); ++i) {
+        const auto& r = results[i];
         double mk = N / r.avgMs / 1000.0;
         double vs = r_std.avgMs / r.avgMs;
         std::cout << std::left << std::setw(32) << r.name
