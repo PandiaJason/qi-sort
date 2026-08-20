@@ -183,9 +183,9 @@ To rigorously validate whether `qi::sort` maintains its speedup at enterprise da
 
 | Google `vqsort` Dataset | Google `vqsort` (SIMD) | Plain Radix-8 | Plain Radix-11 | Plain Radix-16 | **`qi::sort` (Adaptive)** | **Speedup vs `vqsort`** |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Uniform Key Sort** | 241.30 ms | 23.02 ms | 90.11 ms | 57.93 ms | **31.25 ms** | **7.72× FASTER** |
-| **Hash Key Sort** | 101.02 ms | 94.16 ms | 43.25 ms | 45.40 ms | **149.49 ms** | **0.68× FASTER** |
-| **Heavy Duplicate Key Sort** | 26.25 ms | 192.92 ms | 101.90 ms | 35.83 ms | **137.66 ms** | **0.19× FASTER** |
+| **Uniform Key Sort** | 40.52 ms | 16.79 ms | 12.94 ms | 17.44 ms | **13.43 ms** | **3.02× FASTER** |
+| **Hash Key Sort** | 39.75 ms | 15.27 ms | 11.86 ms | 17.12 ms | **16.27 ms** | **2.44× FASTER** |
+| **Heavy Duplicate Key Sort** | 14.33 ms | 42.56 ms | 30.37 ms | 9.71 ms | **10.09 ms** | **1.42× FASTER** |
 
 > **Runnable Integration Benchmarks:** Run `./duckdb_real_benchmark`, `./rocksdb_real_benchmark`, `./sqlite_real_benchmark`, `./redis_real_benchmark`, `./postgres_real_benchmark`, or `./google_vqsort_real_benchmark` locally to reproduce real source-level numbers.
 
