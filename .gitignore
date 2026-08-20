@@ -1,48 +1,60 @@
-# Build Binaries
-qi_radix
-db_benchmark
-basic_usage
+# ──── Compiled Binaries (extensionless executables) ────
+ablation_test
+algo_test
 analytical_inspection
+basic_usage
+c_example
+cost_compare
 database_column_sort
-spatial_morton_sort
+db_bench
+db_benchmark
+ex_analyze
+ex_basic
+ex_db
+ex_spatial
+global_bench
+head2head
+online_test
+parallel_bench
+qi_radix
+qi_radix_final
 qsort-db
+quick_bench
+radix_test
+real_bench
+real_qsort_bench
+spatial_morton_sort
+verify
 
-# Data Files & Logs
-*.bin
-*.out
+# ──── Object Files & Libraries ────
 *.o
 *.a
 *.so
 *.dylib
+*.dll
+*.lib
+*.exe
 
-# IDE & OS Artifacts
+# ──── Data Files ────
+*.bin
+
+# ──── Build Directories ────
+build/
+cmake-build-*/
+
+# ──── IDE & OS Artifacts ────
 .DS_Store
 .vscode/
 .idea/
-build/
-# Compiled binaries
-global_bench
-parallel_bench
-quick_bench
-real_qsort_bench
-verify
-cost_compare
-ex_basic
-ex_analyze
-ex_db
-ex_spatial
-real_bench
-db_benchmark
-algo_test
-radix_test
-qsort-db
-libqisort.dylib
-libqisort.so
-*.o
-*.bin
-100mb_data.bin
-ablation_test
-db_bench
-head2head
-real_bench
-real_bench
+*.dSYM/
+
+# ──── Python ────
+__pycache__/
+*.pyc
+*.pyo
+
+# ──── Java ────
+*.class
+
+# ──── Redundant development files ────
+qi_radix_final.cpp
