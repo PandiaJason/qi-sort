@@ -260,23 +260,21 @@ inline ThreadLocalScratch& getScratch() {
 }
 
 // ── RADIX-8 ──
-// Single combined counting pass + selective scatter passes.
-// uint32_t histograms = 1KB → L1 resident on all architectures.
+// Used for narrow-range data (bitOr-guided pass skipping). Radix-8 is NOT the default for
+// full 32-bit data; see qi::sort() routing. uint32_t histograms = 1KB each → L1 resident.
 inline void radixSort8(u32* data, size_t n, bool allowShortcuts = true, u32 bitOr = ~0u) {
     if (n <= 1) return;
-    u32* dst = getScratch().get(n);
+    u32* buf = getScratch().get(n);
     u32* src = data;
 
-    // Determine which passes are needed upfront
     const bool p0 = ((bitOr >>  0) & 0xFF) != 0;
     const bool p1 = ((bitOr >>  8) & 0xFF) != 0;
     const bool p2 = ((bitOr >> 16) & 0xFF) != 0;
     const bool p3 = ((bitOr >> 24) & 0xFF) != 0;
 
-    // uint32_t: 256×4 = 1 KB per histogram — guaranteed L1 resident
-    alignas(64) uint32_t c0[256] = {}, c1[256] = {}, c2[256] = {}, c3[256] = {};
-
-    // ONE combined counting pass over data (4× fewer cache misses than 4 separate passes)
+    // Stack-allocated uint32_t histograms: 4KB total, guaranteed L1 resident
+    // Note: conditional counting is correct here — narrow-range data usually has p1/p2/p3=false
+    alignas(64) uint32_t c0[256]={}, c1[256]={}, c2[256]={}, c3[256]={};
     for (size_t i = 0; i < n; ++i) {
         u32 v = src[i];
         if (p0) c0[ v        & 0xFF]++;
@@ -285,76 +283,98 @@ inline void radixSort8(u32* data, size_t n, bool allowShortcuts = true, u32 bitO
         if (p3) c3[ v >> 24       ]++;
     }
 
-    // Prefix sums
-    uint32_t s0 = 0, s1 = 0, s2 = 0, s3 = 0;
+    // Prefix sums (only active passes)
+    uint32_t s0=0, s1=0, s2=0, s3=0;
     for (int i = 0; i < 256; ++i) {
         uint32_t t;
-        if (p0) { t = c0[i]; c0[i] = s0; s0 += t; }
-        if (p1) { t = c1[i]; c1[i] = s1; s1 += t; }
-        if (p2) { t = c2[i]; c2[i] = s2; s2 += t; }
-        if (p3) { t = c3[i]; c3[i] = s3; s3 += t; }
+        if (p0) { t=c0[i]; c0[i]=s0; s0+=t; }
+        if (p1) { t=c1[i]; c1[i]=s1; s1+=t; }
+        if (p2) { t=c2[i]; c2[i]=s2; s2+=t; }
+        if (p3) { t=c3[i]; c3[i]=s3; s3+=t; }
     }
 
-    // Scatter passes
-    if (p0) { for (size_t i = 0; i < n; ++i) { u32 v=src[i]; dst[c0[ v       &0xFF]++]=v; } std::swap(src,dst); }
-    if (p1) { for (size_t i = 0; i < n; ++i) { u32 v=src[i]; dst[c1[(v>> 8)&0xFF]++]=v; } std::swap(src,dst); }
-    if (p2) { for (size_t i = 0; i < n; ++i) { u32 v=src[i]; dst[c2[(v>>16)&0xFF]++]=v; } std::swap(src,dst); }
-    if (p3) { for (size_t i = 0; i < n; ++i) { u32 v=src[i]; dst[c3[ v>>24      ]++]=v; } std::swap(src,dst); }
+    // Scatter with prefetch (PF=32: hides ~200-cycle write-allocate DRAM latency)
+    constexpr size_t PF = 32;
+#define RADIX8_SCATTER(SRC, DST, CNT, SHIFT, MASK) \
+    for (size_t i = 0; i < n; ++i) { \
+        if (i + PF < n) __builtin_prefetch(&(DST)[CNT[((SRC)[i+PF] >> SHIFT) & MASK]], 1, 0); \
+        u32 _v = (SRC)[i]; (DST)[CNT[(_v >> SHIFT) & MASK]++] = _v; \
+    }
+    u32* dst = buf;
+    if (p0) { RADIX8_SCATTER(src, dst,  c0,  0, 0xFF); std::swap(src,dst); }
+    if (p1) { RADIX8_SCATTER(src, dst,  c1,  8, 0xFF); std::swap(src,dst); }
+    if (p2) { RADIX8_SCATTER(src, dst,  c2, 16, 0xFF); std::swap(src,dst); }
+    if (p3) { RADIX8_SCATTER(src, dst,  c3, 24, 0xFF); std::swap(src,dst); }
+#undef RADIX8_SCATTER
 
     if (src != data) std::memcpy(data, src, n * sizeof(u32));
 }
 
 // ── RADIX-11 ──
-// Three-pass LSD radix sort with 11-bit digits (2048 buckets per pass).
-// uint32_t histograms: 2048×4 + 2048×4 + 1024×4 = 20 KB → fits in 32 KB L1 cache on x86_64!
+// Primary engine for full 32-bit random data. Three-pass LSD radix sort, 11-bit digits.
+//
+// KEY DESIGN CHOICES vs v0.3.12:
+// 1. UNCONDITIONAL combined counting (no per-element if-checks) → compiler can vectorize
+// 2. STACK-ALLOCATED histograms (20KB total) → no TLS function call overhead in .so
+//    x86_64 L1=32KB: 20KB fits (was: 40KB with size_t → spilled to L2 → cache thrashing)
+//    ARM    L1=128KB: 20KB trivially fits
+// 3. PREFETCH on scatter: hides write-allocate DRAM latency (~200 cycles on x86_64)
+// 4. HARD-CODED alternation (data→buf→data→buf) — no std::swap confusion
+// 5. Pass-2 is the ONLY optional pass (via bitOr); passes 0+1 always run.
 inline void radixSort11(u32* data, size_t n, bool allowShortcuts = true, u32 bitOr = ~0u) {
     if (n <= 1) return;
-    u32* dst = getScratch().get(n);
-    u32* src = data;
+    u32* buf = getScratch().get(n);
 
-    const bool pass0_active = (bitOr & 0x7FFu) != 0;
-    const bool pass1_active = ((bitOr >> 11) & 0x7FFu) != 0;
-    const bool pass2_active = (bitOr >> 22) != 0;
+    // Stack allocation: 20KB contiguous, zero-initialised, direct RSP-relative addressing
+    // No memset() needed — stack frame zeroing handles it
+    alignas(64) uint32_t c0[2048] = {};
+    alignas(64) uint32_t c1[2048] = {};
+    alignas(64) uint32_t c2[1024] = {};
 
-    // uint32_t: halves histogram size vs size_t — critical for x86_64 L1 fit
-    alignas(64) static thread_local uint32_t count0[2048];
-    alignas(64) static thread_local uint32_t count1[2048];
-    alignas(64) static thread_local uint32_t count2[1024];
-
-    std::memset(count0, 0, 2048 * sizeof(uint32_t));
-    if (pass1_active) std::memset(count1, 0, 2048 * sizeof(uint32_t));
-    if (pass2_active) std::memset(count2, 0, 1024 * sizeof(uint32_t));
-
-    // Single combined counting pass — 1× memory read instead of 3×
+    // UNCONDITIONAL combined counting (1 read of data, 3 histogram updates, no branches)
+    // Compiler can unroll+pipeline this loop freely; no if-checks block vectorization
     for (size_t i = 0; i < n; ++i) {
-        u32 val = src[i];
-        if (pass0_active) count0[val & 0x7FFu]++;
-        if (pass1_active) count1[(val >> 11) & 0x7FFu]++;
-        if (pass2_active) count2[val >> 22]++;
+        u32 v = data[i];
+        c0[v & 0x7FFu]++;
+        c1[(v >> 11) & 0x7FFu]++;
+        c2[v >> 22]++;
     }
 
-    uint32_t sum0 = 0, sum1 = 0, sum2 = 0;
+    // Prefix sums
+    uint32_t s0=0, s1=0, s2=0;
     for (int i = 0; i < 2048; ++i) {
-        if (pass0_active) { uint32_t c = count0[i]; count0[i] = sum0; sum0 += c; }
-        if (pass1_active) { uint32_t c = count1[i]; count1[i] = sum1; sum1 += c; }
-        if (pass2_active && i < 1024) { uint32_t c = count2[i]; count2[i] = sum2; sum2 += c; }
+        uint32_t t;
+        t=c0[i]; c0[i]=s0; s0+=t;
+        t=c1[i]; c1[i]=s1; s1+=t;
+        if (i < 1024) { t=c2[i]; c2[i]=s2; s2+=t; }
     }
 
-    // Scatter passes (only active passes execute)
-    if (pass0_active) {
-        for (size_t i = 0; i < n; ++i) { u32 v = src[i]; dst[count0[v & 0x7FFu]++] = v; }
-        std::swap(src, dst);
-    }
-    if (pass1_active) {
-        for (size_t i = 0; i < n; ++i) { u32 v = src[i]; dst[count1[(v >> 11) & 0x7FFu]++] = v; }
-        std::swap(src, dst);
-    }
-    if (pass2_active) {
-        for (size_t i = 0; i < n; ++i) { u32 v = src[i]; dst[count2[v >> 22]++] = v; }
-        std::swap(src, dst);
+    // Prefetch distance: hides ~200-cycle DRAM write-allocate miss latency
+    // PF=32 iterations * ~6 cycles/iter = 192 cycles of look-ahead
+    constexpr size_t PF = 32;
+
+    // Pass 0: data → buf  (bits 0-10)
+    for (size_t i = 0; i < n; ++i) {
+        if (i + PF < n) __builtin_prefetch(&buf[c0[data[i+PF] & 0x7FFu]], 1, 0);
+        u32 v = data[i]; buf[c0[v & 0x7FFu]++] = v;
     }
 
-    if (src != data) std::memcpy(data, src, n * sizeof(u32));
+    // Pass 1: buf → data  (bits 11-21)
+    for (size_t i = 0; i < n; ++i) {
+        if (i + PF < n) __builtin_prefetch(&data[c1[(buf[i+PF] >> 11) & 0x7FFu]], 1, 0);
+        u32 v = buf[i]; data[c1[(v >> 11) & 0x7FFu]++] = v;
+    }
+
+    // Pass 2 (optional): data → buf  (bits 22-31)
+    // Skip if all values fit in 22 bits (bitOr >> 22 == 0)
+    if ((bitOr >> 22) != 0) {
+        for (size_t i = 0; i < n; ++i) {
+            if (i + PF < n) __builtin_prefetch(&buf[c2[data[i+PF] >> 22]], 1, 0);
+            u32 v = data[i]; buf[c2[v >> 22]++] = v;
+        }
+        std::memcpy(data, buf, n * sizeof(u32));
+    }
+    // If pass 2 skipped: result is already in data from pass 1. Done — no memcpy needed.
 }
 
 // ── RADIX-16 ──
