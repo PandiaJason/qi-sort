@@ -288,11 +288,13 @@ inline State analyzeData(const u32* data, size_t n, size_t sampleSize = 8192) {
     u32 activeMask = bitOr ^ bitAnd;
     if (state.effectiveStates <= 16.0 || state.duplicateRatio >= 0.70) {
         state.recommendedRadix = Radix::R16;
-    } else if (state.highByteComplexity > 0.60 || state.effectiveStates >= 64.0 || activeMask <= 0x000FFFFFu) {
-        state.recommendedRadix = Radix::R11;
-    } else if (state.amplitudeSpread > 0.85 && state.effectiveStates > 32.0) {
-        // Amplitude spread is high → wavefunction is delocalized across many states
-        // This predicts heavy L2 cache pressure under R-16's 65K buckets
+    } else if (activeMask <= 0x000FFFFFu) {
+        state.recommendedRadix = Radix::R8;
+    } else if (state.averageEntropy > 0.75 && state.effectiveStates > 128.0) {
+        // High entropy 32-bit data → 256 buckets (R8) fits 100% in 32KB L1 Data Cache
+        // avoiding store-queue thrashing across 2048/65536 buckets on cloud VMs
+        state.recommendedRadix = Radix::R8;
+    } else if (state.highByteComplexity > 0.60 || state.effectiveStates >= 64.0) {
         state.recommendedRadix = Radix::R11;
     } else {
         state.recommendedRadix = Radix::R16;
