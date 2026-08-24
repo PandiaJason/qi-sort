@@ -296,8 +296,6 @@ inline State analyzeData(const u32* data, size_t n, size_t sampleSize = 8192) {
         state.recommendedRadix = Radix::R8;
     } else if (state.highByteComplexity > 0.60 || state.effectiveStates >= 64.0) {
         state.recommendedRadix = Radix::R11;
-    } else {
-        state.recommendedRadix = Radix::R16;
     }
 
     auto end = std::chrono::high_resolution_clock::now();
@@ -306,25 +304,24 @@ inline State analyzeData(const u32* data, size_t n, size_t sampleSize = 8192) {
     return state;
 }
 
+struct ThreadLocalScratch {
+    std::vector<u32> buffer;
+    u32* get(size_t n) {
+        if (buffer.size() < n) buffer.resize(n);
+        return buffer.data();
+    }
+};
+
+inline ThreadLocalScratch& getScratch() {
+    thread_local ThreadLocalScratch scratch;
+    return scratch;
+}
+
 // ── RADIX-8 ──
 inline void radixSort8(u32* data, size_t n, bool allowShortcuts = true) {
     if (n <= 1) return;
-    if (allowShortcuts) {
-        if (std::is_sorted(data, data + n)) return;
-        // O(N) reverse-sorted shortcut
-        bool isReverse = true;
-        for (size_t i = 1; i < std::min<size_t>(n, 1024); ++i) {
-            if (data[i - 1] < data[i]) { isReverse = false; break; }
-        }
-        if (isReverse && std::is_sorted(std::make_reverse_iterator(data + n), std::make_reverse_iterator(data))) {
-            std::reverse(data, data + n);
-            return;
-        }
-    }
-
-    std::unique_ptr<u32[]> buffer_ptr(new u32[n]);
+    u32* dst = getScratch().get(n);
     u32* src = data;
-    u32* dst = buffer_ptr.get();
 
     for (int pass = 0; pass < 4; ++pass) {
         size_t count[256] = {0};
@@ -355,21 +352,8 @@ inline void radixSort8(u32* data, size_t n, bool allowShortcuts = true) {
 // ── RADIX-11 ──
 inline void radixSort11(u32* data, size_t n, bool allowShortcuts = true) {
     if (n <= 1) return;
-    if (allowShortcuts) {
-        if (std::is_sorted(data, data + n)) return;
-        bool isReverse = true;
-        for (size_t i = 1; i < std::min<size_t>(n, 1024); ++i) {
-            if (data[i - 1] < data[i]) { isReverse = false; break; }
-        }
-        if (isReverse && std::is_sorted(std::make_reverse_iterator(data + n), std::make_reverse_iterator(data))) {
-            std::reverse(data, data + n);
-            return;
-        }
-    }
-
-    std::unique_ptr<u32[]> buffer_ptr(new u32[n]);
+    u32* dst = getScratch().get(n);
     u32* src = data;
-    u32* dst = buffer_ptr.get();
 
     alignas(64) size_t count0[2048] = {0};
     alignas(64) size_t count1[2048] = {0};
@@ -457,21 +441,8 @@ inline void radixSort11(u32* data, size_t n, bool allowShortcuts = true) {
 // ── RADIX-16 ──
 inline void radixSort16(u32* data, size_t n, bool allowShortcuts = true) {
     if (n <= 1) return;
-    if (allowShortcuts) {
-        if (std::is_sorted(data, data + n)) return;
-        bool isReverse = true;
-        for (size_t i = 1; i < std::min<size_t>(n, 1024); ++i) {
-            if (data[i - 1] < data[i]) { isReverse = false; break; }
-        }
-        if (isReverse && std::is_sorted(std::make_reverse_iterator(data + n), std::make_reverse_iterator(data))) {
-            std::reverse(data, data + n);
-            return;
-        }
-    }
-
-    std::unique_ptr<u32[]> buffer_ptr(new u32[n]);
+    u32* dst = getScratch().get(n);
     u32* src = data;
-    u32* dst = buffer_ptr.get();
 
     auto count0_ptr = std::make_unique<std::array<size_t, 65536>>();
     auto count1_ptr = std::make_unique<std::array<size_t, 65536>>();
