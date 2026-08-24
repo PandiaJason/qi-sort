@@ -289,7 +289,6 @@ inline void radixSort11(u32* data, size_t n, bool allowShortcuts = true) {
     if (n <= 1) return;
     if (allowShortcuts) {
         if (std::is_sorted(data, data + n)) return;
-        // O(N) reverse-sorted shortcut
         bool isReverse = true;
         for (size_t i = 1; i < std::min<size_t>(n, 1024); ++i) {
             if (data[i - 1] < data[i]) { isReverse = false; break; }
@@ -304,37 +303,78 @@ inline void radixSort11(u32* data, size_t n, bool allowShortcuts = true) {
     u32* src = data;
     u32* dst = buffer.data();
 
-    const int shifts[3] = {0, 11, 22};
-    const size_t masks[3] = {0x7FF, 0x7FF, 0x3FF};
-    const int numBuckets[3] = {2048, 2048, 1024};
+    alignas(64) size_t count0[2048] = {0};
+    alignas(64) size_t count1[2048] = {0};
+    alignas(64) size_t count2[1024] = {0};
 
-    for (int pass = 0; pass < 3; ++pass) {
-        int shift = shifts[pass];
-        size_t mask = masks[pass];
-        int buckets = numBuckets[pass];
-
-        std::vector<size_t> count(buckets, 0);
-
-        for (size_t i = 0; i < n; ++i) {
-            count[(src[i] >> shift) & mask]++;
-        }
-
-        size_t total = 0;
-        for (int i = 0; i < buckets; ++i) {
-            size_t c = count[i];
-            count[i] = total;
-            total += c;
-        }
-
-        if (count[0] == n) continue;
-
-        for (size_t i = 0; i < n; ++i) {
-            size_t bucket = (src[i] >> shift) & mask;
-            dst[count[bucket]++] = src[i];
-        }
-        std::swap(src, dst);
+    for (size_t i = 0; i < n; ++i) {
+        u32 val = src[i];
+        count0[val & 0x7FFu]++;
+        count1[(val >> 11) & 0x7FFu]++;
+        count2[val >> 22]++;
     }
-    if (src != data) std::memcpy(data, src, n * sizeof(u32));
+
+    size_t sum0 = 0, sum1 = 0, sum2 = 0;
+    for (int i = 0; i < 2048; ++i) {
+        size_t c0 = count0[i]; count0[i] = sum0; sum0 += c0;
+        size_t c1 = count1[i]; count1[i] = sum1; sum1 += c1;
+        if (i < 1024) {
+            size_t c2 = count2[i]; count2[i] = sum2; sum2 += c2;
+        }
+    }
+
+    // Pass 0 (bits 0-10)
+    size_t i = 0;
+    for (; i + 3 < n; i += 4) {
+        u32 v0 = src[i], v1 = src[i+1], v2 = src[i+2], v3 = src[i+3];
+        __builtin_prefetch(&src[i+32], 0, 1);
+        dst[count0[v0 & 0x7FFu]++] = v0;
+        dst[count0[v1 & 0x7FFu]++] = v1;
+        dst[count0[v2 & 0x7FFu]++] = v2;
+        dst[count0[v3 & 0x7FFu]++] = v3;
+    }
+    for (; i < n; ++i) {
+        u32 v = src[i];
+        dst[count0[v & 0x7FFu]++] = v;
+    }
+
+    // Pass 1 (bits 11-21)
+    i = 0;
+    for (; i + 3 < n; i += 4) {
+        u32 v0 = dst[i], v1 = dst[i+1], v2 = dst[i+2], v3 = dst[i+3];
+        __builtin_prefetch(&dst[i+32], 0, 1);
+        src[count1[(v0 >> 11) & 0x7FFu]++] = v0;
+        src[count1[(v1 >> 11) & 0x7FFu]++] = v1;
+        src[count1[(v2 >> 11) & 0x7FFu]++] = v2;
+        src[count1[(v3 >> 11) & 0x7FFu]++] = v3;
+    }
+    for (; i < n; ++i) {
+        u32 v = dst[i];
+        src[count1[(v >> 11) & 0x7FFu]++] = v;
+    }
+
+    // If upper 10 bits are all zero, pass 2 is not needed
+    if (sum2 == count2[0] + (count2[1] - count2[0]) && count2[0] == n) {
+        // Upper bits are all 0, data is already in src
+        return;
+    }
+
+    // Pass 2 (bits 22-31)
+    i = 0;
+    for (; i + 3 < n; i += 4) {
+        u32 v0 = src[i], v1 = src[i+1], v2 = src[i+2], v3 = src[i+3];
+        __builtin_prefetch(&src[i+32], 0, 1);
+        dst[count2[v0 >> 22]++] = v0;
+        dst[count2[v1 >> 22]++] = v1;
+        dst[count2[v2 >> 22]++] = v2;
+        dst[count2[v3 >> 22]++] = v3;
+    }
+    for (; i < n; ++i) {
+        u32 v = src[i];
+        dst[count2[v >> 22]++] = v;
+    }
+
+    std::memcpy(data, dst, n * sizeof(u32));
 }
 
 // ── RADIX-16 ──
