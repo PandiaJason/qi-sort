@@ -117,8 +117,13 @@ def sort(data: Union[List[int], any]) -> Union[List[int], any]:
             _lib.qi_sort_u32(c_ptr, converted.size)
             data[:] = converted
             return data
-    except ImportError:
-        pass
+    # 2. Standard Python list handling (Optimized via C array buffer)
+    if not isinstance(data, list):
+        raise TypeError("Input must be a list of integers, array.array('I'), or a uint32 NumPy array.")
+
+    n = len(data)
+    if n <= 1:
+        return data
 
 def radix8(data: any) -> any:
     """Run fixed 4-pass Radix-8 sort in-place."""
@@ -140,14 +145,6 @@ def radix16(data: any) -> any:
         qi_sort_cpp.radix16(data)
         return data
     raise RuntimeError("qi_sort_cpp module required")
-
-    # 3. Standard Python list handling (Optimized via C array buffer)
-    if not isinstance(data, list):
-        raise TypeError("Input must be a list of integers, array.array('I'), or a uint32 NumPy array.")
-
-    n = len(data)
-    if n <= 1:
-        return data
 
     # Fast conversion to C array via array.array buffer
     arr_buf = array.array('I', data)
