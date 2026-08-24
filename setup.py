@@ -11,7 +11,7 @@ link_args = []
 if platform.system() == 'Darwin':
     cpp_args.extend(['-mcpu=native'])
 elif platform.system() == 'Linux':
-    cpp_args.extend(['-O3', '-fno-semantic-interposition'])
+    cpp_args.extend(['-O3', '-mavx2', '-mfma', '-fno-semantic-interposition'])
 
 ext_modules = [
     Extension(
@@ -26,7 +26,7 @@ ext_modules = [
 
 setup(
     name='qi_sort',
-    version='0.3.27',
+    version='0.3.28',
     description='Quantum-Inspired Adaptive Radix Sorting Engine',
     author='Jason Pandia',
     url='https://github.com/PandiaJason/qi-sort',
