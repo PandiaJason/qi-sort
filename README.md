@@ -345,7 +345,7 @@ Compiled with `g++ -O3 -std=c++17 -march=native`, 10,000,000 keys, best of 3 run
 
 | Dataset | `std::sort` | pdqsort | ska_sort | **`qi::sort`** | Winner |
 | :--- | ---: | ---: | ---: | ---: | :--- |
-| **Uniform Random 32-bit** | 228.03 ms | 219.55 ms | 178.21 ms | **41.60 ms** | **`qi::sort` (5.5×)** |
+| **Uniform Random 32-bit** | 228.45 ms | 219.14 ms | 178.25 ms | **34.81 ms** | **`qi::sort` (6.6×)** |
 | **Nearly Sorted (95%)** | 123.10 ms | 121.69 ms | 165.00 ms | **104.00 ms** | **`qi::sort` (1.2×)** |
 | **Few Unique (1000 values)** | 93.83 ms | 75.20 ms | 81.07 ms | **32.09 ms** | **`qi::sort` (2.9×)** |
 | **Pipe Organ Pattern** | 578.30 ms | 238.17 ms | 159.57 ms | **96.22 ms** | **`qi::sort` (6.0×)** |
