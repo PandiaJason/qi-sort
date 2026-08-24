@@ -2,58 +2,68 @@
 #include <Python.h>
 #include "../include/qi_radix.hpp"
 
+static inline bool get_u32_buffer(PyObject* obj, Py_buffer* view, uint32_t** ptr, size_t* n) {
+    if (PyObject_GetBuffer(obj, view, PyBUF_WRITABLE) < 0) {
+        PyErr_Clear();
+        return false;
+    }
+    if (view->itemsize != sizeof(uint32_t) || !PyBuffer_IsContiguous(view, 'C')) {
+        PyBuffer_Release(view);
+        return false;
+    }
+    *ptr = reinterpret_cast<uint32_t*>(view->buf);
+    *n = view->len / sizeof(uint32_t);
+    return true;
+}
+
 static PyObject* py_qi_sort(PyObject* self, PyObject* args) {
     PyObject* obj;
     if (!PyArg_ParseTuple(args, "O", &obj)) return NULL;
 
     Py_buffer view;
-    if (PyObject_GetBuffer(obj, &view, PyBUF_WRITABLE | PyBUF_ND | PyBUF_STRIDES) < 0) {
-        PyErr_Clear();
-        if (PyList_Check(obj)) {
-            Py_ssize_t n = PyList_Size(obj);
-            if (n <= 1) Py_RETURN_NONE;
-            std::vector<uint32_t> vec(n);
-            for (Py_ssize_t i = 0; i < n; ++i) {
-                vec[i] = static_cast<uint32_t>(PyLong_AsUnsignedLong(PyList_GET_ITEM(obj, i)));
-            }
+    uint32_t* ptr = nullptr;
+    size_t n = 0;
+
+    if (get_u32_buffer(obj, &view, &ptr, &n)) {
+        if (n > 1) {
             Py_BEGIN_ALLOW_THREADS
-            qi::sort(vec);
+            qi::sort(ptr, n);
             Py_END_ALLOW_THREADS
-            for (Py_ssize_t i = 0; i < n; ++i) {
-                PyList_SET_ITEM(obj, i, PyLong_FromUnsignedLong(vec[i]));
-            }
-            Py_RETURN_NONE;
         }
-        PyErr_SetString(PyExc_TypeError, "Expected a writable 32-bit uint32 buffer or list.");
-        return NULL;
-    }
-
-    if (view.itemsize != sizeof(uint32_t) || !PyBuffer_IsContiguous(&view, 'C')) {
         PyBuffer_Release(&view);
-        PyErr_SetString(PyExc_TypeError, "Buffer must be a 32-bit C-contiguous array (uint32).");
-        return NULL;
+        Py_RETURN_NONE;
     }
 
-    uint32_t* ptr = reinterpret_cast<uint32_t*>(view.buf);
-    size_t n = view.len / sizeof(uint32_t);
-
-    if (n > 1) {
+    if (PyList_Check(obj)) {
+        Py_ssize_t size = PyList_Size(obj);
+        if (size <= 1) Py_RETURN_NONE;
+        std::vector<uint32_t> vec(size);
+        for (Py_ssize_t i = 0; i < size; ++i) {
+            vec[i] = static_cast<uint32_t>(PyLong_AsUnsignedLong(PyList_GET_ITEM(obj, i)));
+        }
         Py_BEGIN_ALLOW_THREADS
-        qi::sort(ptr, n);
+        qi::sort(vec);
         Py_END_ALLOW_THREADS
+        for (Py_ssize_t i = 0; i < size; ++i) {
+            PyList_SET_ITEM(obj, i, PyLong_FromUnsignedLong(vec[i]));
+        }
+        Py_RETURN_NONE;
     }
 
-    PyBuffer_Release(&view);
-    Py_RETURN_NONE;
+    PyErr_SetString(PyExc_TypeError, "Expected a writable C-contiguous 32-bit uint32 buffer or Python list.");
+    return NULL;
 }
 
 static PyObject* py_qi_radix8(PyObject* self, PyObject* args) {
     PyObject* obj;
     if (!PyArg_ParseTuple(args, "O", &obj)) return NULL;
     Py_buffer view;
-    if (PyObject_GetBuffer(obj, &view, PyBUF_WRITABLE | PyBUF_ND | PyBUF_STRIDES) < 0) return NULL;
-    uint32_t* ptr = reinterpret_cast<uint32_t*>(view.buf);
-    size_t n = view.len / sizeof(uint32_t);
+    uint32_t* ptr = nullptr;
+    size_t n = 0;
+    if (!get_u32_buffer(obj, &view, &ptr, &n)) {
+        PyErr_SetString(PyExc_TypeError, "Expected a writable C-contiguous 32-bit uint32 buffer.");
+        return NULL;
+    }
     if (n > 1) {
         Py_BEGIN_ALLOW_THREADS
         qi::detail::radixSort8(ptr, n, true);
@@ -67,9 +77,12 @@ static PyObject* py_qi_radix11(PyObject* self, PyObject* args) {
     PyObject* obj;
     if (!PyArg_ParseTuple(args, "O", &obj)) return NULL;
     Py_buffer view;
-    if (PyObject_GetBuffer(obj, &view, PyBUF_WRITABLE | PyBUF_ND | PyBUF_STRIDES) < 0) return NULL;
-    uint32_t* ptr = reinterpret_cast<uint32_t*>(view.buf);
-    size_t n = view.len / sizeof(uint32_t);
+    uint32_t* ptr = nullptr;
+    size_t n = 0;
+    if (!get_u32_buffer(obj, &view, &ptr, &n)) {
+        PyErr_SetString(PyExc_TypeError, "Expected a writable C-contiguous 32-bit uint32 buffer.");
+        return NULL;
+    }
     if (n > 1) {
         Py_BEGIN_ALLOW_THREADS
         qi::detail::radixSort11(ptr, n, true);
@@ -83,9 +96,12 @@ static PyObject* py_qi_radix16(PyObject* self, PyObject* args) {
     PyObject* obj;
     if (!PyArg_ParseTuple(args, "O", &obj)) return NULL;
     Py_buffer view;
-    if (PyObject_GetBuffer(obj, &view, PyBUF_WRITABLE | PyBUF_ND | PyBUF_STRIDES) < 0) return NULL;
-    uint32_t* ptr = reinterpret_cast<uint32_t*>(view.buf);
-    size_t n = view.len / sizeof(uint32_t);
+    uint32_t* ptr = nullptr;
+    size_t n = 0;
+    if (!get_u32_buffer(obj, &view, &ptr, &n)) {
+        PyErr_SetString(PyExc_TypeError, "Expected a writable C-contiguous 32-bit uint32 buffer.");
+        return NULL;
+    }
     if (n > 1) {
         Py_BEGIN_ALLOW_THREADS
         qi::detail::radixSort16(ptr, n, true);

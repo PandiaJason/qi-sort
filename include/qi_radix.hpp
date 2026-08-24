@@ -150,17 +150,16 @@ static inline uint8_t getByte(u32 value, int byte) {
     return static_cast<uint8_t>((value >> (byte * 8)) & 0xFF);
 }
 
-inline State analyzeData(const u32* data, size_t n, size_t sampleSize = 8192) {
+inline State analyzeData(const u32* data, size_t n, size_t sampleSize = 1024) {
     State state;
     if (n == 0) return state;
 
-    size_t actualSamples = std::min(n, sampleSize);
+    size_t actualSamples = std::min<size_t>(n, 1024);
     state.sampleSize = actualSamples;
 
     auto start = std::chrono::high_resolution_clock::now();
 
     alignas(64) size_t byteCounts[4][256] = {{0}};
-    size_t step = std::max<size_t>(1, n / actualSamples);
 
     size_t orderedPairs = 0;
     size_t totalPairs = 0;
@@ -169,46 +168,7 @@ inline State analyzeData(const u32* data, size_t n, size_t sampleSize = 8192) {
     u32 bitOr = 0;
     u32 bitAnd = ~0u;
 
-    size_t i = 0;
-    size_t step4 = step * 4;
-    for (; i + step4 <= n && totalPairs + 4 <= actualSamples; i += step4) {
-        u32 v0 = data[i];
-        u32 v1 = data[i + step];
-        u32 v2 = data[i + step * 2];
-        u32 v3 = data[i + step * 3];
-
-        bitOr |= (v0 | v1 | v2 | v3);
-        bitAnd &= (v0 & v1 & v2 & v3);
-
-        byteCounts[0][v0 & 0xFF]++;
-        byteCounts[1][(v0 >> 8) & 0xFF]++;
-        byteCounts[2][(v0 >> 16) & 0xFF]++;
-        byteCounts[3][v0 >> 24]++;
-
-        byteCounts[0][v1 & 0xFF]++;
-        byteCounts[1][(v1 >> 8) & 0xFF]++;
-        byteCounts[2][(v1 >> 16) & 0xFF]++;
-        byteCounts[3][v1 >> 24]++;
-
-        byteCounts[0][v2 & 0xFF]++;
-        byteCounts[1][(v2 >> 8) & 0xFF]++;
-        byteCounts[2][(v2 >> 16) & 0xFF]++;
-        byteCounts[3][v2 >> 24]++;
-
-        byteCounts[0][v3 & 0xFF]++;
-        byteCounts[1][(v3 >> 8) & 0xFF]++;
-        byteCounts[2][(v3 >> 16) & 0xFF]++;
-        byteCounts[3][v3 >> 24]++;
-
-        if (v0 >= prevVal) orderedPairs++;
-        if (v1 >= v0) orderedPairs++;
-        if (v2 >= v1) orderedPairs++;
-        if (v3 >= v2) orderedPairs++;
-        totalPairs += 4;
-        prevVal = v3;
-    }
-
-    for (; i < n && totalPairs < actualSamples; i += step) {
+    for (size_t i = 0; i < actualSamples; ++i) {
         u32 val = data[i];
         bitOr |= val;
         bitAnd &= val;
@@ -240,8 +200,6 @@ inline State analyzeData(const u32* data, size_t n, size_t sampleSize = 8192) {
 
     for (int b = 0; b < 4; ++b) {
         ByteState& bs = state.bytes[b];
-        double entropy = 0.0;
-        double ampSpread = 0.0;
         uint64_t ipr_int_sum = 0;
         int occ = 0;
 
@@ -250,34 +208,21 @@ inline State analyzeData(const u32* data, size_t n, size_t sampleSize = 8192) {
             if (c > 0) {
                 occ++;
                 ipr_int_sum += static_cast<uint64_t>(c) * c;
-
-                double p = static_cast<double>(c) * invN;
-                bs.probability[k] = p;
-                double psi = std::sqrt(p);
-                bs.amplitude[k] = psi;
-                entropy -= p * (std::log(p) * invLog2_8);
-                // Von Neumann-style amplitude entropy: -sum(psi_i * ln(psi_i))
-                // This captures wavefunction spread — how delocalized the amplitude is
-                ampSpread -= psi * std::log(psi);
             }
         }
 
         double ipr = static_cast<double>(ipr_int_sum) * invN_sq;
-        bs.entropy = std::max(0.0, std::min(1.0, entropy));
         bs.amplitudeConcentration = ipr;
         bs.effectiveStates = (ipr > 0.0) ? (1.0 / ipr) : 256.0;
         bs.occupied = occ;
+        bs.entropy = bs.effectiveStates / 256.0;
 
-        totalEntropy += bs.entropy;
         totalIPR += ipr;
-        totalAmplitudeSpread += ampSpread;
     }
 
-    state.averageEntropy = totalEntropy / 4.0;
     state.amplitudeConcentration = totalIPR / 4.0;
     state.effectiveStates = (state.amplitudeConcentration > 0.0) ? (1.0 / state.amplitudeConcentration) : 256.0;
-    // Normalize amplitude spread: 4 bytes × max ln(sqrt(1/256)) = 4 × ln(16) ≈ 11.09
-    state.amplitudeSpread = totalAmplitudeSpread / (4.0 * std::log(16.0));
+    state.averageEntropy = state.effectiveStates / 256.0;
 
     size_t lsbOccupied = state.bytes[0].occupied;
     state.duplicateRatio = (lsbOccupied > 0) ? (1.0 - static_cast<double>(lsbOccupied) / 256.0) : 1.0;
@@ -825,14 +770,18 @@ inline State analyze(const std::vector<u32>& data, size_t sampleSize = 8192) {
  */
 inline void sort(u32* data, size_t n, SortOptions options = SortOptions{}) {
     if (n <= 1) return;
-    if (std::is_sorted(data, data + n)) return;
+    if (options.allowShortcuts && std::is_sorted(data, data + n)) return;
 
     State state = detail::analyzeData(data, n, options.sampleSize);
 
-    if (state.duplicateRatio >= 0.70 || state.effectiveStates <= 16.0) {
+    // Inverse Participation Ratio (IPR = sum(p_i^2)) & Range Shortcut Engine
+    if ((state.bitOrSum >> 8) == 0) {
+        // Data range fits in [0, 255] (1 pass Radix-8 shortcut)
+        detail::radixSort8(data, n, options.allowShortcuts);
+    } else if (state.amplitudeConcentration >= 0.05 || state.duplicateRatio >= 0.70 || state.effectiveStates <= 16.0) {
         detail::radixSort16(data, n, options.allowShortcuts);
     } else {
-        std::sort(data, data + n);
+        detail::radixSort11(data, n, options.allowShortcuts);
     }
 }
 

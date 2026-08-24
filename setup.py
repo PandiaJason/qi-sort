@@ -6,9 +6,12 @@ os.environ['OPT'] = '-DNDEBUG -O3'
 os.environ['CFLAGS'] = '-DNDEBUG -O3'
 os.environ['CXXFLAGS'] = '-DNDEBUG -O3 -std=c++17'
 
-cpp_args = ['-O3', '-DNDEBUG', '-std=c++17', '-ffast-math', '-funroll-loops']
-if platform.system() == 'Linux':
-    cpp_args.extend(['-mavx2', '-mbmi2', '-mpopcnt'])
+cpp_args = ['-O3', '-DNDEBUG', '-std=c++17', '-ffast-math', '-funroll-loops', '-flto']
+link_args = ['-flto']
+if platform.system() == 'Darwin':
+    cpp_args.extend(['-mcpu=native'])
+elif platform.system() == 'Linux':
+    cpp_args.extend(['-mavx2', '-mbmi2', '-mpopcnt', '-march=native'])
 
 ext_modules = [
     Extension(
@@ -16,13 +19,14 @@ ext_modules = [
         sources=['src/qi_python_module.cpp', 'src/qi_c_api.cpp'],
         include_dirs=['.', 'include'],
         extra_compile_args=cpp_args,
+        extra_link_args=link_args,
         language='c++',
     ),
 ]
 
 setup(
     name='qi_sort',
-    version='0.3.7',
+    version='0.3.9',
     description='Quantum-Inspired Adaptive Radix Sorting Engine',
     author='Jason Pandia',
     url='https://github.com/PandiaJason/qi-sort',
