@@ -84,6 +84,7 @@ struct State {
     double averageEntropy = 0.0;
     double amplitudeConcentration = 0.0;  // Average IPR across bytes
     double effectiveStates = 0.0;         // Average N_eff across bytes
+    double amplitudeSpread = 0.0;         // Von Neumann-style amplitude entropy: -sum(psi_i * ln(psi_i))
     double duplicateRatio = 0.0;          // Fraction of duplicate keys [0, 1]
     double orderedness = 0.0;             // Degree of pre-sorted order [0, 1]
     double disorder = 0.0;
@@ -235,10 +236,12 @@ inline State analyzeData(const u32* data, size_t n, size_t sampleSize = 8192) {
 
     double totalEntropy = 0.0;
     double totalIPR = 0.0;
+    double totalAmplitudeSpread = 0.0;
 
     for (int b = 0; b < 4; ++b) {
         ByteState& bs = state.bytes[b];
         double entropy = 0.0;
+        double ampSpread = 0.0;
         uint64_t ipr_int_sum = 0;
         int occ = 0;
 
@@ -250,8 +253,12 @@ inline State analyzeData(const u32* data, size_t n, size_t sampleSize = 8192) {
 
                 double p = static_cast<double>(c) * invN;
                 bs.probability[k] = p;
-                bs.amplitude[k] = std::sqrt(p);
+                double psi = std::sqrt(p);
+                bs.amplitude[k] = psi;
                 entropy -= p * (std::log(p) * invLog2_8);
+                // Von Neumann-style amplitude entropy: -sum(psi_i * ln(psi_i))
+                // This captures wavefunction spread — how delocalized the amplitude is
+                ampSpread -= psi * std::log(psi);
             }
         }
 
@@ -263,11 +270,14 @@ inline State analyzeData(const u32* data, size_t n, size_t sampleSize = 8192) {
 
         totalEntropy += bs.entropy;
         totalIPR += ipr;
+        totalAmplitudeSpread += ampSpread;
     }
 
     state.averageEntropy = totalEntropy / 4.0;
     state.amplitudeConcentration = totalIPR / 4.0;
     state.effectiveStates = (state.amplitudeConcentration > 0.0) ? (1.0 / state.amplitudeConcentration) : 256.0;
+    // Normalize amplitude spread: 4 bytes × max ln(sqrt(1/256)) = 4 × ln(16) ≈ 11.09
+    state.amplitudeSpread = totalAmplitudeSpread / (4.0 * std::log(16.0));
 
     size_t lsbOccupied = state.bytes[0].occupied;
     state.duplicateRatio = (lsbOccupied > 0) ? (1.0 - static_cast<double>(lsbOccupied) / 256.0) : 1.0;
@@ -279,6 +289,10 @@ inline State analyzeData(const u32* data, size_t n, size_t sampleSize = 8192) {
     if (state.effectiveStates <= 16.0 || state.duplicateRatio >= 0.70) {
         state.recommendedRadix = Radix::R16;
     } else if (state.highByteComplexity > 0.60 || state.effectiveStates >= 64.0 || activeMask <= 0x000FFFFFu) {
+        state.recommendedRadix = Radix::R11;
+    } else if (state.amplitudeSpread > 0.85 && state.effectiveStates > 32.0) {
+        // Amplitude spread is high → wavefunction is delocalized across many states
+        // This predicts heavy L2 cache pressure under R-16's 65K buckets
         state.recommendedRadix = Radix::R11;
     } else {
         state.recommendedRadix = Radix::R16;
@@ -582,15 +596,254 @@ inline void parallelRadixSort8(u32* data, size_t n, bool allowShortcuts = true, 
 }
 
 inline void parallelRadixSort11(u32* data, size_t n, bool allowShortcuts = true, unsigned int numThreads = 0) {
+    if (n <= 1) return;
     if (numThreads == 0) numThreads = std::thread::hardware_concurrency();
-    if (numThreads < 2) { radixSort11(data, n, allowShortcuts); return; }
-    radixSort11(data, n, allowShortcuts); // High efficiency fallback
+    if (numThreads < 2 || n < 200000) { radixSort11(data, n, allowShortcuts); return; }
+
+    if (allowShortcuts) {
+        if (std::is_sorted(data, data + n)) return;
+        bool isReverse = true;
+        for (size_t i = 1; i < std::min<size_t>(n, 1024); ++i) {
+            if (data[i - 1] < data[i]) { isReverse = false; break; }
+        }
+        if (isReverse && std::is_sorted(std::make_reverse_iterator(data + n), std::make_reverse_iterator(data))) {
+            std::reverse(data, data + n);
+            return;
+        }
+    }
+
+    std::vector<u32> buffer(n);
+    u32* src = data;
+    u32* dst = buffer.data();
+    size_t chunkSize = (n + numThreads - 1) / numThreads;
+
+    // --- Pass 0: bits 0-10 (11 bits, 2048 buckets) ---
+    {
+        int shift = 0; u32 mask = 0x7FFu;
+        std::vector<std::array<size_t, 2048>> tCounts(numThreads);
+        std::vector<std::thread> workers;
+        for (unsigned t = 0; t < numThreads; ++t) {
+            size_t s = t * chunkSize, e = std::min(s + chunkSize, n);
+            if (s >= n) break;
+            workers.emplace_back([src, shift, mask, s, e, &tCounts, t]() {
+                tCounts[t].fill(0);
+                for (size_t i = s; i < e; ++i) tCounts[t][(src[i] >> shift) & mask]++;
+            });
+        }
+        for (auto& w : workers) w.join();
+        std::vector<std::array<size_t, 2048>> tOffsets(numThreads);
+        size_t cur = 0;
+        for (int b = 0; b < 2048; ++b) {
+            for (unsigned t = 0; t < numThreads; ++t) {
+                tOffsets[t][b] = cur;
+                cur += tCounts[t][b];
+            }
+        }
+        workers.clear();
+        for (unsigned t = 0; t < numThreads; ++t) {
+            size_t s = t * chunkSize, e = std::min(s + chunkSize, n);
+            if (s >= n) break;
+            workers.emplace_back([src, dst, shift, mask, s, e, &tOffsets, t]() {
+                auto off = tOffsets[t];
+                for (size_t i = s; i < e; ++i) {
+                    u32 v = src[i];
+                    dst[off[(v >> shift) & mask]++] = v;
+                }
+            });
+        }
+        for (auto& w : workers) w.join();
+        std::swap(src, dst);
+    }
+
+    // --- Pass 1: bits 11-21 (11 bits, 2048 buckets) ---
+    {
+        int shift = 11; u32 mask = 0x7FFu;
+        std::vector<std::array<size_t, 2048>> tCounts(numThreads);
+        std::vector<std::thread> workers;
+        for (unsigned t = 0; t < numThreads; ++t) {
+            size_t s = t * chunkSize, e = std::min(s + chunkSize, n);
+            if (s >= n) break;
+            workers.emplace_back([src, shift, mask, s, e, &tCounts, t]() {
+                tCounts[t].fill(0);
+                for (size_t i = s; i < e; ++i) tCounts[t][(src[i] >> shift) & mask]++;
+            });
+        }
+        for (auto& w : workers) w.join();
+        std::vector<std::array<size_t, 2048>> tOffsets(numThreads);
+        size_t cur = 0;
+        for (int b = 0; b < 2048; ++b) {
+            for (unsigned t = 0; t < numThreads; ++t) {
+                tOffsets[t][b] = cur;
+                cur += tCounts[t][b];
+            }
+        }
+        workers.clear();
+        for (unsigned t = 0; t < numThreads; ++t) {
+            size_t s = t * chunkSize, e = std::min(s + chunkSize, n);
+            if (s >= n) break;
+            workers.emplace_back([src, dst, shift, mask, s, e, &tOffsets, t]() {
+                auto off = tOffsets[t];
+                for (size_t i = s; i < e; ++i) {
+                    u32 v = src[i];
+                    dst[off[(v >> shift) & mask]++] = v;
+                }
+            });
+        }
+        for (auto& w : workers) w.join();
+        std::swap(src, dst);
+    }
+
+    // --- Pass 2: bits 22-31 (10 bits, 1024 buckets) ---
+    {
+        int shift = 22;
+        std::vector<std::array<size_t, 1024>> tCounts(numThreads);
+        std::vector<std::thread> workers;
+        for (unsigned t = 0; t < numThreads; ++t) {
+            size_t s = t * chunkSize, e = std::min(s + chunkSize, n);
+            if (s >= n) break;
+            workers.emplace_back([src, shift, s, e, &tCounts, t]() {
+                tCounts[t].fill(0);
+                for (size_t i = s; i < e; ++i) tCounts[t][src[i] >> shift]++;
+            });
+        }
+        for (auto& w : workers) w.join();
+        // Check if pass can be skipped (all upper bits zero)
+        bool skipPass2 = true;
+        size_t totalBucket0 = 0;
+        for (unsigned t = 0; t < numThreads; ++t) totalBucket0 += tCounts[t][0];
+        if (totalBucket0 != n) skipPass2 = false;
+        if (!skipPass2) {
+            std::vector<std::array<size_t, 1024>> tOffsets(numThreads);
+            size_t cur = 0;
+            for (int b = 0; b < 1024; ++b) {
+                for (unsigned t = 0; t < numThreads; ++t) {
+                    tOffsets[t][b] = cur;
+                    cur += tCounts[t][b];
+                }
+            }
+            workers.clear();
+            for (unsigned t = 0; t < numThreads; ++t) {
+                size_t s = t * chunkSize, e = std::min(s + chunkSize, n);
+                if (s >= n) break;
+                workers.emplace_back([src, dst, shift, s, e, &tOffsets, t]() {
+                    auto off = tOffsets[t];
+                    for (size_t i = s; i < e; ++i) {
+                        u32 v = src[i];
+                        dst[off[v >> shift]++] = v;
+                    }
+                });
+            }
+            for (auto& w : workers) w.join();
+            std::swap(src, dst);
+        }
+    }
+
+    if (src != data) std::memcpy(data, src, n * sizeof(u32));
 }
 
 inline void parallelRadixSort16(u32* data, size_t n, bool allowShortcuts = true, unsigned int numThreads = 0) {
+    if (n <= 1) return;
     if (numThreads == 0) numThreads = std::thread::hardware_concurrency();
-    if (numThreads < 2) { radixSort16(data, n, allowShortcuts); return; }
-    radixSort16(data, n, allowShortcuts);
+    if (numThreads < 2 || n < 200000) { radixSort16(data, n, allowShortcuts); return; }
+
+    if (allowShortcuts) {
+        if (std::is_sorted(data, data + n)) return;
+        bool isReverse = true;
+        for (size_t i = 1; i < std::min<size_t>(n, 1024); ++i) {
+            if (data[i - 1] < data[i]) { isReverse = false; break; }
+        }
+        if (isReverse && std::is_sorted(std::make_reverse_iterator(data + n), std::make_reverse_iterator(data))) {
+            std::reverse(data, data + n);
+            return;
+        }
+    }
+
+    std::vector<u32> buffer(n);
+    u32* src = data;
+    u32* dst = buffer.data();
+    size_t chunkSize = (n + numThreads - 1) / numThreads;
+
+    // --- Pass 0: bits 0-15 (16 bits, 65536 buckets) ---
+    {
+        u32 mask = 0xFFFFu;
+        auto tCounts = std::make_unique<std::vector<std::array<size_t, 65536>>>(numThreads);
+        std::vector<std::thread> workers;
+        for (unsigned t = 0; t < numThreads; ++t) {
+            size_t s = t * chunkSize, e = std::min(s + chunkSize, n);
+            if (s >= n) break;
+            workers.emplace_back([src, mask, s, e, &tCounts, t]() {
+                (*tCounts)[t].fill(0);
+                for (size_t i = s; i < e; ++i) (*tCounts)[t][src[i] & mask]++;
+            });
+        }
+        for (auto& w : workers) w.join();
+        auto tOffsets = std::make_unique<std::vector<std::array<size_t, 65536>>>(numThreads);
+        size_t cur = 0;
+        for (int b = 0; b < 65536; ++b) {
+            for (unsigned t = 0; t < numThreads; ++t) {
+                (*tOffsets)[t][b] = cur;
+                cur += (*tCounts)[t][b];
+            }
+        }
+        workers.clear();
+        for (unsigned t = 0; t < numThreads; ++t) {
+            size_t s = t * chunkSize, e = std::min(s + chunkSize, n);
+            if (s >= n) break;
+            workers.emplace_back([src, dst, mask, s, e, &tOffsets, t]() {
+                auto off = (*tOffsets)[t];
+                for (size_t i = s; i < e; ++i) {
+                    u32 v = src[i];
+                    dst[off[v & mask]++] = v;
+                }
+            });
+        }
+        for (auto& w : workers) w.join();
+        std::swap(src, dst);
+    }
+
+    // --- Pass 1: bits 16-31 (16 bits, 65536 buckets) ---
+    {
+        auto tCounts = std::make_unique<std::vector<std::array<size_t, 65536>>>(numThreads);
+        std::vector<std::thread> workers;
+        for (unsigned t = 0; t < numThreads; ++t) {
+            size_t s = t * chunkSize, e = std::min(s + chunkSize, n);
+            if (s >= n) break;
+            workers.emplace_back([src, s, e, &tCounts, t]() {
+                (*tCounts)[t].fill(0);
+                for (size_t i = s; i < e; ++i) (*tCounts)[t][src[i] >> 16]++;
+            });
+        }
+        for (auto& w : workers) w.join();
+        // Check if pass can be skipped
+        size_t totalBucket0 = 0;
+        for (unsigned t = 0; t < numThreads; ++t) totalBucket0 += (*tCounts)[t][0];
+        if (totalBucket0 != n) {
+            auto tOffsets = std::make_unique<std::vector<std::array<size_t, 65536>>>(numThreads);
+            size_t cur = 0;
+            for (int b = 0; b < 65536; ++b) {
+                for (unsigned t = 0; t < numThreads; ++t) {
+                    (*tOffsets)[t][b] = cur;
+                    cur += (*tCounts)[t][b];
+                }
+            }
+            workers.clear();
+            for (unsigned t = 0; t < numThreads; ++t) {
+                size_t s = t * chunkSize, e = std::min(s + chunkSize, n);
+                if (s >= n) break;
+                workers.emplace_back([src, dst, s, e, &tOffsets, t]() {
+                    auto off = (*tOffsets)[t];
+                    for (size_t i = s; i < e; ++i) {
+                        u32 v = src[i];
+                        dst[off[v >> 16]++] = v;
+                    }
+                });
+            }
+            for (auto& w : workers) w.join();
+            std::swap(src, dst);
+        }
+    }
+
+    if (src != data) std::memcpy(data, src, n * sizeof(u32));
 }
 
 // ── KEY-PAYLOAD (TUPLE) PAIR RADIX SORTING ──

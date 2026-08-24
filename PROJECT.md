@@ -103,11 +103,11 @@ All algorithms compiled with the same `g++ -O3 -std=c++17 -march=native`, best o
 
 | Dataset | `std::sort` | pdqsort | ska_sort | **qi::sort** | Winner |
 | :--- | ---: | ---: | ---: | ---: | :--- |
-| Uniform Random 32-bit | 228.49 ms | 220.72 ms | 178.85 ms | **42.17 ms** | **qi::sort (5.4×)** |
-| Nearly Sorted (95%) | 122.73 ms | 119.98 ms | 160.74 ms | **98.31 ms** | **qi::sort (1.2×)** |
-| Few Unique (1000 values) | 95.33 ms | 70.22 ms | 76.88 ms | **31.37 ms** | **qi::sort (3.0×)** |
-| Pipe Organ Pattern | 572.85 ms | 237.60 ms | 157.90 ms | **99.03 ms** | **qi::sort (5.8×)** |
-| Random 0–65535 (16-bit) | 138.80 ms | 113.09 ms | 79.96 ms | **43.55 ms** | **qi::sort (3.2×)** |
+| Uniform Random 32-bit | 229.40 ms | 221.97 ms | 183.67 ms | **44.47 ms** | **qi::sort (5.2×)** |
+| Nearly Sorted (95%) | 127.72 ms | 122.23 ms | 168.86 ms | **113.04 ms** | **qi::sort (1.1×)** |
+| Few Unique (1000 values) | 92.84 ms | 70.89 ms | 78.84 ms | **31.85 ms** | **qi::sort (2.9×)** |
+| Pipe Organ Pattern | 579.40 ms | 235.09 ms | 161.02 ms | **97.41 ms** | **qi::sort (5.9×)** |
+| Random 0–65535 (16-bit) | 138.19 ms | 112.37 ms | 69.46 ms | **40.77 ms** | **qi::sort (3.4×)** |
 
 **Single-threaded scorecard: qi::sort wins 5/5 — undefeated across all distributions.**
 
@@ -115,11 +115,11 @@ All algorithms compiled with the same `g++ -O3 -std=c++17 -march=native`, best o
 
 | Dataset | Best Single-Thread | **qi::sort Parallel** | vs `std::sort` | MKeys/s |
 | :--- | ---: | ---: | :---: | ---: |
-| Uniform Random 32-bit | 42.17 ms (qi scalar) | **12.28 ms** | **18.6×** | **814 MKeys/s** |
-| Nearly Sorted (95%) | 98.31 ms (qi scalar) | **28.33 ms** | **4.3×** | 352 MKeys/s |
-| Few Unique (1000 values) | 31.37 ms (qi scalar) | **14.76 ms** | **6.5×** | 677 MKeys/s |
-| Pipe Organ Pattern | 99.03 ms (qi scalar) | **30.57 ms** | **18.7×** | 327 MKeys/s |
-| Random 0–65535 (16-bit) | 43.55 ms (qi scalar) | **22.44 ms** | **6.2×** | 445 MKeys/s |
+| Uniform Random 32-bit | 44.47 ms (qi scalar) | **12.20 ms** | **18.8×** | **819 MKeys/s** |
+| Nearly Sorted (95%) | 113.04 ms (qi scalar) | **31.28 ms** | **4.1×** | 319 MKeys/s |
+| Few Unique (1000 values) | 31.85 ms (qi scalar) | **10.80 ms** | **8.6×** | **926 MKeys/s** |
+| Pipe Organ Pattern | 97.41 ms (qi scalar) | **28.09 ms** | **20.6×** | 355 MKeys/s |
+| Random 0–65535 (16-bit) | 40.77 ms (qi scalar) | **16.12 ms** | **8.6×** | 620 MKeys/s |
 
 **Parallel scorecard: qi::sort wins 5/5 — undefeated across all distributions.**
 
@@ -129,12 +129,12 @@ All algorithms compiled with the same `g++ -O3 -std=c++17 -march=native`, best o
 
 | Dataset Size | `std::sort` | qi::sort Scalar | qi::sort Parallel | Peak Throughput | Speedup vs `std::sort` |
 | :--- | ---: | ---: | ---: | ---: | :---: |
-| 1M keys (3 MB) | 33.92 ms | 5.54 ms | **3.14 ms** | 318 MKeys/s | **10.8×** |
-| 5M keys (19 MB) | 113.31 ms | 27.39 ms | **9.48 ms** | 527 MKeys/s | **12.0×** |
-| 10M keys (38 MB) | 226.48 ms | 56.74 ms | **19.81 ms** | 504 MKeys/s | **11.4×** |
-| 25M keys (95 MB) | 591.56 ms | 162.58 ms | **48.49 ms** | 515 MKeys/s | **12.2×** |
+| 1M keys (3 MB) | 33.50 ms | 3.92 ms | **2.36 ms** | 424 MKeys/s | **14.2×** |
+| 5M keys (19 MB) | 112.73 ms | 21.36 ms | **9.51 ms** | 525 MKeys/s | **11.9×** |
+| 10M keys (38 MB) | 230.20 ms | 44.31 ms | **17.15 ms** | 583 MKeys/s | **13.4×** |
+| 25M keys (95 MB) | 622.62 ms | 133.85 ms | **59.16 ms** | 422 MKeys/s | **10.5×** |
 
-Parallel speedup over scalar qi::sort: **2.9× to 3.4×** on 10 cores.
+Parallel speedup over scalar qi::sort: **1.7× to 2.6×** on 10 cores.
 
 ---
 
@@ -240,6 +240,20 @@ Adding SIMD vectorization (AVX2 / ARM NEON) to histogram and scatter loops would
 | **8** | Sensing Overhead Timing Inclusion | PASS | Verified sensing overhead is 4–8% and charged inside `qi::sort` time |
 
 **Audit Status: 25 / 25 PASSED.**
+
+---
+
+## Benchmark Methodology Notes
+
+> **Comparison Class:** `qi::sort` is a non-comparison radix sort ($O(N \cdot k)$) that operates exclusively on fixed-width numeric keys (`uint32_t`, `int32_t`, `float`). Speedups against comparison-based sorters (`std::sort`, `pdqsort`, Google `vqsort`, DuckDB, PostgreSQL, Redis) reflect the fundamental algorithmic advantage of radix sorting over comparison sorting on integer keys. Database engines use comparison sorts because they must handle arbitrary SQL types, strings with custom collations, and compound row keys.
+>
+> **`qi::sort`'s novel contribution** is the adaptive radix-width selection (R-11 vs R-16) using sampled probability-amplitude concentration (IPR), achieving near-oracle kernel selection with ~1% mean regret. The fairest apples-to-apples comparisons are against other radix sorts: `ska_sort`, Plain Radix-8/11/16.
+>
+> **C-ABI sorters** (Redis `pqsort`, PostgreSQL `pg_qsort`) use opaque function pointer comparators which prevent compiler inlining, adding inherent per-comparison overhead compared to C++ template-based sorts.
+>
+> **RocksDB's `VectorRep`** MemTable internally sorts via `std::sort` on flush (see `memtable/vectorrep.cc`).
+>
+> **All benchmarks** use the same compiler flags (`g++ -O3 -std=c++17`), same input data copies, and all competitor radix sorts have shortcuts (sorted/reverse detection) enabled for fair comparison.
 
 ---
 

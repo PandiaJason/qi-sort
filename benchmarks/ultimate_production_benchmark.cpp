@@ -61,51 +61,28 @@ extern "C" {
 
 using Clock = std::chrono::high_resolution_clock;
 
-// ── SQLITE VDBE SORTER SIMULATOR (src/vdbesort.c) ──
-struct SQLiteRecord {
-    uint32_t val;
-    SQLiteRecord* pNext;
-};
-
-static inline int sqlite3VdbeSorterCompareInt(uint32_t a, uint32_t b) {
-    return (a > b) - (a < b);
-}
-
-static SQLiteRecord* sqlite3VdbeSorterMerge(SQLiteRecord* p1, SQLiteRecord* p2) {
-    SQLiteRecord* pFinal = nullptr;
-    SQLiteRecord** pp = &pFinal;
-    while (p1 && p2) {
-        int res = sqlite3VdbeSorterCompareInt(p1->val, p2->val);
-        if (res <= 0) { *pp = p1; pp = &p1->pNext; p1 = p1->pNext; }
-        else { *pp = p2; pp = &p2->pNext; p2 = p2->pNext; }
-    }
-    *pp = p1 ? p1 : p2;
-    return pFinal;
-}
-
-static double run_sqlite_vdbesort(const std::vector<uint32_t>& data) {
+// ── SQLITE-STYLE ARRAY MERGE SORT (matching vdbeSorterSort's algorithmic class) ──
+// Uses array-based bottom-up merge sort (not linked-list) for fair comparison
+static double run_sqlite_style_mergesort(const std::vector<uint32_t>& data) {
     auto start = Clock::now();
-    std::vector<SQLiteRecord> nodes(data.size());
-    for (size_t i = 0; i < data.size(); ++i) {
-        nodes[i].val = data[i];
-        nodes[i].pNext = (i + 1 < data.size()) ? &nodes[i + 1] : nullptr;
-    }
-    SQLiteRecord* p = &nodes[0];
-    SQLiteRecord* aSlot[64] = {0};
-    while (p) {
-        SQLiteRecord* pNext = p->pNext;
-        p->pNext = nullptr;
-        int i;
-        for (i = 0; aSlot[i]; i++) {
-            p = sqlite3VdbeSorterMerge(p, aSlot[i]);
-            aSlot[i] = nullptr;
+    size_t n = data.size();
+    std::vector<uint32_t> arr(data.begin(), data.end());
+    std::vector<uint32_t> tmp(n);
+    // Bottom-up merge sort (same algorithmic class as SQLite VdbeSorter)
+    for (size_t width = 1; width < n; width *= 2) {
+        for (size_t i = 0; i < n; i += 2 * width) {
+            size_t left = i;
+            size_t mid = std::min(i + width, n);
+            size_t right = std::min(i + 2 * width, n);
+            size_t l = left, r = mid, k = left;
+            while (l < mid && r < right) {
+                if (arr[l] <= arr[r]) tmp[k++] = arr[l++];
+                else tmp[k++] = arr[r++];
+            }
+            while (l < mid) tmp[k++] = arr[l++];
+            while (r < right) tmp[k++] = arr[r++];
         }
-        aSlot[i] = p;
-        p = pNext;
-    }
-    SQLiteRecord* result = nullptr;
-    for (int i = 0; i < 64; i++) {
-        if (aSlot[i]) result = result ? sqlite3VdbeSorterMerge(result, aSlot[i]) : aSlot[i];
+        std::swap(arr, tmp);
     }
     auto end = Clock::now();
     return std::chrono::duration<double, std::milli>(end - start).count();
@@ -189,14 +166,15 @@ int main() {
         duckdb_vergesort::vergesort(d_duck.begin(), d_duck.end(), std::less<uint32_t>(), fallback);
         double t_duck = std::chrono::duration<double, std::milli>(Clock::now() - s3).count();
 
-        // 4. RocksDB VectorRep MemTable
+        // 4. RocksDB VectorRep MemTable — RocksDB's VectorRep::Iterator internally
+        // sorts via std::sort on MemTable flush (see memtable/vectorrep.cc)
         auto d_rocks = rawData;
         auto s4 = Clock::now();
         std::sort(d_rocks.begin(), d_rocks.end());
         double t_rocks = std::chrono::duration<double, std::milli>(Clock::now() - s4).count();
 
-        // 5. SQLite VdbeSorter
-        double t_sqlite = (N <= 2000000) ? run_sqlite_vdbesort(rawData) : run_sqlite_vdbesort(rawData);
+        // 5. SQLite-Style Merge Sort (array-based, matching VdbeSorter's algorithmic class)
+        double t_sqlite = run_sqlite_style_mergesort(rawData);
 
         // 6. Redis pqsort
         auto d_redis = rawData;
@@ -216,22 +194,22 @@ int main() {
         hwy::VQSort(d_vq.data(), d_vq.size(), hwy::SortAscending());
         double t_vq = std::chrono::duration<double, std::milli>(Clock::now() - s8).count();
 
-        // 9. Plain Radix-8
+        // 9. Plain Radix-8 (shortcuts ENABLED for fair comparison)
         auto d_r8 = rawData;
         auto s9 = Clock::now();
-        qi::detail::radixSort8(d_r8.data(), d_r8.size(), false);
+        qi::detail::radixSort8(d_r8.data(), d_r8.size(), true);
         double t_r8 = std::chrono::duration<double, std::milli>(Clock::now() - s9).count();
 
-        // 10. Plain Radix-11
+        // 10. Plain Radix-11 (shortcuts ENABLED for fair comparison)
         auto d_r11 = rawData;
         auto s10 = Clock::now();
-        qi::detail::radixSort11(d_r11.data(), d_r11.size(), false);
+        qi::detail::radixSort11(d_r11.data(), d_r11.size(), true);
         double t_r11 = std::chrono::duration<double, std::milli>(Clock::now() - s10).count();
 
-        // 11. Plain Radix-16
+        // 11. Plain Radix-16 (shortcuts ENABLED for fair comparison)
         auto d_r16 = rawData;
         auto s11 = Clock::now();
-        qi::detail::radixSort16(d_r16.data(), d_r16.size(), false);
+        qi::detail::radixSort16(d_r16.data(), d_r16.size(), true);
         double t_r16 = std::chrono::duration<double, std::milli>(Clock::now() - s11).count();
 
         // 12. qi::sort (Adaptive Engine)
@@ -260,10 +238,10 @@ int main() {
         row("Standard C++",     "std::sort (IntroSort)",                    t_std);
         row("Python/Java/Rust", "std::stable_sort (Timsort)",               t_tim);
         row("Analytical SQL",   "DuckDB (vergesort/pdqsort)",               t_duck);
-        row("LSM Storage",      "RocksDB (VectorRep MemTable)",             t_rocks);
-        row("Embedded SQL",     "SQLite (VdbeSorter Merge)",                t_sqlite);
-        row("In-Memory Cache",  "Redis (pqsort Bentley-McIlroy)",           t_redis);
-        row("Relational DB",    "PostgreSQL (pg_qsort)",                    t_pg);
+        row("LSM Storage",      "RocksDB VectorRep (std::sort on flush)",   t_rocks);
+        row("Embedded SQL",     "SQLite-Style (Array Merge Sort)",          t_sqlite);
+        row("In-Memory Cache",  "Redis pqsort (C-ABI, no inlining)",       t_redis);
+        row("Relational DB",    "PostgreSQL pg_qsort (C-ABI, no inlining)",t_pg);
         row("Google SIMD",      "Google vqsort (Highway SIMD)",             t_vq);
         row("Fixed Radix",      "Plain Radix-8 (Fixed 4-Pass)",             t_r8);
         row("Fixed Radix",      "Plain Radix-11 (Fixed 3-Pass)",            t_r11);
