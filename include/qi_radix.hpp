@@ -168,7 +168,46 @@ inline State analyzeData(const u32* data, size_t n, size_t sampleSize = 8192) {
     u32 bitOr = 0;
     u32 bitAnd = ~0u;
 
-    for (size_t i = 0; i < n && totalPairs < actualSamples; i += step) {
+    size_t i = 0;
+    size_t step4 = step * 4;
+    for (; i + step4 <= n && totalPairs + 4 <= actualSamples; i += step4) {
+        u32 v0 = data[i];
+        u32 v1 = data[i + step];
+        u32 v2 = data[i + step * 2];
+        u32 v3 = data[i + step * 3];
+
+        bitOr |= (v0 | v1 | v2 | v3);
+        bitAnd &= (v0 & v1 & v2 & v3);
+
+        byteCounts[0][v0 & 0xFF]++;
+        byteCounts[1][(v0 >> 8) & 0xFF]++;
+        byteCounts[2][(v0 >> 16) & 0xFF]++;
+        byteCounts[3][v0 >> 24]++;
+
+        byteCounts[0][v1 & 0xFF]++;
+        byteCounts[1][(v1 >> 8) & 0xFF]++;
+        byteCounts[2][(v1 >> 16) & 0xFF]++;
+        byteCounts[3][v1 >> 24]++;
+
+        byteCounts[0][v2 & 0xFF]++;
+        byteCounts[1][(v2 >> 8) & 0xFF]++;
+        byteCounts[2][(v2 >> 16) & 0xFF]++;
+        byteCounts[3][v2 >> 24]++;
+
+        byteCounts[0][v3 & 0xFF]++;
+        byteCounts[1][(v3 >> 8) & 0xFF]++;
+        byteCounts[2][(v3 >> 16) & 0xFF]++;
+        byteCounts[3][v3 >> 24]++;
+
+        if (v0 >= prevVal) orderedPairs++;
+        if (v1 >= v0) orderedPairs++;
+        if (v2 >= v1) orderedPairs++;
+        if (v3 >= v2) orderedPairs++;
+        totalPairs += 4;
+        prevVal = v3;
+    }
+
+    for (; i < n && totalPairs < actualSamples; i += step) {
         u32 val = data[i];
         bitOr |= val;
         bitAnd &= val;
@@ -192,7 +231,7 @@ inline State analyzeData(const u32* data, size_t n, size_t sampleSize = 8192) {
 
     double invN = 1.0 / static_cast<double>(actualSamples);
     double invN_sq = invN * invN;
-    double invLog2_8 = 1.0 / (8.0 * 0.69314718055994530942); // 1.0 / (8 * ln(2))
+    double invLog2_8 = 1.0 / (8.0 * 0.69314718055994530942);
 
     double totalEntropy = 0.0;
     double totalIPR = 0.0;
@@ -203,15 +242,15 @@ inline State analyzeData(const u32* data, size_t n, size_t sampleSize = 8192) {
         uint64_t ipr_int_sum = 0;
         int occ = 0;
 
-        for (int i = 0; i < 256; ++i) {
-            size_t c = byteCounts[b][i];
+        for (int k = 0; k < 256; ++k) {
+            size_t c = byteCounts[b][k];
             if (c > 0) {
                 occ++;
                 ipr_int_sum += static_cast<uint64_t>(c) * c;
 
                 double p = static_cast<double>(c) * invN;
-                bs.probability[i] = p;
-                bs.amplitude[i] = std::sqrt(p);
+                bs.probability[k] = p;
+                bs.amplitude[k] = std::sqrt(p);
                 entropy -= p * (std::log(p) * invLog2_8);
             }
         }
@@ -236,9 +275,10 @@ inline State analyzeData(const u32* data, size_t n, size_t sampleSize = 8192) {
     state.lowByteComplexity = (state.bytes[0].entropy + state.bytes[1].entropy) / 2.0;
     state.highByteComplexity = (state.bytes[2].entropy + state.bytes[3].entropy) / 2.0;
 
+    u32 activeMask = bitOr ^ bitAnd;
     if (state.effectiveStates <= 16.0 || state.duplicateRatio >= 0.70) {
         state.recommendedRadix = Radix::R16;
-    } else if (state.highByteComplexity > 0.60 || state.effectiveStates >= 64.0) {
+    } else if (state.highByteComplexity > 0.60 || state.effectiveStates >= 64.0 || activeMask <= 0x000FFFFFu) {
         state.recommendedRadix = Radix::R11;
     } else {
         state.recommendedRadix = Radix::R16;
