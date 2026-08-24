@@ -41,6 +41,7 @@ Usage:
 #include <thread>
 #include <type_traits>
 #include <vector>
+#include "qi_sort_univ.hpp"
 
 namespace qi {
 
@@ -816,7 +817,12 @@ inline void sort(u32* data, size_t n, SortOptions options = SortOptions{}) {
     } else if (state.amplitudeConcentration >= 0.05 || state.duplicateRatio >= 0.70 || state.effectiveStates <= 16.0) {
         detail::radixSort16(data, n, options.allowShortcuts);
     } else {
+#if defined(__linux__) || defined(__x86_64__)
+        // Automatic high-throughput block-buffered engine on Linux / x86_64
+        qi_univ::radixSort11_univ(data, n, bitOr);
+#else
         detail::radixSort11(data, n, options.allowShortcuts, bitOr);
+#endif
     }
 }
 
