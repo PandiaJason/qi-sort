@@ -158,22 +158,25 @@ inline State analyzeData(const u32* data, size_t n, size_t sampleSize = 8192) {
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    std::array<std::array<size_t, 256>, 4> byteCounts{};
+    alignas(64) size_t byteCounts[4][256] = {{0}};
     size_t step = std::max<size_t>(1, n / actualSamples);
 
     size_t orderedPairs = 0;
     size_t totalPairs = 0;
     u32 prevVal = data[0];
 
+    u32 bitOr = 0;
+    u32 bitAnd = ~0u;
+
     for (size_t i = 0; i < n && totalPairs < actualSamples; i += step) {
         u32 val = data[i];
-        state.bitOrSum |= val;
-        state.bitAndSum &= val;
+        bitOr |= val;
+        bitAnd &= val;
 
-        byteCounts[0][(val) & 0xFF]++;
+        byteCounts[0][val & 0xFF]++;
         byteCounts[1][(val >> 8) & 0xFF]++;
         byteCounts[2][(val >> 16) & 0xFF]++;
-        byteCounts[3][(val >> 24) & 0xFF]++;
+        byteCounts[3][val >> 24]++;
 
         if (i > 0) {
             if (val >= prevVal) orderedPairs++;
@@ -182,8 +185,14 @@ inline State analyzeData(const u32* data, size_t n, size_t sampleSize = 8192) {
         prevVal = val;
     }
 
+    state.bitOrSum = bitOr;
+    state.bitAndSum = bitAnd;
     state.orderedness = (totalPairs > 0) ? static_cast<double>(orderedPairs) / totalPairs : 1.0;
     state.disorder = 1.0 - state.orderedness;
+
+    double invN = 1.0 / static_cast<double>(actualSamples);
+    double invN_sq = invN * invN;
+    double invLog2_8 = 1.0 / (8.0 * 0.69314718055994530942); // 1.0 / (8 * ln(2))
 
     double totalEntropy = 0.0;
     double totalIPR = 0.0;
@@ -191,20 +200,23 @@ inline State analyzeData(const u32* data, size_t n, size_t sampleSize = 8192) {
     for (int b = 0; b < 4; ++b) {
         ByteState& bs = state.bytes[b];
         double entropy = 0.0;
-        double ipr = 0.0;
+        uint64_t ipr_int_sum = 0;
         int occ = 0;
 
         for (int i = 0; i < 256; ++i) {
             size_t c = byteCounts[b][i];
             if (c > 0) {
                 occ++;
-                double p = static_cast<double>(c) / actualSamples;
+                ipr_int_sum += static_cast<uint64_t>(c) * c;
+
+                double p = static_cast<double>(c) * invN;
                 bs.probability[i] = p;
                 bs.amplitude[i] = std::sqrt(p);
-                entropy -= p * (std::log2(p) / 8.0);
-                ipr += p * p;
+                entropy -= p * (std::log(p) * invLog2_8);
             }
         }
+
+        double ipr = static_cast<double>(ipr_int_sum) * invN_sq;
         bs.entropy = std::max(0.0, std::min(1.0, entropy));
         bs.amplitudeConcentration = ipr;
         bs.effectiveStates = (ipr > 0.0) ? (1.0 / ipr) : 256.0;
