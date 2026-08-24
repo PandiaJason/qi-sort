@@ -9,8 +9,15 @@ import platform
 import time
 from typing import Union, List, Tuple
 
-# Load Native C Shared Library
+# Load Native C Shared Library or C-Extension
 def _load_library():
+    # 1. Attempt loading compiled PyExtension qi_sort_cpp
+    try:
+        import qi_sort_cpp
+        return ctypes.CDLL(qi_sort_cpp.__file__)
+    except (ImportError, AttributeError):
+        pass
+
     dir_path = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.abspath(os.path.join(dir_path, "../../"))
     
@@ -23,6 +30,7 @@ def _load_library():
         lib_name = "libqisort.so"
 
     search_paths = [
+        os.path.join(project_root, "src", lib_name),
         os.path.join(project_root, lib_name),
         os.path.join(dir_path, lib_name),
         os.path.join("/usr/local/lib", lib_name),
@@ -32,7 +40,7 @@ def _load_library():
         if os.path.exists(path):
             return ctypes.CDLL(path)
             
-    raise FileNotFoundError(f"Could not find native {lib_name}. Please build libqisort first.")
+    raise FileNotFoundError(f"Could not find native {lib_name} or qi_sort_cpp extension. Please run 'pip install .' or build libqisort.")
 
 _lib = _load_library()
 
