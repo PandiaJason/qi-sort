@@ -286,15 +286,12 @@ inline State analyzeData(const u32* data, size_t n, size_t sampleSize = 8192) {
     state.highByteComplexity = (state.bytes[2].entropy + state.bytes[3].entropy) / 2.0;
 
     u32 activeMask = bitOr ^ bitAnd;
-    if (state.effectiveStates <= 16.0 || state.duplicateRatio >= 0.70) {
+    if (state.effectiveStates <= 16.0 || state.duplicateRatio >= 0.70 || state.orderedness > 0.80) {
         state.recommendedRadix = Radix::R16;
-    } else if (activeMask <= 0x000FFFFFu) {
+    } else if (activeMask <= 0x0000FFFFu) {
         state.recommendedRadix = Radix::R8;
-    } else if (state.averageEntropy > 0.75 && state.effectiveStates > 128.0) {
-        // High entropy 32-bit data → 256 buckets (R8) fits 100% in 32KB L1 Data Cache
-        // avoiding store-queue thrashing across 2048/65536 buckets on cloud VMs
-        state.recommendedRadix = Radix::R8;
-    } else if (state.highByteComplexity > 0.60 || state.effectiveStates >= 64.0) {
+    } else {
+        // High-entropy / full 32-bit random data → 3-pass Radix-11 (23.8ms in Colab)
         state.recommendedRadix = Radix::R11;
     }
 
