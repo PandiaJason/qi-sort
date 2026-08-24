@@ -811,13 +811,7 @@ inline void sort(u32* data, size_t n, SortOptions options = SortOptions{}) {
         if (isSorted && std::is_sorted(data, data + n)) return;
     }
 
-    // Auto-parallelize across CPU cores for large enterprise arrays (N >= 200,000)
-    if (options.parallel || n >= 200000) {
-        detail::parallelRadixSort11(data, n, options.allowShortcuts, options.numThreads);
-        return;
-    }
-
-    // High-throughput 20 KB L1-resident zero-branch engine
+    // High-throughput 2-Pass Radix-16 Zero-Memcpy Engine
     qi_univ::sort_univ(data, n);
 }
 

@@ -13,11 +13,7 @@ static PyObject* py_qi_sort_ptr(PyObject* self, PyObject* args) {
     if (n > 1) {
         uint32_t* ptr = reinterpret_cast<uint32_t*>(static_cast<uintptr_t>(ptr_int));
         Py_BEGIN_ALLOW_THREADS
-        if (n >= 100000) {
-            qi::parallel_sort(ptr, static_cast<size_t>(n));
-        } else {
-            qi::sort(ptr, static_cast<size_t>(n));
-        }
+        qi::sort(ptr, static_cast<size_t>(n));
         Py_END_ALLOW_THREADS
     }
     Py_RETURN_NONE;
