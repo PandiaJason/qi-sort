@@ -352,9 +352,13 @@ inline void radixSort11(u32* data, size_t n, bool allowShortcuts = true) {
     u32* dst = getScratch().get(n);
     u32* src = data;
 
-    alignas(64) size_t count0[2048] = {0};
-    alignas(64) size_t count1[2048] = {0};
-    alignas(64) size_t count2[1024] = {0};
+    alignas(64) static thread_local size_t count0[2048];
+    alignas(64) static thread_local size_t count1[2048];
+    alignas(64) static thread_local size_t count2[1024];
+
+    std::memset(count0, 0, sizeof(count0));
+    std::memset(count1, 0, sizeof(count1));
+    std::memset(count2, 0, sizeof(count2));
 
     for (size_t i = 0; i < n; ++i) {
         u32 val = src[i];
@@ -373,61 +377,19 @@ inline void radixSort11(u32* data, size_t n, bool allowShortcuts = true) {
     }
 
     // Pass 0 (bits 0-10)
-    size_t i = 0;
-    for (; i + 3 < n; i += 4) {
-        u32 v0 = src[i], v1 = src[i+1], v2 = src[i+2], v3 = src[i+3];
-        __builtin_prefetch(&src[i+32], 0, 1);
-        if (i + 16 < n) {
-            __builtin_prefetch(&dst[count0[src[i+16] & 0x7FFu]], 1, 1);
-        }
-        dst[count0[v0 & 0x7FFu]++] = v0;
-        dst[count0[v1 & 0x7FFu]++] = v1;
-        dst[count0[v2 & 0x7FFu]++] = v2;
-        dst[count0[v3 & 0x7FFu]++] = v3;
-    }
-    for (; i < n; ++i) {
+    for (size_t i = 0; i < n; ++i) {
         u32 v = src[i];
         dst[count0[v & 0x7FFu]++] = v;
     }
 
     // Pass 1 (bits 11-21)
-    i = 0;
-    for (; i + 3 < n; i += 4) {
-        u32 v0 = dst[i], v1 = dst[i+1], v2 = dst[i+2], v3 = dst[i+3];
-        __builtin_prefetch(&dst[i+32], 0, 1);
-        if (i + 16 < n) {
-            __builtin_prefetch(&src[count1[(dst[i+16] >> 11) & 0x7FFu]], 1, 1);
-        }
-        src[count1[(v0 >> 11) & 0x7FFu]++] = v0;
-        src[count1[(v1 >> 11) & 0x7FFu]++] = v1;
-        src[count1[(v2 >> 11) & 0x7FFu]++] = v2;
-        src[count1[(v3 >> 11) & 0x7FFu]++] = v3;
-    }
-    for (; i < n; ++i) {
+    for (size_t i = 0; i < n; ++i) {
         u32 v = dst[i];
         src[count1[(v >> 11) & 0x7FFu]++] = v;
     }
 
-    // If upper 10 bits are all zero, pass 2 is not needed
-    if (sum2 == count2[0] + (count2[1] - count2[0]) && count2[0] == n) {
-        // Upper bits are all 0, data is already in src
-        return;
-    }
-
     // Pass 2 (bits 22-31)
-    i = 0;
-    for (; i + 3 < n; i += 4) {
-        u32 v0 = src[i], v1 = src[i+1], v2 = src[i+2], v3 = src[i+3];
-        __builtin_prefetch(&src[i+32], 0, 1);
-        if (i + 16 < n) {
-            __builtin_prefetch(&dst[count2[src[i+16] >> 22]], 1, 1);
-        }
-        dst[count2[v0 >> 22]++] = v0;
-        dst[count2[v1 >> 22]++] = v1;
-        dst[count2[v2 >> 22]++] = v2;
-        dst[count2[v3 >> 22]++] = v3;
-    }
-    for (; i < n; ++i) {
+    for (size_t i = 0; i < n; ++i) {
         u32 v = src[i];
         dst[count2[v >> 22]++] = v;
     }
@@ -441,32 +403,15 @@ inline void radixSort16(u32* data, size_t n, bool allowShortcuts = true) {
     u32* dst = getScratch().get(n);
     u32* src = data;
 
-    auto count0_ptr = std::make_unique<std::array<size_t, 65536>>();
-    auto count1_ptr = std::make_unique<std::array<size_t, 65536>>();
-    auto& count0 = *count0_ptr;
-    auto& count1 = *count1_ptr;
-    count0.fill(0);
-    count1.fill(0);
+    alignas(64) static thread_local size_t count0[65536];
+    alignas(64) static thread_local size_t count1[65536];
+    std::memset(count0, 0, sizeof(count0));
+    std::memset(count1, 0, sizeof(count1));
 
     for (size_t i = 0; i < n; ++i) {
         u32 val = src[i];
         count0[val & 0xFFFFu]++;
         count1[val >> 16]++;
-    }
-
-    if (count1[0] == n) {
-        size_t sum = 0;
-        for (int i = 0; i < 65536; ++i) {
-            size_t c = count0[i];
-            count0[i] = sum;
-            sum += c;
-        }
-        for (size_t i = 0; i < n; ++i) {
-            u32 val = src[i];
-            dst[count0[val & 0xFFFFu]++] = val;
-        }
-        std::memcpy(data, dst, n * sizeof(u32));
-        return;
     }
 
     size_t sum0 = 0, sum1 = 0;
@@ -475,30 +420,14 @@ inline void radixSort16(u32* data, size_t n, bool allowShortcuts = true) {
         size_t c1 = count1[i]; count1[i] = sum1; sum1 += c1;
     }
 
-    size_t i = 0;
-    for (; i + 3 < n; i += 4) {
-        u32 v0 = src[i], v1 = src[i+1], v2 = src[i+2], v3 = src[i+3];
-        __builtin_prefetch(&src[i+32], 0, 1);
-        dst[count0[v0 & 0xFFFFu]++] = v0;
-        dst[count0[v1 & 0xFFFFu]++] = v1;
-        dst[count0[v2 & 0xFFFFu]++] = v2;
-        dst[count0[v3 & 0xFFFFu]++] = v3;
-    }
-    for (; i < n; ++i) {
+    // Pass 0 (bits 0-15)
+    for (size_t i = 0; i < n; ++i) {
         u32 v = src[i];
         dst[count0[v & 0xFFFFu]++] = v;
     }
 
-    i = 0;
-    for (; i + 3 < n; i += 4) {
-        u32 v0 = dst[i], v1 = dst[i+1], v2 = dst[i+2], v3 = dst[i+3];
-        __builtin_prefetch(&dst[i+32], 0, 1);
-        src[count1[v0 >> 16]++] = v0;
-        src[count1[v1 >> 16]++] = v1;
-        src[count1[v2 >> 16]++] = v2;
-        src[count1[v3 >> 16]++] = v3;
-    }
-    for (; i < n; ++i) {
+    // Pass 1 (bits 16-31)
+    for (size_t i = 0; i < n; ++i) {
         u32 v = dst[i];
         src[count1[v >> 16]++] = v;
     }
