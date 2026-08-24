@@ -802,28 +802,17 @@ inline State analyze(const std::vector<u32>& data, size_t sampleSize = 8192) {
 inline void sort(u32* data, size_t n, SortOptions options = SortOptions{}) {
     if (n <= 1) return;
 
-    State state = detail::analyzeData(data, n, options.sampleSize);
-    u32 bitOr = state.bitOrSum;
-
-    // Nearly-sorted early exit: if 98%+ pairs in sample are ordered, check & return
-    if (options.allowShortcuts && state.orderedness >= 0.98) {
-        if (std::is_sorted(data, data + n)) return;
+    // Fast O(N) early exit for pre-sorted arrays
+    if (options.allowShortcuts && n >= 64) {
+        bool isSorted = true;
+        for (size_t i = 1; i < std::min<size_t>(n, 1024); ++i) {
+            if (data[i - 1] > data[i]) { isSorted = false; break; }
+        }
+        if (isSorted && std::is_sorted(data, data + n)) return;
     }
 
-    // IPR-guided radix selection + bitOr pass-skipping
-    if ((bitOr >> 8) == 0) {
-        // Range fits in [0,255] — only 1 active byte, Radix-8 skips other 3 passes
-        detail::radixSort8(data, n, options.allowShortcuts, bitOr);
-    } else if (state.amplitudeConcentration >= 0.05 || state.duplicateRatio >= 0.70 || state.effectiveStates <= 16.0) {
-        detail::radixSort16(data, n, options.allowShortcuts);
-    } else {
-#if defined(__linux__) || defined(__x86_64__)
-        // Automatic L1-resident block-buffered engine on Linux / x86_64
-        qi_univ::sort_univ(data, n, bitOr);
-#else
-        detail::radixSort11(data, n, options.allowShortcuts, bitOr);
-#endif
-    }
+    // High-throughput 20 KB L1-resident zero-branch engine
+    qi_univ::sort_univ(data, n);
 }
 
 inline void sort(std::vector<u32>& data, SortOptions options = SortOptions{}) {

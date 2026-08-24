@@ -8,9 +8,9 @@
  *
  * KEY PERFORMANCE DESIGN:
  * 1. 20 KB L1-Resident Histograms: 2048 x 4-byte uint32_t counts fit inside 32 KB L1.
- * 2. 0 Branches in Scatter Loop: Eliminates branch mispredictions.
- * 3. 0 Function Calls in Inner Loops: Direct pointer indexing (no memcpy overhead).
- * 4. 3-Pass 11-Bit Radix: Sorts full 32-bit random integers in ~6 ms for 2M elements.
+ * 2. 0 Branches in Inner Loops: Zero branch mispredictions during scatter.
+ * 3. 0 Function Calls in Scatter: Direct pointer indexing.
+ * 4. Zero-Cost Pass Skipping: If all values fit in lower bits, higher passes skip in 1 cycle.
  */
 
 #include <cstdint>
@@ -42,8 +42,8 @@ inline ScratchBuffer& getScratch() {
     return scratch;
 }
 
-// ── FAST ZERO-BRANCH RADIX-11 ENGINE (20 KB L1 Footprint) ──
-inline void radixSort11_univ(u32* data, size_t n, u32 bitOr = ~0u) {
+// ── FAST ZERO-BRANCH RADIX-11 ENGINE WITH ZERO-COST PASS SKIPPING ──
+inline void radixSort11_univ(u32* data, size_t n) {
     if (n <= 1) return;
     u32* buf = getScratch().get(n);
 
@@ -52,7 +52,7 @@ inline void radixSort11_univ(u32* data, size_t n, u32 bitOr = ~0u) {
     alignas(64) uint32_t c1[2048] = {};
     alignas(64) uint32_t c2[1024] = {};
 
-    // 1 combined count pass (vectorized by compiler)
+    // 1 combined count pass
     for (size_t i = 0; i < n; ++i) {
         u32 v = data[i];
         c0[v & 0x7FFu]++;
@@ -60,39 +60,50 @@ inline void radixSort11_univ(u32* data, size_t n, u32 bitOr = ~0u) {
         c2[v >> 22]++;
     }
 
+    // Check if pass 1 and 2 can be skipped
+    bool skipPass1And2 = (c1[0] == n);
+    bool skipPass2     = (c2[0] == n);
+
     // Prefix sums
     uint32_t s0 = 0, s1 = 0, s2 = 0;
     for (int i = 0; i < 2048; ++i) {
         uint32_t t;
         t = c0[i]; c0[i] = s0; s0 += t;
-        t = c1[i]; c1[i] = s1; s1 += t;
-        if (i < 1024) { t = c2[i]; c2[i] = s2; s2 += t; }
+        if (!skipPass1And2) { t = c1[i]; c1[i] = s1; s1 += t; }
+        if (!skipPass1And2 && !skipPass2 && i < 1024) { t = c2[i]; c2[i] = s2; s2 += t; }
     }
 
-    // Pass 0: data -> buf (bits 0-10) — ZERO branches, ZERO function calls
+    // Pass 0: data -> buf (bits 0-10)
     for (size_t i = 0; i < n; ++i) {
         u32 v = data[i];
         buf[c0[v & 0x7FFu]++] = v;
     }
 
-    // Pass 1: buf -> data (bits 11-21) — ZERO branches, ZERO function calls
+    // Short-circuit if all values fit in 11 bits (e.g. 0-255 or 0-2047)
+    if (skipPass1And2) {
+        std::memcpy(data, buf, n * sizeof(u32));
+        return;
+    }
+
+    // Pass 1: buf -> data (bits 11-21)
     for (size_t i = 0; i < n; ++i) {
         u32 v = buf[i];
         data[c1[(v >> 11) & 0x7FFu]++] = v;
     }
 
-    // Pass 2 (optional): data -> buf (bits 22-31)
-    if ((bitOr >> 22) != 0) {
-        for (size_t i = 0; i < n; ++i) {
-            u32 v = data[i];
-            buf[c2[v >> 22]++] = v;
-        }
-        std::memcpy(data, buf, n * sizeof(u32));
+    // Short-circuit if all values fit in 22 bits
+    if (skipPass2) return;
+
+    // Pass 2: data -> buf (bits 22-31)
+    for (size_t i = 0; i < n; ++i) {
+        u32 v = data[i];
+        buf[c2[v >> 22]++] = v;
     }
+    std::memcpy(data, buf, n * sizeof(u32));
 }
 
-inline void sort_univ(u32* data, size_t n, u32 bitOr = ~0u) {
-    radixSort11_univ(data, n, bitOr);
+inline void sort_univ(u32* data, size_t n) {
+    radixSort11_univ(data, n);
 }
 
 } // namespace qi_univ
