@@ -229,6 +229,8 @@ We compiled **DuckDB's exact native sorting headers** ([`third_party/pdqsort/pdq
 
 ### 1. DuckDB Native Source Sorter & End-to-End ORDER BY Matrix ($N = 3,000,000$)
 
+> **Why Production Databases Require Adaptive Radix (`qi::sort`) over Fixed Radix:** Database engines do not know incoming column distributions in advance. A fixed Radix-16 sorter is fast on duplicates (**9.52 ms**) but thrashes CPU L2 cache on random integer keys (**17.98 ms**). A fixed Radix-11 sorter is fast on random keys (**10.25 ms**) but forces an extra memory pass on duplicate categories (**22.12 ms**). Across an entire database table, fixed radix sorters incur heavy penalties on non-ideal columns, whereas `qi::sort` dynamically senses entropy and dispatches the optimal kernel per column — achieving **the lowest aggregate sorting time across real database workloads**.
+
 | SQL Column / Dataset | DuckDB `pdqsort` | DuckDB `vergesort` | Plain Radix-8 | Plain Radix-11 | Plain Radix-16 | **`qi::sort` (Adaptive)** | **End-to-End ORDER BY Speedup** |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **Integer Keys & Surrogate IDs** | 62.76 ms | 63.46 ms | 18.89 ms | 10.25 ms | 17.98 ms | **11.44 ms** | **5.55× FASTER** (262 MRows/s) |

@@ -249,6 +249,8 @@ Adding SIMD vectorization (AVX2 / ARM NEON) to histogram and scatter loops would
 >
 > **`qi::sort`'s novel contribution** is the adaptive radix-width selection (R-11 vs R-16) using sampled probability-amplitude concentration (IPR), achieving near-oracle kernel selection with ~1% mean regret. The fairest apples-to-apples comparisons are against other radix sorts: `ska_sort`, Plain Radix-8/11/16.
 >
+> **Why Production Databases Require Adaptive Radix (`qi::sort`) over Fixed Radix:** Real database engines cannot predict column data distributions in advance. A fixed Radix-16 sorter is fast on duplicates (9.52 ms) but thrashes CPU L2 cache on random integer keys (17.98 ms). A fixed Radix-11 sorter is fast on random keys (10.25 ms) but forces an extra memory pass on duplicate categories (22.12 ms). Across an entire database workload, fixed radix sorters incur heavy penalties on non-ideal columns, whereas `qi::sort` dynamically senses entropy and dispatches the optimal kernel per column — achieving **the lowest aggregate sorting time across real database workloads**.
+>
 > **C-ABI sorters** (Redis `pqsort`, PostgreSQL `pg_qsort`) use opaque function pointer comparators which prevent compiler inlining, adding inherent per-comparison overhead compared to C++ template-based sorts.
 >
 > **RocksDB's `VectorRep`** MemTable internally sorts via `std::sort` on flush (see `memtable/vectorrep.cc`).
