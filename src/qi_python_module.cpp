@@ -20,7 +20,11 @@ static PyObject* py_qi_sort(PyObject* self, PyObject* args) {
             for (Py_ssize_t i = 0; i < n; ++i) {
                 vec[i] = static_cast<uint32_t>(PyLong_AsUnsignedLong(PyList_GET_ITEM(obj, i)));
             }
+            
+            Py_BEGIN_ALLOW_THREADS
             qi::sort(vec);
+            Py_END_ALLOW_THREADS
+
             for (Py_ssize_t i = 0; i < n; ++i) {
                 PyList_SET_ITEM(obj, i, PyLong_FromUnsignedLong(vec[i]));
             }
@@ -46,7 +50,13 @@ static PyObject* py_qi_sort(PyObject* self, PyObject* args) {
     size_t n = view.len / sizeof(uint32_t);
 
     if (n > 1) {
-        qi::sort(ptr, n);
+        Py_BEGIN_ALLOW_THREADS
+        if (n >= 100000) {
+            qi::parallel_sort(ptr, n);
+        } else {
+            qi::sort(ptr, n);
+        }
+        Py_END_ALLOW_THREADS
     }
 
     PyBuffer_Release(&view);
