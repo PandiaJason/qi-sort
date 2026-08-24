@@ -7,6 +7,8 @@ os.environ['CFLAGS'] = '-DNDEBUG -O3'
 os.environ['CXXFLAGS'] = '-DNDEBUG -O3 -std=c++17'
 
 cpp_args = ['-O3', '-DNDEBUG', '-std=c++17', '-ffast-math']
+if platform.system() != 'Windows' and platform.machine() in ['x86_64', 'AMD64']:
+    cpp_args.extend(['-mavx2', '-mbmi2'])
 
 ext_modules = [
     Extension(
@@ -20,7 +22,7 @@ ext_modules = [
 
 setup(
     name='qi_sort',
-    version='0.2.7',
+    version='0.2.8',
     description='Quantum-Inspired Adaptive Radix Sorting Engine',
     author='Jason Pandia',
     url='https://github.com/PandiaJason/qi-sort',

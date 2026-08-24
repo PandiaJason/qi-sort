@@ -396,6 +396,9 @@ inline void radixSort11(u32* data, size_t n, bool allowShortcuts = true) {
     for (; i + 3 < n; i += 4) {
         u32 v0 = src[i], v1 = src[i+1], v2 = src[i+2], v3 = src[i+3];
         __builtin_prefetch(&src[i+32], 0, 1);
+        if (i + 16 < n) {
+            __builtin_prefetch(&dst[count0[src[i+16] & 0x7FFu]], 1, 1);
+        }
         dst[count0[v0 & 0x7FFu]++] = v0;
         dst[count0[v1 & 0x7FFu]++] = v1;
         dst[count0[v2 & 0x7FFu]++] = v2;
@@ -411,6 +414,9 @@ inline void radixSort11(u32* data, size_t n, bool allowShortcuts = true) {
     for (; i + 3 < n; i += 4) {
         u32 v0 = dst[i], v1 = dst[i+1], v2 = dst[i+2], v3 = dst[i+3];
         __builtin_prefetch(&dst[i+32], 0, 1);
+        if (i + 16 < n) {
+            __builtin_prefetch(&src[count1[(dst[i+16] >> 11) & 0x7FFu]], 1, 1);
+        }
         src[count1[(v0 >> 11) & 0x7FFu]++] = v0;
         src[count1[(v1 >> 11) & 0x7FFu]++] = v1;
         src[count1[(v2 >> 11) & 0x7FFu]++] = v2;
@@ -432,6 +438,9 @@ inline void radixSort11(u32* data, size_t n, bool allowShortcuts = true) {
     for (; i + 3 < n; i += 4) {
         u32 v0 = src[i], v1 = src[i+1], v2 = src[i+2], v3 = src[i+3];
         __builtin_prefetch(&src[i+32], 0, 1);
+        if (i + 16 < n) {
+            __builtin_prefetch(&dst[count2[src[i+16] >> 22]], 1, 1);
+        }
         dst[count2[v0 >> 22]++] = v0;
         dst[count2[v1 >> 22]++] = v1;
         dst[count2[v2 >> 22]++] = v2;
