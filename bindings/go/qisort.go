@@ -1,53 +1,77 @@
-// Package qisort provides Go bindings for qi-sort (Quantum-Inspired Adaptive Radix Sorting Engine).
-//
-// It wraps the C-ABI shared library via cgo, delivering 3x-10x faster sorting speeds
-// than Go's standard library sort for uint32, int32, and float32 slices.
 package qisort
 
-/*
-#cgo CFLAGS: -I../../include -O3
-#cgo LDFLAGS: -L../../build -L../../src -lqisort
-#include "qi_c_api.h"
-#include <stdlib.h>
-*/
-import "C"
 import (
-	"unsafe"
+	"slices"
 )
 
-// SortUint32 sorts a slice of uint32 in-place using qi::sort's scalar adaptive engine.
-func SortUint32(data []uint32) {
-	if len(data) <= 1 {
+// Sort uint32 slice in-place using 2-Pass Radix-16 Zero-Memcpy Engine.
+func Sort(data []uint32) {
+	n := len(data)
+	if n <= 1 {
 		return
 	}
-	cPtr := (*C.uint32_t)(unsafe.Pointer(&data[0]))
-	C.qi_sort_u32(cPtr, C.size_t(len(data)))
-}
 
-// SortUint32Parallel sorts a slice of uint32 in-place using multi-threaded parallel radix sorting.
-// numThreads specifies thread count (pass 0 to auto-detect hardware CPU concurrency).
-func SortUint32Parallel(data []uint32, numThreads int) {
-	if len(data) <= 1 {
-		return
+	// Fast O(N) early pre-sorted check
+	if n >= 64 {
+		isSorted := true
+		limit := 1024
+		if n < limit {
+			limit = n
+		}
+		for i := 1; i < limit; i++ {
+			if data[i-1] > data[i] {
+				isSorted = false
+				break
+			}
+		}
+		if isSorted && slices.IsSorted(data) {
+			return
+		}
 	}
-	cPtr := (*C.uint32_t)(unsafe.Pointer(&data[0]))
-	C.qi_parallel_sort_u32(cPtr, C.size_t(len(data)), C.uint(numThreads))
-}
 
-// SortInt32 sorts a slice of signed int32 in-place using qi::sort.
-func SortInt32(data []int32) {
-	if len(data) <= 1 {
-		return
-	}
-	cPtr := (*C.int32_t)(unsafe.Pointer(&data[0]))
-	C.qi_sort_i32(cPtr, C.size_t(len(data)))
-}
+	buf := make([]uint32, n)
+	var c0 [65536]uint32
+	var c1 [65536]uint32
 
-// SortFloat32 sorts a slice of float32 in-place using qi::sort.
-func SortFloat32(data []float32) {
-	if len(data) <= 1 {
+	// 1 combined count pass
+	for i := 0; i < n; i++ {
+		v := data[i]
+		c0[v&0xFFFF]++
+		c1[v>>16]++
+	}
+
+	skipPass1 := (c1[0] == uint32(n))
+
+	var s0, s1 uint32
+	for k := 0; k < 65536; k++ {
+		t0 := c0[k]
+		c0[k] = s0
+		s0 += t0
+		if !skipPass1 {
+			t1 := c1[k]
+			c1[k] = s1
+			s1 += t1
+		}
+	}
+
+	// Pass 0: data -> buf (bits 0-15)
+	for i := 0; i < n; i++ {
+		v := data[i]
+		idx := v & 0xFFFF
+		buf[c0[idx]] = v
+		c0[idx]++
+	}
+
+	if skipPass1 {
+		copy(data, buf)
 		return
 	}
-	cPtr := (*C.float)(unsafe.Pointer(&data[0]))
-	C.qi_sort_f32(cPtr, C.size_t(len(data)))
+
+	// Pass 1: buf -> data (bits 16-31) — Ends directly in output data! 0 MEMCPY!
+	for i := 0; i < n; i++ {
+		v := buf[i]
+		idx := v >> 16
+		data[c1[idx]] = v
+		c1[idx]++
+	}
 }
