@@ -120,13 +120,26 @@ def sort(data: Union[List[int], any]) -> Union[List[int], any]:
     except ImportError:
         pass
 
-    # 2. Python array.array('I') (Zero-Copy C Pointer)
-    if isinstance(data, array.array):
-        if data.typecode != 'I':
-            raise TypeError("array.array must be of typecode 'I' (unsigned 32-bit int)")
-        c_ptr = (ctypes.c_uint32 * len(data)).from_buffer(data)
-        _lib.qi_sort_u32(c_ptr, len(data))
+def radix8(data: any) -> any:
+    """Run fixed 4-pass Radix-8 sort in-place."""
+    if _has_native_mod:
+        qi_sort_cpp.radix8(data)
         return data
+    raise RuntimeError("qi_sort_cpp module required")
+
+def radix11(data: any) -> any:
+    """Run fixed 3-pass Radix-11 sort in-place."""
+    if _has_native_mod:
+        qi_sort_cpp.radix11(data)
+        return data
+    raise RuntimeError("qi_sort_cpp module required")
+
+def radix16(data: any) -> any:
+    """Run fixed 2-pass Radix-16 sort in-place."""
+    if _has_native_mod:
+        qi_sort_cpp.radix16(data)
+        return data
+    raise RuntimeError("qi_sort_cpp module required")
 
     # 3. Standard Python list handling (Optimized via C array buffer)
     if not isinstance(data, list):
