@@ -21,6 +21,21 @@ void qi_parallel_sort_u32(uint32_t* data, size_t n, unsigned int num_threads) {
     qi::sort(data, n, opts);
 }
 
+void qi_radix8_u32(uint32_t* data, size_t n, int allow_shortcuts) {
+    if (!data || n <= 1) return;
+    qi::detail::radixSort8(data, n, allow_shortcuts != 0);
+}
+
+void qi_radix11_u32(uint32_t* data, size_t n, int allow_shortcuts) {
+    if (!data || n <= 1) return;
+    qi::detail::radixSort11(data, n, allow_shortcuts != 0);
+}
+
+void qi_radix16_u32(uint32_t* data, size_t n, int allow_shortcuts) {
+    if (!data || n <= 1) return;
+    qi::detail::radixSort16(data, n, allow_shortcuts != 0);
+}
+
 void qi_sort_i32(int32_t* data, size_t n) {
     if (!data || n <= 1) return;
     qi::sort(data, n);

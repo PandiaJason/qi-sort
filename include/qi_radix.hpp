@@ -260,39 +260,31 @@ inline ThreadLocalScratch& getScratch() {
 }
 
 // ── RADIX-8 ──
-inline void radixSort8(u32* data, size_t n, bool allowShortcuts = true) {
+inline void radixSort8(u32* data, size_t n, bool allowShortcuts = true, u32 bitOr = ~0u) {
     if (n <= 1) return;
     u32* dst = getScratch().get(n);
     u32* src = data;
 
     for (int pass = 0; pass < 4; ++pass) {
-        size_t count[256] = {0};
         int shift = pass * 8;
+        // Skip this pass entirely if no element has non-zero bits in this byte
+        if (((bitOr >> shift) & 0xFF) == 0) continue;
 
-        for (size_t i = 0; i < n; ++i) {
-            count[(src[i] >> shift) & 0xFF]++;
-        }
+        size_t count[256] = {0};
+        for (size_t i = 0; i < n; ++i) count[(src[i] >> shift) & 0xFF]++;
 
         size_t total = 0;
-        for (int i = 0; i < 256; ++i) {
-            size_t c = count[i];
-            count[i] = total;
-            total += c;
-        }
+        for (int i = 0; i < 256; ++i) { size_t c = count[i]; count[i] = total; total += c; }
 
-        if (count[0] == n) continue;
-
-        for (size_t i = 0; i < n; ++i) {
-            uint8_t byte = (src[i] >> shift) & 0xFF;
-            dst[count[byte]++] = src[i];
-        }
+        for (size_t i = 0; i < n; ++i) { uint8_t b = (src[i] >> shift) & 0xFF; dst[count[b]++] = src[i]; }
         std::swap(src, dst);
     }
     if (src != data) std::memcpy(data, src, n * sizeof(u32));
 }
 
 // ── RADIX-11 ──
-inline void radixSort11(u32* data, size_t n, bool allowShortcuts = true) {
+// bitOr: pass full bitwise-OR of sample so we can skip passes whose byte range is zero
+inline void radixSort11(u32* data, size_t n, bool allowShortcuts = true, u32 bitOr = ~0u) {
     if (n <= 1) return;
     u32* dst = getScratch().get(n);
     u32* src = data;
@@ -301,45 +293,47 @@ inline void radixSort11(u32* data, size_t n, bool allowShortcuts = true) {
     alignas(64) static thread_local size_t count1[2048];
     alignas(64) static thread_local size_t count2[1024];
 
-    std::memset(count0, 0, sizeof(count0));
-    std::memset(count1, 0, sizeof(count1));
-    std::memset(count2, 0, sizeof(count2));
+    const bool pass0_active = (bitOr & 0x7FFu) != 0;
+    const bool pass1_active = ((bitOr >> 11) & 0x7FFu) != 0;
+    const bool pass2_active = (bitOr >> 22) != 0;
+
+    std::memset(count0, 0, 2048 * sizeof(size_t));
+    if (pass1_active) std::memset(count1, 0, 2048 * sizeof(size_t));
+    if (pass2_active) std::memset(count2, 0, 1024 * sizeof(size_t));
 
     for (size_t i = 0; i < n; ++i) {
         u32 val = src[i];
-        count0[val & 0x7FFu]++;
-        count1[(val >> 11) & 0x7FFu]++;
-        count2[val >> 22]++;
+        if (pass0_active) count0[val & 0x7FFu]++;
+        if (pass1_active) count1[(val >> 11) & 0x7FFu]++;
+        if (pass2_active) count2[val >> 22]++;
     }
 
     size_t sum0 = 0, sum1 = 0, sum2 = 0;
     for (int i = 0; i < 2048; ++i) {
-        size_t c0 = count0[i]; count0[i] = sum0; sum0 += c0;
-        size_t c1 = count1[i]; count1[i] = sum1; sum1 += c1;
-        if (i < 1024) {
-            size_t c2 = count2[i]; count2[i] = sum2; sum2 += c2;
-        }
+        if (pass0_active) { size_t c = count0[i]; count0[i] = sum0; sum0 += c; }
+        if (pass1_active) { size_t c = count1[i]; count1[i] = sum1; sum1 += c; }
+        if (pass2_active && i < 1024) { size_t c = count2[i]; count2[i] = sum2; sum2 += c; }
     }
 
     // Pass 0 (bits 0-10)
-    for (size_t i = 0; i < n; ++i) {
-        u32 v = src[i];
-        dst[count0[v & 0x7FFu]++] = v;
+    if (pass0_active) {
+        for (size_t i = 0; i < n; ++i) { u32 v = src[i]; dst[count0[v & 0x7FFu]++] = v; }
+        std::swap(src, dst);
     }
 
     // Pass 1 (bits 11-21)
-    for (size_t i = 0; i < n; ++i) {
-        u32 v = dst[i];
-        src[count1[(v >> 11) & 0x7FFu]++] = v;
+    if (pass1_active) {
+        for (size_t i = 0; i < n; ++i) { u32 v = src[i]; dst[count1[(v >> 11) & 0x7FFu]++] = v; }
+        std::swap(src, dst);
     }
 
     // Pass 2 (bits 22-31)
-    for (size_t i = 0; i < n; ++i) {
-        u32 v = src[i];
-        dst[count2[v >> 22]++] = v;
+    if (pass2_active) {
+        for (size_t i = 0; i < n; ++i) { u32 v = src[i]; dst[count2[v >> 22]++] = v; }
+        std::swap(src, dst);
     }
 
-    std::memcpy(data, dst, n * sizeof(u32));
+    if (src != data) std::memcpy(data, src, n * sizeof(u32));
 }
 
 // ── RADIX-16 ──
@@ -770,18 +764,23 @@ inline State analyze(const std::vector<u32>& data, size_t sampleSize = 8192) {
  */
 inline void sort(u32* data, size_t n, SortOptions options = SortOptions{}) {
     if (n <= 1) return;
-    if (options.allowShortcuts && std::is_sorted(data, data + n)) return;
 
     State state = detail::analyzeData(data, n, options.sampleSize);
+    u32 bitOr = state.bitOrSum;
 
-    // Inverse Participation Ratio (IPR = sum(p_i^2)) & Range Shortcut Engine
-    if ((state.bitOrSum >> 8) == 0) {
-        // Data range fits in [0, 255] (1 pass Radix-8 shortcut)
-        detail::radixSort8(data, n, options.allowShortcuts);
+    // Nearly-sorted early exit: if 98%+ pairs in sample are ordered, check & return
+    if (options.allowShortcuts && state.orderedness >= 0.98) {
+        if (std::is_sorted(data, data + n)) return;
+    }
+
+    // IPR-guided radix selection + bitOr pass-skipping
+    if ((bitOr >> 8) == 0) {
+        // Range fits in [0,255] — only 1 active byte, Radix-8 skips other 3 passes
+        detail::radixSort8(data, n, options.allowShortcuts, bitOr);
     } else if (state.amplitudeConcentration >= 0.05 || state.duplicateRatio >= 0.70 || state.effectiveStates <= 16.0) {
         detail::radixSort16(data, n, options.allowShortcuts);
     } else {
-        detail::radixSort11(data, n, options.allowShortcuts);
+        detail::radixSort11(data, n, options.allowShortcuts, bitOr);
     }
 }
 
