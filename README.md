@@ -118,42 +118,106 @@ There is also an **O(N) short-circuit**: if sensing detects the data is pre-sort
 
 ---
 
-## Quickstart
+---
 
-**C++ — drop in one header:**
+## How to Use `qi-sort` in Your Project
 
-```bash
-cp include/qi_radix.hpp /your/project/include/
-```
+`qi-sort` is designed as a **zero-dependency, header-only C++17 library** that drops into any codebase with zero build configuration. It also provides native C, Python, and Java bindings.
+
+### 1. C++ (Header-Only — Recommended)
+
+Simply copy [`include/qi_radix.hpp`](include/qi_radix.hpp) into your project's include directory:
 
 ```cpp
 #include "qi_radix.hpp"
+#include <vector>
+#include <cstdint>
 
-// Single-threaded (default)
-std::vector<uint32_t> data = {10543, 42, 999999, 12, 0, 8881};
-qi::sort(data);
+int main() {
+    // A. Vector of 32-bit unsigned integers
+    std::vector<uint32_t> data = {10543, 42, 999999, 12, 0, 8881};
+    qi::sort(data);
 
-// Multi-threaded (all CPU cores)
-qi::SortOptions opts;
-opts.parallel = true;
-qi::sort(data, opts);
+    // B. Raw C-style pointer & array size
+    uint32_t raw_arr[1000];
+    qi::sort(raw_arr, 1000);
+
+    // C. Signed integers & Floating-point numbers
+    std::vector<int32_t> signed_data = {-500, 42, -10, 1000};
+    qi::sort(signed_data);
+
+    std::vector<float> float_data = {-3.14f, 100.5f, 0.0f, 2.71f};
+    qi::sort(float_data);
+
+    // D. Multi-Threaded Parallel Sort (auto-detects CPU cores)
+    qi::SortOptions opts;
+    opts.parallel = true;
+    qi::sort(data, opts);
+}
 ```
 
-**Python integration:**
+### 2. CMake Integration
+
+Add `qi-sort` to your `CMakeLists.txt`:
+
+```cmake
+# Header-only target
+add_subdirectory(path/to/qi-sort)
+target_link_libraries(your_target PRIVATE qi_radix)
+```
+
+### 3. C Language (C-ABI Shared Library)
+
+```c
+#include "qi_c_api.h"
+
+uint32_t data[6] = {10543, 42, 999999, 12, 0, 8881};
+qi_sort_u32(data, 6); // Single-threaded
+qi_parallel_sort_u32(data, 6, 0); // Multi-threaded (0 = auto cores)
+```
+
+Compile and link:
+```bash
+g++ -O3 -shared -fPIC -std=c++17 src/qi_c_api.cpp -o libqisort.dylib
+gcc -O3 main.c -L. -lqisort -o my_app
+```
+
+### 4. Python Integration
 
 ```python
+import numpy as np
 import qi_sort
-qi_sort.sort(my_list)   # Up to 65.9× faster on NumPy & 11.0× faster on Python lists vs list.sort()
+
+# Sort NumPy 1D Array (in-place zero-copy)
+arr = np.random.randint(0, 1000000, size=1000000, dtype=np.uint32)
+qi_sort.sort_numpy(arr)
+
+# Sort standard Python List
+data = [10543, 42, 999999, 12, 0, 8881]
+qi_sort.sort(data)
 ```
 
-**DuckDB Query Engine Block Sorting:**
+### 5. Java (JNI Integration)
+
+```java
+import com.qisort.QiSort;
+
+int[] data = {10543, 42, 999999, 12, 0, 8881};
+QiSort.sort(data);
+```
+
+### 6. Database & Columnar Engine Integration (DuckDB / Arrow / Polars)
+
+To accelerate columnar `ORDER BY`, hash joins, or log timestamps:
 
 ```cpp
 #include "qi_radix.hpp"
 
-// Inside DuckDB / Columnar Database Local Sink:
-void SortDuckDBChunk(uint32_t* normalized_keys, size_t count) {
-    qi::sort(normalized_keys, count);
+// Inside columnar chunk processing sink:
+void ProcessColumnChunk(uint32_t* keys, size_t row_count) {
+    qi::SortOptions opts;
+    opts.parallel = (row_count >= 100000); // Activate multi-threading for large chunks
+    qi::sort(keys, row_count, opts);
 }
 ```
 
