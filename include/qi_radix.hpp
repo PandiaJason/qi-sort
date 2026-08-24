@@ -818,8 +818,8 @@ inline void sort(u32* data, size_t n, SortOptions options = SortOptions{}) {
         detail::radixSort16(data, n, options.allowShortcuts);
     } else {
 #if defined(__linux__) || defined(__x86_64__)
-        // Automatic high-throughput block-buffered engine on Linux / x86_64
-        qi_univ::radixSort11_univ(data, n, bitOr);
+        // Automatic L1-resident block-buffered engine on Linux / x86_64
+        qi_univ::sort_univ(data, n, bitOr);
 #else
         detail::radixSort11(data, n, options.allowShortcuts, bitOr);
 #endif

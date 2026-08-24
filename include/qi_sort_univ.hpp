@@ -4,9 +4,9 @@
 /**
  * qi-sort-univ: Universal Block-Buffered Adaptive Radix Sort Engine
  * =================================================================
- * Optimized for x86_64 (Linux/Intel/AMD) and ARM64 architectures.
- * Uses 32-byte cache-line write buffering to eliminate DRAM line-fill
- * stalls during non-contiguous bucket scatter passes.
+ * Optimized specifically for x86_64 (Linux / Intel / AMD) & ARM64.
+ * Uses a strict 5.25 KB working memory footprint (Radix-8 + 4-element write buffers)
+ * guaranteeing 100% L1 Data Cache residency on ALL x86_64 CPUs (32 KB L1 budget).
  */
 
 #include <cstdint>
@@ -19,7 +19,6 @@ namespace qi_univ {
 
 using u32 = uint32_t;
 
-// ── Scratch Buffer Management ──
 class ScratchBuffer {
 public:
     u32* get(size_t n) {
@@ -39,103 +38,65 @@ inline ScratchBuffer& getScratch() {
     return scratch;
 }
 
-// ── Universal Block-Buffered Radix-11 Engine ──
-inline void radixSort11_univ(u32* data, size_t n, u32 bitOr = ~0u) {
+// ── L1-RESIDENT RADIX-8 ENGINE (5.25 KB Working Footprint) ──
+inline void radixSort8_univ(u32* data, size_t n, u32 bitOr = ~0u) {
     if (n <= 1) return;
     u32* buf = getScratch().get(n);
+    u32* src = data;
+    u32* dst = buf;
 
-    // 20 KB uint32_t histograms — guaranteed L1 cache fit (32 KB L1 on x86_64)
-    alignas(64) uint32_t c0[2048] = {};
-    alignas(64) uint32_t c1[2048] = {};
-    alignas(64) uint32_t c2[1024] = {};
+    // 4-element write buffer: 256 * 16 bytes = 4 KB (guaranteed L1 resident)
+    alignas(64) u32 wbuf[256][4];
+    alignas(64) uint8_t wcnt[256];
 
-    // Unconditional combined counting pass — fully SIMD vectorizable
-    for (size_t i = 0; i < n; ++i) {
-        u32 v = data[i];
-        c0[v & 0x7FFu]++;
-        c1[(v >> 11) & 0x7FFu]++;
-        c2[v >> 22]++;
-    }
+    for (int pass = 0; pass < 4; ++pass) {
+        int shift = pass * 8;
+        if (((bitOr >> shift) & 0xFF) == 0) continue;
 
-    // Prefix sums
-    uint32_t s0 = 0, s1 = 0, s2 = 0;
-    for (int i = 0; i < 2048; ++i) {
-        uint32_t t;
-        t = c0[i]; c0[i] = s0; s0 += t;
-        t = c1[i]; c1[i] = s1; s1 += t;
-        if (i < 1024) { t = c2[i]; c2[i] = s2; s2 += t; }
-    }
+        alignas(64) uint32_t count[256] = {};
 
-    // ── BLOCK-BUFFERED WRITE SCATTER ──
-    // 8 elements (32 bytes) per buffer → 2048 × 32 = 64 KB total write buffer.
-    // 87.5% of writes stay in fast L1 cache; 12.5% of writes are 32-byte block writes.
-    alignas(64) static thread_local u32 wbuf[2048][8];
-    alignas(64) static thread_local uint8_t wcnt[2048];
-
-    // Pass 0: data → buf (bits 0-10)
-    std::memset(wcnt, 0, 2048);
-    for (size_t i = 0; i < n; ++i) {
-        u32 v = data[i];
-        u32 b = v & 0x7FFu;
-        wbuf[b][wcnt[b]++] = v;
-        if (wcnt[b] == 8) {
-            std::memcpy(&buf[c0[b]], wbuf[b], 32);
-            c0[b] += 8;
-            wcnt[b] = 0;
-        }
-    }
-    for (int b = 0; b < 2048; ++b) {
-        if (wcnt[b] > 0) {
-            std::memcpy(&buf[c0[b]], wbuf[b], wcnt[b] * sizeof(u32));
-            c0[b] += wcnt[b];
-            wcnt[b] = 0;
-        }
-    }
-
-    // Pass 1: buf → data (bits 11-21)
-    for (size_t i = 0; i < n; ++i) {
-        u32 v = buf[i];
-        u32 b = (v >> 11) & 0x7FFu;
-        wbuf[b][wcnt[b]++] = v;
-        if (wcnt[b] == 8) {
-            std::memcpy(&data[c1[b]], wbuf[b], 32);
-            c1[b] += 8;
-            wcnt[b] = 0;
-        }
-    }
-    for (int b = 0; b < 2048; ++b) {
-        if (wcnt[b] > 0) {
-            std::memcpy(&data[c1[b]], wbuf[b], wcnt[b] * sizeof(u32));
-            c1[b] += wcnt[b];
-            wcnt[b] = 0;
-        }
-    }
-
-    // Pass 2 (optional): data → buf (bits 22-31)
-    if ((bitOr >> 22) != 0) {
+        // Combined count pass (1 KB)
         for (size_t i = 0; i < n; ++i) {
-            u32 v = data[i];
-            u32 b = v >> 22;
+            count[(src[i] >> shift) & 0xFF]++;
+        }
+
+        // Prefix sum
+        uint32_t sum = 0;
+        for (int i = 0; i < 256; ++i) {
+            uint32_t c = count[i];
+            count[i] = sum;
+            sum += c;
+        }
+
+        if (count[0] == n) continue;
+
+        // Block-buffered 16-byte SIMD store scatter
+        std::memset(wcnt, 0, 256);
+        for (size_t i = 0; i < n; ++i) {
+            u32 v = src[i];
+            uint8_t b = (v >> shift) & 0xFF;
             wbuf[b][wcnt[b]++] = v;
-            if (wcnt[b] == 8) {
-                std::memcpy(&buf[c2[b]], wbuf[b], 32);
-                c2[b] += 8;
+            if (wcnt[b] == 4) {
+                std::memcpy(&dst[count[b]], wbuf[b], 16);
+                count[b] += 4;
                 wcnt[b] = 0;
             }
         }
-        for (int b = 0; b < 1024; ++b) {
+        for (int b = 0; b < 256; ++b) {
             if (wcnt[b] > 0) {
-                std::memcpy(&buf[c2[b]], wbuf[b], wcnt[b] * sizeof(u32));
-                c2[b] += wcnt[b];
+                std::memcpy(&dst[count[b]], wbuf[b], wcnt[b] * sizeof(u32));
+                count[b] += wcnt[b];
                 wcnt[b] = 0;
             }
         }
-        std::memcpy(data, buf, n * sizeof(u32));
+        std::swap(src, dst);
     }
+
+    if (src != data) std::memcpy(data, src, n * sizeof(u32));
 }
 
-inline void sort_univ(u32* data, size_t n) {
-    radixSort11_univ(data, n);
+inline void sort_univ(u32* data, size_t n, u32 bitOr = ~0u) {
+    radixSort8_univ(data, n, bitOr);
 }
 
 } // namespace qi_univ
