@@ -85,10 +85,26 @@ def sort(data: Union[List[int], any]) -> Union[List[int], any]:
     try:
         import numpy as np
         if isinstance(data, np.ndarray):
-            if data.dtype != np.uint32:
-                data = data.astype(np.uint32)
-            c_ptr = data.ctypes.data_as(ctypes.POINTER(ctypes.c_uint32))
-            _lib.qi_sort_u32(c_ptr, data.size)
+            if data.dtype == np.uint32:
+                c_ptr = data.ctypes.data_as(ctypes.POINTER(ctypes.c_uint32))
+                _lib.qi_sort_u32(c_ptr, data.size)
+                return data
+            elif data.dtype == np.int32:
+                if hasattr(_lib, 'qi_sort_i32'):
+                    c_ptr = data.ctypes.data_as(ctypes.POINTER(ctypes.c_int32))
+                    _lib.qi_sort_i32(c_ptr, data.size)
+                    return data
+            elif data.dtype == np.float32:
+                if hasattr(_lib, 'qi_sort_f32'):
+                    c_ptr = data.ctypes.data_as(ctypes.POINTER(ctypes.c_float))
+                    _lib.qi_sort_f32(c_ptr, data.size)
+                    return data
+
+            # Fallback for uint64/int64/other types
+            converted = data.astype(np.uint32)
+            c_ptr = converted.ctypes.data_as(ctypes.POINTER(ctypes.c_uint32))
+            _lib.qi_sort_u32(c_ptr, converted.size)
+            data[:] = converted
             return data
     except ImportError:
         pass
