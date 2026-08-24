@@ -231,9 +231,9 @@ We compiled **DuckDB's exact native sorting headers** ([`third_party/pdqsort/pdq
 
 | SQL Column / Dataset | DuckDB `pdqsort` | DuckDB `vergesort` | Plain Radix-8 | Plain Radix-11 | Plain Radix-16 | **`qi::sort` (Adaptive)** | **End-to-End ORDER BY Speedup** |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Integer Keys & Surrogate IDs** | 62.43 ms | 63.60 ms | 18.76 ms | 13.59 ms | 17.31 ms | **13.72 ms** | **4.63× FASTER** (211 MRows/s) |
-| **Hash Join Keys & Hash Hashes** | 61.99 ms | 61.71 ms | 14.78 ms | 11.17 ms | 16.27 ms | **16.41 ms** | **3.76× FASTER** (183 MRows/s) |
-| **Heavy Duplicate Categories (0-255)** | 17.77 ms | 17.79 ms | 42.28 ms | 30.03 ms | 9.44 ms | **9.62 ms** | **1.85× FASTER** (303 MRows/s) |
+| **Integer Keys & Surrogate IDs** | 62.76 ms | 63.46 ms | 18.89 ms | 10.25 ms | 17.98 ms | **11.44 ms** | **5.55× FASTER** (262 MRows/s) |
+| **Hash Join Keys & Hash Hashes** | 62.07 ms | 62.04 ms | 14.67 ms | 9.15 ms | 16.24 ms | **9.14 ms** | **6.79× FASTER** (328 MRows/s) |
+| **Heavy Duplicate Categories (0-255)** | 17.64 ms | 17.70 ms | 42.44 ms | 22.12 ms | 9.52 ms | **9.42 ms** | **1.88× FASTER** (318 MRows/s) |
 
 ### DuckDB Multi-Scale & Multi-Threaded Validation Matrix (3M → 10M → 50M Rows)
 
