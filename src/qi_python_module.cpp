@@ -10,7 +10,7 @@ static PyObject* py_qi_sort(PyObject* self, PyObject* args) {
     }
 
     Py_buffer view;
-    if (PyObject_GetBuffer(obj, &view, PyBUF_WRITABLE | PyBUF_ND) < 0) {
+    if (PyObject_GetBuffer(obj, &view, PyBUF_WRITABLE | PyBUF_ND | PyBUF_STRIDES) < 0) {
         PyErr_Clear();
         // Fallback for Python lists
         if (PyList_Check(obj)) {
@@ -33,6 +33,12 @@ static PyObject* py_qi_sort(PyObject* self, PyObject* args) {
     if (view.itemsize != sizeof(uint32_t)) {
         PyBuffer_Release(&view);
         PyErr_SetString(PyExc_TypeError, "qi_sort buffer must be 32-bit (uint32, int32, or float32). Use data.astype(np.uint32).");
+        return NULL;
+    }
+
+    if (!PyBuffer_IsContiguous(&view, 'C')) {
+        PyBuffer_Release(&view);
+        PyErr_SetString(PyExc_ValueError, "Buffer must be C-contiguous. Use np.ascontiguousarray(data).");
         return NULL;
     }
 

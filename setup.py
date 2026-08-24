@@ -2,7 +2,11 @@ from setuptools import setup, Extension
 import os
 import platform
 
-cpp_args = ['-O3', '-std=c++17', '-ffast-math']
+os.environ['OPT'] = '-DNDEBUG -O3'
+os.environ['CFLAGS'] = '-DNDEBUG -O3'
+os.environ['CXXFLAGS'] = '-DNDEBUG -O3 -std=c++17'
+
+cpp_args = ['-O3', '-DNDEBUG', '-std=c++17', '-ffast-math']
 
 ext_modules = [
     Extension(
@@ -16,7 +20,7 @@ ext_modules = [
 
 setup(
     name='qi_sort',
-    version='0.2.6',
+    version='0.2.7',
     description='Quantum-Inspired Adaptive Radix Sorting Engine',
     author='Jason Pandia',
     url='https://github.com/PandiaJason/qi-sort',
