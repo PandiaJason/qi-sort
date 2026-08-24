@@ -30,6 +30,12 @@ static PyObject* py_qi_sort(PyObject* self, PyObject* args) {
         return NULL;
     }
 
+    if (view.itemsize != sizeof(uint32_t)) {
+        PyBuffer_Release(&view);
+        PyErr_SetString(PyExc_TypeError, "qi_sort buffer must be 32-bit (uint32, int32, or float32). Use data.astype(np.uint32).");
+        return NULL;
+    }
+
     uint32_t* ptr = reinterpret_cast<uint32_t*>(view.buf);
     size_t n = view.len / sizeof(uint32_t);
 

@@ -320,9 +320,9 @@ inline void radixSort8(u32* data, size_t n, bool allowShortcuts = true) {
         }
     }
 
-    std::vector<u32> buffer(n);
+    std::unique_ptr<u32[]> buffer_ptr(new u32[n]);
     u32* src = data;
-    u32* dst = buffer.data();
+    u32* dst = buffer_ptr.get();
 
     for (int pass = 0; pass < 4; ++pass) {
         size_t count[256] = {0};
@@ -365,9 +365,9 @@ inline void radixSort11(u32* data, size_t n, bool allowShortcuts = true) {
         }
     }
 
-    std::vector<u32> buffer(n);
+    std::unique_ptr<u32[]> buffer_ptr(new u32[n]);
     u32* src = data;
-    u32* dst = buffer.data();
+    u32* dst = buffer_ptr.get();
 
     alignas(64) size_t count0[2048] = {0};
     alignas(64) size_t count1[2048] = {0};
@@ -458,9 +458,9 @@ inline void radixSort16(u32* data, size_t n, bool allowShortcuts = true) {
         }
     }
 
-    std::vector<u32> buffer(n);
+    std::unique_ptr<u32[]> buffer_ptr(new u32[n]);
     u32* src = data;
-    u32* dst = buffer.data();
+    u32* dst = buffer_ptr.get();
 
     auto count0_ptr = std::make_unique<std::array<size_t, 65536>>();
     auto count1_ptr = std::make_unique<std::array<size_t, 65536>>();
