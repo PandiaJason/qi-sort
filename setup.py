@@ -2,14 +2,12 @@ from setuptools import setup, Extension
 import os
 import platform
 
-cpp_args = ['-O3', '-std=c++17', '-ffast-math', '-flto']
-if platform.system() != 'Windows':
-    cpp_args.append('-march=native')
+cpp_args = ['-O3', '-std=c++17', '-ffast-math']
 
 ext_modules = [
     Extension(
         'qi_sort_cpp',
-        sources=['src/qi_c_api.cpp'],
+        sources=['src/qi_python_module.cpp', 'src/qi_c_api.cpp'],
         include_dirs=['.', 'include'],
         extra_compile_args=cpp_args,
         language='c++',
@@ -18,7 +16,7 @@ ext_modules = [
 
 setup(
     name='qi_sort',
-    version='0.2.3',
+    version='0.2.4',
     description='Quantum-Inspired Adaptive Radix Sorting Engine',
     author='Jason Pandia',
     url='https://github.com/PandiaJason/qi-sort',

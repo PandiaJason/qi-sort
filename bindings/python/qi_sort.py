@@ -70,7 +70,11 @@ _lib.qi_analyze_u32.argtypes = [
 _lib.qi_analyze_u32.restype = None
 
 
-import array
+try:
+    import qi_sort_cpp
+    _has_native_mod = True
+except ImportError:
+    _has_native_mod = False
 
 def sort(data: Union[List[int], any]) -> Union[List[int], any]:
     """
@@ -81,7 +85,14 @@ def sort(data: Union[List[int], any]) -> Union[List[int], any]:
         data = [10, 5, 20, 1]
         qi_sort.sort(data)
     """
-    # 1. NumPy Array (Zero-Copy C Pointer)
+    if _has_native_mod:
+        try:
+            qi_sort_cpp.sort(data)
+            return data
+        except TypeError:
+            pass
+
+    # 1. NumPy Array (Zero-Copy C Pointer via ctypes fallback)
     try:
         import numpy as np
         if isinstance(data, np.ndarray):
