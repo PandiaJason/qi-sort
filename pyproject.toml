@@ -8,9 +8,16 @@ version = "0.2.0"
 description = "Quantum-Inspired Adaptive Radix Sorting Engine"
 readme = "README.md"
 requires-python = ">=3.8"
-license = { text = "GPL-2.0" }
+license = { text = "GPL-2.0-only" }
 authors = [
     { name = "Jason Pandia" }
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries",
+    "Programming Language :: C++",
+    "Programming Language :: Python :: 3"
 ]
 keywords = ["sorting", "radix-sort", "c++17", "high-performance", "adaptive-sort"]
 

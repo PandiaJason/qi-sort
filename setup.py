@@ -10,7 +10,7 @@ ext_modules = [
     Extension(
         'qi_sort_cpp',
         sources=['src/qi_c_api.cpp'],
-        include_dirs=['include'],
+        include_dirs=['.', 'include'],
         extra_compile_args=cpp_args,
         language='c++',
     ),

@@ -1,5 +1,10 @@
+#if __has_include("qi_c_api.h")
+#include "qi_c_api.h"
+#include "qi_radix.hpp"
+#else
 #include "../include/qi_c_api.h"
 #include "../include/qi_radix.hpp"
+#endif
 
 extern "C" {
 
