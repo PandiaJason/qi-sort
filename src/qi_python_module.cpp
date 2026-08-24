@@ -51,11 +51,7 @@ static PyObject* py_qi_sort(PyObject* self, PyObject* args) {
 
     if (n > 1) {
         Py_BEGIN_ALLOW_THREADS
-        if (n >= 100000) {
-            qi::parallel_sort(ptr, n);
-        } else {
-            qi::sort(ptr, n);
-        }
+        qi::sort(ptr, n);
         Py_END_ALLOW_THREADS
     }
 
