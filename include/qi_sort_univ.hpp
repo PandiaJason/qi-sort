@@ -2,14 +2,8 @@
 #define QI_SORT_UNIV_HPP
 
 /**
- * qi-sort-univ: OpenMP Multi-Threaded 2-Pass Radix-16 Zero-Memcpy Engine
- * ======================================================================
- * Engineered for Linux cloud hypervisors (Google Colab / AWS / GCP / Docker).
- *
- * KEY HIGHLIGHTS:
- * 1. OpenMP Parallelization: Distributes Pass 0 and Pass 1 across all vCPU cores.
- * 2. 0 Memcpy: Pass 0 writes data -> buf; Pass 1 writes buf -> data.
- * 3. 0 TLS Overhead: Thread-local static histograms.
+ * qi-sort-univ: High-Performance Radix Engine for Linux & Cloud Hypervisors
+ * ========================================================================
  */
 
 #include <cstdint>
@@ -18,10 +12,6 @@
 #include <vector>
 #include <algorithm>
 #include <array>
-
-#if defined(_OPENMP)
-  #include <omp.h>
-#endif
 
 namespace qi_univ {
 
@@ -51,68 +41,6 @@ inline void radixSort16_univ(u32* data, size_t n) {
     if (n <= 1) return;
     u32* buf = getScratch().get(n);
 
-#if defined(_OPENMP)
-    if (n >= 100000) {
-        int nth = omp_get_max_threads();
-        if (nth > 1) {
-            std::vector<std::array<uint32_t, 65536>> c0_t(nth);
-            std::vector<std::array<uint32_t, 65536>> c1_t(nth);
-
-            #pragma omp parallel
-            {
-                int tid = omp_get_thread_num();
-                c0_t[tid].fill(0);
-                c1_t[tid].fill(0);
-                #pragma omp for schedule(static)
-                for (size_t i = 0; i < n; ++i) {
-                    u32 v = data[i];
-                    c0_t[tid][v & 0xFFFFu]++;
-                    c1_t[tid][v >> 16]++;
-                }
-            }
-
-            bool skipPass1 = true;
-            for (int t = 0; t < nth; ++t) {
-                if (c1_t[t][0] != c1_t[t][0]) { skipPass1 = false; break; }
-            }
-
-            std::vector<std::array<uint32_t, 65536>> off0(nth);
-            std::vector<std::array<uint32_t, 65536>> off1(nth);
-            uint32_t s0 = 0, s1 = 0;
-            for (int k = 0; k < 65536; ++k) {
-                for (int t = 0; t < nth; ++t) {
-                    off0[t][k] = s0; s0 += c0_t[t][k];
-                    off1[t][k] = s1; s1 += c1_t[t][k];
-                }
-            }
-
-            #pragma omp parallel
-            {
-                int tid = omp_get_thread_num();
-                auto l_off0 = off0[tid];
-                #pragma omp for schedule(static)
-                for (size_t i = 0; i < n; ++i) {
-                    u32 v = data[i];
-                    buf[l_off0[v & 0xFFFFu]++] = v;
-                }
-            }
-
-            #pragma omp parallel
-            {
-                int tid = omp_get_thread_num();
-                auto l_off1 = off1[tid];
-                #pragma omp for schedule(static)
-                for (size_t i = 0; i < n; ++i) {
-                    u32 v = buf[i];
-                    data[l_off1[v >> 16]++] = v;
-                }
-            }
-            return;
-        }
-    }
-#endif
-
-    // Single-threaded fallback
     alignas(64) uint32_t c0[65536] = {};
     alignas(64) uint32_t c1[65536] = {};
 
