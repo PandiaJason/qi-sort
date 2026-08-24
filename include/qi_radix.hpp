@@ -825,24 +825,14 @@ inline State analyze(const std::vector<u32>& data, size_t sampleSize = 8192) {
  */
 inline void sort(u32* data, size_t n, SortOptions options = SortOptions{}) {
     if (n <= 1) return;
+    if (std::is_sorted(data, data + n)) return;
+
     State state = detail::analyzeData(data, n, options.sampleSize);
 
-    if (options.parallel && n >= 100000) {
-        unsigned int threads = options.numThreads;
-        if (threads == 0) threads = std::thread::hardware_concurrency();
-        if (threads < 2) threads = 2;
-
-        switch (state.recommendedRadix) {
-            case Radix::R8:  detail::parallelRadixSort8(data, n, options.allowShortcuts, threads); break;
-            case Radix::R11: detail::parallelRadixSort11(data, n, options.allowShortcuts, threads); break;
-            case Radix::R16: detail::parallelRadixSort16(data, n, options.allowShortcuts, threads); break;
-        }
+    if (state.duplicateRatio >= 0.70 || state.effectiveStates <= 16.0) {
+        detail::radixSort16(data, n, options.allowShortcuts);
     } else {
-        switch (state.recommendedRadix) {
-            case Radix::R8:  detail::radixSort8(data, n, options.allowShortcuts); break;
-            case Radix::R11: detail::radixSort11(data, n, options.allowShortcuts); break;
-            case Radix::R16: detail::radixSort16(data, n, options.allowShortcuts); break;
-        }
+        std::sort(data, data + n);
     }
 }
 
