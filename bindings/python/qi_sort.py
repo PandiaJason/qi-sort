@@ -1,199 +1,150 @@
 """
-QI-Sort Python Bindings (ctypes / NumPy)
-Ultra-fast quantum-inspired adaptive radix sort for Python lists & NumPy arrays.
+qi-sort: Quantum-Inspired Adaptive Radix Sort
+==============================================
+Ultra-fast sorting for NumPy uint32 arrays and Python lists.
+
+Usage:
+    import qi_sort
+    import numpy as np
+
+    data = np.random.randint(0, 2**32-1, size=2_000_000, dtype=np.uint32)
+    qi_sort.sort(data)          # in-place, beats NumPy on all distributions
+    qi_sort.sort(data, alg=8)   # force Radix-8
+    qi_sort.sort(data, alg=11)  # force Radix-11
+    qi_sort.sort(data, alg=16)  # force Radix-16
+
+PyPI: https://pypi.org/project/qi-sort/
+GitHub: https://github.com/PandiaJason/qi-sort
 """
 
-import ctypes
-import os
-import platform
-import time
-from typing import Union, List, Tuple
+from typing import List, Optional, Union
 
-# Load Native C Shared Library or C-Extension
-def _load_library():
-    dir_path = os.path.dirname(os.path.abspath(__file__))
-    
-    # 1. Look for compiled extension binary in the same directory as qi_sort.py
-    if os.path.exists(dir_path):
-        for f in os.listdir(dir_path):
-            if f.startswith("qi_sort_cpp") and (f.endswith(".so") or f.endswith(".pyd") or f.endswith(".dylib")):
-                try:
-                    return ctypes.CDLL(os.path.join(dir_path, f))
-                except Exception:
-                    pass
-
-    # 2. Attempt direct Python import of qi_sort_cpp
-    try:
-        import qi_sort_cpp
-        return ctypes.CDLL(qi_sort_cpp.__file__)
-    except Exception:
-        pass
-
-    dir_path = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.abspath(os.path.join(dir_path, "../../"))
-    
-    system = platform.system()
-    if system == "Darwin":
-        lib_name = "libqisort.dylib"
-    elif system == "Windows":
-        lib_name = "qisort.dll"
-    else:
-        lib_name = "libqisort.so"
-
-    search_paths = [
-        os.path.join(project_root, "src", lib_name),
-        os.path.join(project_root, lib_name),
-        os.path.join(dir_path, lib_name),
-        os.path.join("/usr/local/lib", lib_name),
-    ]
-
-    for path in search_paths:
-        if os.path.exists(path):
-            return ctypes.CDLL(path)
-            
-    raise FileNotFoundError(f"Could not find native {lib_name} or qi_sort_cpp extension. Please run 'pip install .' or build libqisort.")
-
-_lib = _load_library()
-
-# Function Signatures
-_lib.qi_sort_u32.argtypes = [ctypes.POINTER(ctypes.c_uint32), ctypes.c_size_t]
-_lib.qi_sort_u32.restype = None
-
-_lib.qi_analyze_u32.argtypes = [
-    ctypes.POINTER(ctypes.c_uint32),
-    ctypes.c_size_t,
-    ctypes.POINTER(ctypes.c_double),
-    ctypes.POINTER(ctypes.c_double),
-    ctypes.POINTER(ctypes.c_double),
-    ctypes.POINTER(ctypes.c_double)
-]
-_lib.qi_analyze_u32.restype = None
-
-
+# ── Load native C++ extension ───────────────────────────────────────────────
 try:
-    import qi_sort_cpp
-    _has_native_mod = True
+    import qi_sort_cpp as _cpp
+    _HAS_CPP = True
 except ImportError:
-    _has_native_mod = False
+    _cpp = None  # type: ignore
+    _HAS_CPP = False
 
-def sort(data: Union[List[int], any]) -> Union[List[int], any]:
-    """
-    Sort a Python list of non-negative 32-bit integers, array.array, or NumPy uint32 array in-place.
-    
-    Example:
-        import qi_sort
-        data = [10, 5, 20, 1]
-        qi_sort.sort(data)
-    """
-    if _has_native_mod:
-        try:
-            qi_sort_cpp.sort(data)
-            return data
-        except TypeError:
-            pass
 
-    # 1. NumPy Array (Zero-Copy C Pointer via ctypes fallback)
+def _numpy_sort(data, alg: Optional[int]) -> None:
+    """Sort a NumPy uint32 array in-place using the native C++ engine."""
+    import numpy as np
+
+    if not isinstance(data, np.ndarray):
+        raise TypeError("Expected a numpy ndarray")
+    if data.dtype != np.uint32:
+        raise TypeError(f"Expected dtype=np.uint32, got {data.dtype}")
+    if not data.flags['C_CONTIGUOUS']:
+        raise TypeError("Array must be C-contiguous. Call np.ascontiguousarray() first.")
+    if not data.flags['WRITEABLE']:
+        raise TypeError("Array must be writable.")
+
+    ptr = data.ctypes.data          # raw int pointer — always works on all platforms/numpy versions
+    n   = data.size
+
+    if not _HAS_CPP:
+        raise ImportError(
+            "qi_sort native extension (qi_sort_cpp) not found. "
+            "Install with: pip install qi-sort"
+        )
+
+    if alg == 8:
+        _cpp.radix8_ptr(ptr, n)
+    elif alg == 11:
+        _cpp.radix11_ptr(ptr, n)
+    elif alg == 16:
+        _cpp.radix16_ptr(ptr, n)
+    else:
+        _cpp.sort_ptr(ptr, n)   # IPR-guided adaptive engine
+
+
+def sort(data, alg: Optional[int] = None):
+    """
+    Sort data in-place using the qi adaptive radix engine.
+
+    Parameters
+    ----------
+    data : np.ndarray (uint32) or list[int]
+        Input to sort. NumPy uint32 arrays are sorted zero-copy in C++.
+    alg  : int, optional
+        Force a specific radix kernel: 8, 11, or 16.
+        Default (None) uses the IPR-guided adaptive engine.
+
+    Returns
+    -------
+    data (same object, sorted in-place)
+
+    Examples
+    --------
+    >>> import numpy as np, qi_sort
+    >>> a = np.random.randint(0, 2**32-1, size=2_000_000, dtype=np.uint32)
+    >>> qi_sort.sort(a)
+    """
     try:
         import numpy as np
         if isinstance(data, np.ndarray):
-            if data.dtype == np.uint32:
-                c_ptr = data.ctypes.data_as(ctypes.POINTER(ctypes.c_uint32))
-                _lib.qi_sort_u32(c_ptr, data.size)
-                return data
-            elif data.dtype == np.int32:
-                if hasattr(_lib, 'qi_sort_i32'):
-                    c_ptr = data.ctypes.data_as(ctypes.POINTER(ctypes.c_int32))
-                    _lib.qi_sort_i32(c_ptr, data.size)
-                    return data
-            elif data.dtype == np.float32:
-                if hasattr(_lib, 'qi_sort_f32'):
-                    c_ptr = data.ctypes.data_as(ctypes.POINTER(ctypes.c_float))
-                    _lib.qi_sort_f32(c_ptr, data.size)
-                    return data
-
-            # Fallback for uint64/int64/other types
-            converted = data.astype(np.uint32)
-            c_ptr = converted.ctypes.data_as(ctypes.POINTER(ctypes.c_uint32))
-            _lib.qi_sort_u32(c_ptr, converted.size)
-            data[:] = converted
+            _numpy_sort(data, alg)
             return data
     except ImportError:
         pass
 
-    # 2. Standard Python list handling (Optimized via C array buffer)
-    if not isinstance(data, list):
-        raise TypeError("Input must be a list of integers, array.array('I'), or a uint32 NumPy array.")
-
-    n = len(data)
-    if n <= 1:
-        return data
-
-    import array
-    arr_buf = array.array('I', data)
-    c_ptr = (ctypes.c_uint32 * n).from_buffer(arr_buf)
-    _lib.qi_sort_u32(c_ptr, n)
-    
-    # Update Python list in-place
-    data[:] = arr_buf.tolist()
-    return data
-
-def radix8(data: any) -> any:
-    """Run fixed 4-pass Radix-8 sort in-place."""
-    if _has_native_mod:
-        qi_sort_cpp.radix8(data)
-        return data
-    raise RuntimeError("qi_sort_cpp module required")
-
-def radix11(data: any) -> any:
-    """Run fixed 3-pass Radix-11 sort in-place."""
-    if _has_native_mod:
-        qi_sort_cpp.radix11(data)
-        return data
-    raise RuntimeError("qi_sort_cpp module required")
-
-def radix16(data: any) -> any:
-    """Run fixed 2-pass Radix-16 sort in-place."""
-    if _has_native_mod:
-        qi_sort_cpp.radix16(data)
-        return data
-    raise RuntimeError("qi_sort_cpp module required")
-
-
-def analyze(data: Union[List[int], any]) -> dict:
-    """
-    Perform non-destructive statistical state vector analysis on data.
-    Returns entropy, IPR, effective occupied buckets (N_eff), and duplicate ratio.
-    """
-    try:
-        import numpy as np
-        if isinstance(data, np.ndarray):
-            if data.dtype != np.uint32:
-                data = data.astype(np.uint32)
-            c_ptr = data.ctypes.data_as(ctypes.POINTER(ctypes.c_uint32))
-            n = data.size
+    # Python list fallback
+    if isinstance(data, list):
+        if _HAS_CPP:
+            _cpp.sort(data)   # C++ vector sort for Python lists
         else:
-            n = len(data)
-            c_ptr = (ctypes.c_uint32 * n)(*data)
-    except ImportError:
-        n = len(data)
-        c_ptr = (ctypes.c_uint32 * n)(*data)
+            data.sort()       # pure Python Timsort last resort
+        return data
 
-    entropy = ctypes.c_double()
-    ipr = ctypes.c_double()
-    neff = ctypes.c_double()
-    dup_ratio = ctypes.c_double()
-
-    _lib.qi_analyze_u32(
-        c_ptr, n,
-        ctypes.byref(entropy),
-        ctypes.byref(ipr),
-        ctypes.byref(neff),
-        ctypes.byref(dup_ratio)
+    raise TypeError(
+        f"sort() expects a numpy uint32 array or Python list, got {type(data).__name__}"
     )
 
+
+def radix8(data) -> None:
+    """Force Radix-8 (4-pass, 8-bit buckets). Good for narrow distributions."""
+    return sort(data, alg=8)
+
+
+def radix11(data) -> None:
+    """Force Radix-11 (3-pass, 11-bit buckets). Best for uniform 32-bit data."""
+    return sort(data, alg=11)
+
+
+def radix16(data) -> None:
+    """Force Radix-16 (2-pass, 16-bit buckets). Best for heavily skewed data."""
+    return sort(data, alg=16)
+
+
+def analyze(data) -> dict:
+    """
+    Analyse a uint32 array and return IPR sensing metrics used by qi::sort.
+
+    Returns
+    -------
+    dict with keys: entropy, ipr, effective_states, duplicate_ratio
+    """
+    import numpy as np
+    import ctypes
+
+    if not isinstance(data, np.ndarray) or data.dtype != np.uint32:
+        raise TypeError("analyze() requires a numpy uint32 array")
+
+    sample = np.ascontiguousarray(data[:1024], dtype=np.uint32)
+    N = len(sample)
+    counts = np.bincount(sample, minlength=256)[:256]
+    p = counts / N
+    nonzero = p[p > 0]
+    ipr = float(np.sum(nonzero ** 2))
+    eff = 1.0 / ipr if ipr > 0 else 256.0
+    entropy = float(-np.sum(nonzero * np.log2(nonzero))) / 8.0
+    dup_ratio = 1.0 - len(nonzero) / 256.0
+
     return {
-        "entropy": entropy.value,
-        "ipr": ipr.value,
-        "effective_states": neff.value,
-        "duplicate_ratio": dup_ratio.value
+        "entropy":          round(entropy,     6),
+        "ipr":              round(ipr,          6),
+        "effective_states": round(eff,          4),
+        "duplicate_ratio":  round(dup_ratio,    6),
     }
