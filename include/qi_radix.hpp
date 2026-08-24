@@ -260,47 +260,72 @@ inline ThreadLocalScratch& getScratch() {
 }
 
 // ── RADIX-8 ──
+// Single combined counting pass + selective scatter passes.
+// uint32_t histograms = 1KB → L1 resident on all architectures.
 inline void radixSort8(u32* data, size_t n, bool allowShortcuts = true, u32 bitOr = ~0u) {
     if (n <= 1) return;
     u32* dst = getScratch().get(n);
     u32* src = data;
 
-    for (int pass = 0; pass < 4; ++pass) {
-        int shift = pass * 8;
-        // Skip this pass entirely if no element has non-zero bits in this byte
-        if (((bitOr >> shift) & 0xFF) == 0) continue;
+    // Determine which passes are needed upfront
+    const bool p0 = ((bitOr >>  0) & 0xFF) != 0;
+    const bool p1 = ((bitOr >>  8) & 0xFF) != 0;
+    const bool p2 = ((bitOr >> 16) & 0xFF) != 0;
+    const bool p3 = ((bitOr >> 24) & 0xFF) != 0;
 
-        size_t count[256] = {0};
-        for (size_t i = 0; i < n; ++i) count[(src[i] >> shift) & 0xFF]++;
+    // uint32_t: 256×4 = 1 KB per histogram — guaranteed L1 resident
+    alignas(64) uint32_t c0[256] = {}, c1[256] = {}, c2[256] = {}, c3[256] = {};
 
-        size_t total = 0;
-        for (int i = 0; i < 256; ++i) { size_t c = count[i]; count[i] = total; total += c; }
-
-        for (size_t i = 0; i < n; ++i) { uint8_t b = (src[i] >> shift) & 0xFF; dst[count[b]++] = src[i]; }
-        std::swap(src, dst);
+    // ONE combined counting pass over data (4× fewer cache misses than 4 separate passes)
+    for (size_t i = 0; i < n; ++i) {
+        u32 v = src[i];
+        if (p0) c0[ v        & 0xFF]++;
+        if (p1) c1[(v >>  8) & 0xFF]++;
+        if (p2) c2[(v >> 16) & 0xFF]++;
+        if (p3) c3[ v >> 24       ]++;
     }
+
+    // Prefix sums
+    uint32_t s0 = 0, s1 = 0, s2 = 0, s3 = 0;
+    for (int i = 0; i < 256; ++i) {
+        uint32_t t;
+        if (p0) { t = c0[i]; c0[i] = s0; s0 += t; }
+        if (p1) { t = c1[i]; c1[i] = s1; s1 += t; }
+        if (p2) { t = c2[i]; c2[i] = s2; s2 += t; }
+        if (p3) { t = c3[i]; c3[i] = s3; s3 += t; }
+    }
+
+    // Scatter passes
+    if (p0) { for (size_t i = 0; i < n; ++i) { u32 v=src[i]; dst[c0[ v       &0xFF]++]=v; } std::swap(src,dst); }
+    if (p1) { for (size_t i = 0; i < n; ++i) { u32 v=src[i]; dst[c1[(v>> 8)&0xFF]++]=v; } std::swap(src,dst); }
+    if (p2) { for (size_t i = 0; i < n; ++i) { u32 v=src[i]; dst[c2[(v>>16)&0xFF]++]=v; } std::swap(src,dst); }
+    if (p3) { for (size_t i = 0; i < n; ++i) { u32 v=src[i]; dst[c3[ v>>24      ]++]=v; } std::swap(src,dst); }
+
     if (src != data) std::memcpy(data, src, n * sizeof(u32));
 }
 
 // ── RADIX-11 ──
-// bitOr: pass full bitwise-OR of sample so we can skip passes whose byte range is zero
+// Three-pass LSD radix sort with 11-bit digits (2048 buckets per pass).
+// uint32_t histograms: 2048×4 + 2048×4 + 1024×4 = 20 KB → fits in 32 KB L1 cache on x86_64!
 inline void radixSort11(u32* data, size_t n, bool allowShortcuts = true, u32 bitOr = ~0u) {
     if (n <= 1) return;
     u32* dst = getScratch().get(n);
     u32* src = data;
 
-    alignas(64) static thread_local size_t count0[2048];
-    alignas(64) static thread_local size_t count1[2048];
-    alignas(64) static thread_local size_t count2[1024];
-
     const bool pass0_active = (bitOr & 0x7FFu) != 0;
     const bool pass1_active = ((bitOr >> 11) & 0x7FFu) != 0;
     const bool pass2_active = (bitOr >> 22) != 0;
 
-    std::memset(count0, 0, 2048 * sizeof(size_t));
-    if (pass1_active) std::memset(count1, 0, 2048 * sizeof(size_t));
-    if (pass2_active) std::memset(count2, 0, 1024 * sizeof(size_t));
+    // uint32_t: halves histogram size vs size_t — critical for x86_64 L1 fit
+    alignas(64) static thread_local uint32_t count0[2048];
+    alignas(64) static thread_local uint32_t count1[2048];
+    alignas(64) static thread_local uint32_t count2[1024];
 
+    std::memset(count0, 0, 2048 * sizeof(uint32_t));
+    if (pass1_active) std::memset(count1, 0, 2048 * sizeof(uint32_t));
+    if (pass2_active) std::memset(count2, 0, 1024 * sizeof(uint32_t));
+
+    // Single combined counting pass — 1× memory read instead of 3×
     for (size_t i = 0; i < n; ++i) {
         u32 val = src[i];
         if (pass0_active) count0[val & 0x7FFu]++;
@@ -308,26 +333,22 @@ inline void radixSort11(u32* data, size_t n, bool allowShortcuts = true, u32 bit
         if (pass2_active) count2[val >> 22]++;
     }
 
-    size_t sum0 = 0, sum1 = 0, sum2 = 0;
+    uint32_t sum0 = 0, sum1 = 0, sum2 = 0;
     for (int i = 0; i < 2048; ++i) {
-        if (pass0_active) { size_t c = count0[i]; count0[i] = sum0; sum0 += c; }
-        if (pass1_active) { size_t c = count1[i]; count1[i] = sum1; sum1 += c; }
-        if (pass2_active && i < 1024) { size_t c = count2[i]; count2[i] = sum2; sum2 += c; }
+        if (pass0_active) { uint32_t c = count0[i]; count0[i] = sum0; sum0 += c; }
+        if (pass1_active) { uint32_t c = count1[i]; count1[i] = sum1; sum1 += c; }
+        if (pass2_active && i < 1024) { uint32_t c = count2[i]; count2[i] = sum2; sum2 += c; }
     }
 
-    // Pass 0 (bits 0-10)
+    // Scatter passes (only active passes execute)
     if (pass0_active) {
         for (size_t i = 0; i < n; ++i) { u32 v = src[i]; dst[count0[v & 0x7FFu]++] = v; }
         std::swap(src, dst);
     }
-
-    // Pass 1 (bits 11-21)
     if (pass1_active) {
         for (size_t i = 0; i < n; ++i) { u32 v = src[i]; dst[count1[(v >> 11) & 0x7FFu]++] = v; }
         std::swap(src, dst);
     }
-
-    // Pass 2 (bits 22-31)
     if (pass2_active) {
         for (size_t i = 0; i < n; ++i) { u32 v = src[i]; dst[count2[v >> 22]++] = v; }
         std::swap(src, dst);
@@ -337,39 +358,34 @@ inline void radixSort11(u32* data, size_t n, bool allowShortcuts = true, u32 bit
 }
 
 // ── RADIX-16 ──
+// uint32_t histograms: 65536×4×2 = 512 KB — still L3, but half the memset cost vs size_t.
 inline void radixSort16(u32* data, size_t n, bool allowShortcuts = true) {
     if (n <= 1) return;
     u32* dst = getScratch().get(n);
     u32* src = data;
 
-    alignas(64) static thread_local size_t count0[65536];
-    alignas(64) static thread_local size_t count1[65536];
+    alignas(64) static thread_local uint32_t count0[65536];
+    alignas(64) static thread_local uint32_t count1[65536];
     std::memset(count0, 0, sizeof(count0));
     std::memset(count1, 0, sizeof(count1));
 
+    // Combined count pass
     for (size_t i = 0; i < n; ++i) {
         u32 val = src[i];
         count0[val & 0xFFFFu]++;
         count1[val >> 16]++;
     }
 
-    size_t sum0 = 0, sum1 = 0;
+    uint32_t sum0 = 0, sum1 = 0;
     for (int i = 0; i < 65536; ++i) {
-        size_t c0 = count0[i]; count0[i] = sum0; sum0 += c0;
-        size_t c1 = count1[i]; count1[i] = sum1; sum1 += c1;
+        uint32_t c0 = count0[i]; count0[i] = sum0; sum0 += c0;
+        uint32_t c1 = count1[i]; count1[i] = sum1; sum1 += c1;
     }
 
     // Pass 0 (bits 0-15)
-    for (size_t i = 0; i < n; ++i) {
-        u32 v = src[i];
-        dst[count0[v & 0xFFFFu]++] = v;
-    }
-
+    for (size_t i = 0; i < n; ++i) { u32 v = src[i]; dst[count0[v & 0xFFFFu]++] = v; }
     // Pass 1 (bits 16-31)
-    for (size_t i = 0; i < n; ++i) {
-        u32 v = dst[i];
-        src[count1[v >> 16]++] = v;
-    }
+    for (size_t i = 0; i < n; ++i) { u32 v = dst[i]; src[count1[v >> 16]++] = v; }
 }
 
 // ── PARALLEL MULTI-THREADED RADIX PASSES ──
