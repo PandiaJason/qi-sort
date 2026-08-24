@@ -11,11 +11,22 @@ from typing import Union, List, Tuple
 
 # Load Native C Shared Library or C-Extension
 def _load_library():
-    # 1. Attempt loading compiled PyExtension qi_sort_cpp
+    dir_path = os.path.dirname(os.path.abspath(__file__))
+    
+    # 1. Look for compiled extension binary in the same directory as qi_sort.py
+    if os.path.exists(dir_path):
+        for f in os.listdir(dir_path):
+            if f.startswith("qi_sort_cpp") and (f.endswith(".so") or f.endswith(".pyd") or f.endswith(".dylib")):
+                try:
+                    return ctypes.CDLL(os.path.join(dir_path, f))
+                except Exception:
+                    pass
+
+    # 2. Attempt direct Python import of qi_sort_cpp
     try:
         import qi_sort_cpp
         return ctypes.CDLL(qi_sort_cpp.__file__)
-    except (ImportError, AttributeError):
+    except Exception:
         pass
 
     dir_path = os.path.dirname(os.path.abspath(__file__))
