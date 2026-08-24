@@ -22,7 +22,21 @@ func TestSort(t *testing.T) {
 	}
 }
 
-func BenchmarkQISort_2M(b *testing.B) {
+func TestSortCPP(t *testing.T) {
+	const N = 50000
+	rng := rand.New(rand.NewSource(42))
+	data := make([]uint32, N)
+	for i := 0; i < N; i++ {
+		data[i] = rng.Uint32()
+	}
+
+	qisort.SortCPP(data)
+	if !slices.IsSorted(data) {
+		t.Fatalf("qisort.SortCPP failed to sort uint32 slice correctly")
+	}
+}
+
+func BenchmarkQISortGo_2M(b *testing.B) {
 	const N = 2_000_000
 	rng := rand.New(rand.NewSource(42))
 	orig := make([]uint32, N)
@@ -38,6 +52,25 @@ func BenchmarkQISort_2M(b *testing.B) {
 		copy(data, orig)
 		b.StartTimer()
 		qisort.Sort(data)
+	}
+}
+
+func BenchmarkQISortCPP_2M(b *testing.B) {
+	const N = 2_000_000
+	rng := rand.New(rand.NewSource(42))
+	orig := make([]uint32, N)
+	for i := 0; i < N; i++ {
+		orig[i] = rng.Uint32()
+	}
+
+	data := make([]uint32, N)
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		copy(data, orig)
+		b.StartTimer()
+		qisort.SortCPP(data)
 	}
 }
 
