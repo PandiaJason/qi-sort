@@ -8,6 +8,40 @@ void qi_sort_u32(uint32_t* data, size_t n) {
     qi::sort(data, n);
 }
 
+void qi_parallel_sort_u32(uint32_t* data, size_t n, unsigned int num_threads) {
+    if (!data || n <= 1) return;
+    qi::SortOptions opts;
+    opts.parallel = true;
+    opts.numThreads = num_threads;
+    qi::sort(data, n, opts);
+}
+
+void qi_sort_i32(int32_t* data, size_t n) {
+    if (!data || n <= 1) return;
+    qi::sort(data, n);
+}
+
+void qi_parallel_sort_i32(int32_t* data, size_t n, unsigned int num_threads) {
+    if (!data || n <= 1) return;
+    qi::SortOptions opts;
+    opts.parallel = true;
+    opts.numThreads = num_threads;
+    qi::sort(data, n, opts);
+}
+
+void qi_sort_f32(float* data, size_t n) {
+    if (!data || n <= 1) return;
+    qi::sort(data, n);
+}
+
+void qi_parallel_sort_f32(float* data, size_t n, unsigned int num_threads) {
+    if (!data || n <= 1) return;
+    qi::SortOptions opts;
+    opts.parallel = true;
+    opts.numThreads = num_threads;
+    qi::sort(data, n, opts);
+}
+
 void qi_analyze_u32(
     const uint32_t* data,
     size_t n,

@@ -206,6 +206,18 @@ int[] data = {10543, 42, 999999, 12, 0, 8881};
 QiSort.sort(data);
 ```
 
+### 6. Go (Golang cgo Integration — 13.5× Faster than `slices.Sort`)
+
+```go
+import "qisort"
+
+data := []uint32{10543, 42, 999999, 12, 0, 8881}
+qisort.SortUint32(data) // 13.5x faster than Go standard library slices.Sort on 1M keys
+
+// Multi-threaded parallel sort
+qisort.SortUint32Parallel(data, 0)
+```
+
 ### 6. Database & Columnar Engine Integration (DuckDB / Arrow / Polars)
 
 To accelerate columnar `ORDER BY`, hash joins, or log timestamps:

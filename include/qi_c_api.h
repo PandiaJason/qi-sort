@@ -25,6 +25,13 @@ extern "C" {
  * @param n Number of elements in the array.
  */
 QISORT_API void qi_sort_u32(uint32_t* data, size_t n);
+QISORT_API void qi_parallel_sort_u32(uint32_t* data, size_t n, unsigned int num_threads);
+
+QISORT_API void qi_sort_i32(int32_t* data, size_t n);
+QISORT_API void qi_parallel_sort_i32(int32_t* data, size_t n, unsigned int num_threads);
+
+QISORT_API void qi_sort_f32(float* data, size_t n);
+QISORT_API void qi_parallel_sort_f32(float* data, size_t n, unsigned int num_threads);
 
 /**
  * @brief Senses dataset distribution statistics (entropy, IPR, effective states) without sorting.
