@@ -14,6 +14,7 @@ and $O(N)$ branchless short-circuits — delivering <b>2.2×–6.4× speedups ov
 
 [![License: GPL v2](https://img.shields.io/badge/License-GPL_v2-blue.svg?style=flat-square)](LICENSE)
 [![C++17](https://img.shields.io/badge/C%2B%2B-17-00599C?style=flat-square&logo=c%2B%2B)](include/qi_radix.hpp)
+[![Tested On: macOS M1 Pro / Linux Xeon](https://img.shields.io/badge/Tested--On-macOS_M1_Pro_%7C_Linux_Xeon-blueviolet?style=flat-square)](README.md#hardware-architecture--platform-scoping)
 [![PyPI Package](https://img.shields.io/badge/pip_install-qi--sort-3776AB?style=flat-square&logo=python&logoColor=white)](setup.py)
 [![Go Module](https://img.shields.io/badge/Go-Module-00ADD8?style=flat-square&logo=go&logoColor=white)](bindings/go/qisort.go)
 [![Java JNI](https://img.shields.io/badge/Java-JNI-ED8B00?style=flat-square&logo=openjdk&logoColor=white)](bindings/java/com/qisort/QiSort.java)
@@ -252,9 +253,9 @@ qi::ai::PrioritizeAgentMemories(memories);
 
 ---
 
-## REAL DATABASE SOURCE-LEVEL BENCHMARKS (DuckDB, RocksDB, SQLite, Redis & PostgreSQL)
+## REAL DATABASE SOURCE-LEVEL BENCHMARKS (Tested on Apple Silicon macOS M1 Pro)
 
-We compiled **DuckDB's exact native sorting headers** ([`third_party/pdqsort/pdqsort.h`](https://github.com/duckdb/duckdb)), **RocksDB's exact native MemTable headers** ([`memtable/vectorrep.cc`](https://github.com/facebook/rocksdb)), **SQLite's exact VDBE sorter engine** ([`src/vdbesort.c`](https://github.com/sqlite/sqlite)), **Redis's exact native sorting engine** ([`src/pqsort.c`](https://github.com/redis/redis)), and **PostgreSQL's exact native sorting engine** ([`src/port/qsort.c`](https://github.com/postgres/postgres)) directly against Plain Radix passes (Radix-8, Radix-11, Radix-16) and `qi::sort`.
+We compiled **DuckDB's exact native sorting headers** ([`third_party/pdqsort/pdqsort.h`](https://github.com/duckdb/duckdb)), **RocksDB's exact native MemTable headers** ([`memtable/vectorrep.cc`](https://github.com/facebook/rocksdb)), **SQLite's exact VDBE sorter engine** ([`src/vdbesort.c`](https://github.com/sqlite/sqlite)), **Redis's exact native sorting engine** ([`src/pqsort.c`](https://github.com/redis/redis)), and **PostgreSQL's exact native sorting engine** ([`src/port/qsort.c`](https://github.com/postgres/postgres)) directly against Plain Radix passes (Radix-8, Radix-11, Radix-16) and `qi::sort` on Apple Silicon macOS M1 Pro.
 
 ### 1. DuckDB Native Source Sorter & End-to-End ORDER BY Matrix ($N = 3,000,000$)
 
