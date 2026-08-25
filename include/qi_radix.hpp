@@ -3,7 +3,7 @@
 
 /*
 ===============================================================================
-QI-RADIX: Quantum-Inspired Adaptive Radix Sorting Library (Header-Only)
+QI-RADIX: Quick Index (QI) Radix Sorting Library (Header-Only)
 ===============================================================================
 
 A modular, production-ready C++17 header-only library for ultra-fast adaptive
