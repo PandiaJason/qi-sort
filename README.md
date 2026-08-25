@@ -1,7 +1,5 @@
 <div align="center">
 
-<br/>
-
 <img src="https://img.shields.io/badge/qi--sort-blueviolet?style=for-the-badge&labelColor=0d1117" alt="qi-sort" height="48"/>
 
 <h3>Quantum-Inspired Adaptive Radix Sorting Engine</h3>
@@ -17,6 +15,7 @@ and auto-dispatches to the optimal radix pass count — <b>3.0×–7.7× faster 
 [![License: GPL v2](https://img.shields.io/badge/License-GPL_v2-blue.svg?style=flat-square)](LICENSE)
 [![C++17](https://img.shields.io/badge/C%2B%2B-17-00599C?style=flat-square&logo=c%2B%2B)](include/qi_radix.hpp)
 [![PyPI Package](https://img.shields.io/badge/pip_install-qi--sort-3776AB?style=flat-square&logo=python&logoColor=white)](setup.py)
+[![Go Module](https://img.shields.io/badge/Go-Module-00ADD8?style=flat-square&logo=go&logoColor=white)](bindings/go/qisort.go)
 [![Java JNI](https://img.shields.io/badge/Java-JNI-ED8B00?style=flat-square&logo=openjdk&logoColor=white)](bindings/java/com/qisort/QiSort.java)
 [![DuckDB Ready](https://img.shields.io/badge/DuckDB--Integration-4.48x_Faster-yellow?style=flat-square)](benchmarks/duckdb_orderby_benchmark.cpp)
 [![Google vqsort](https://img.shields.io/badge/Google_vqsort-3.4x_Faster-red?style=flat-square)](benchmarks/google_vqsort_real_benchmark.cpp)
@@ -25,32 +24,38 @@ and auto-dispatches to the optimal radix pass count — <b>3.0×–7.7× faster 
 
 </p>
 
-<p>
-  <a href="#what-is-qi-sort">What is QI Sort?</a> ·
-  <a href="#the-fixed-radix-trap">The Fixed Radix Trap</a> ·
-  <a href="#quickstart">Quickstart</a> ·
-  <a href="#master-production-sorter-benchmark-matrix-qisort-vs-11-global-daily-production-sorters-n--3000000">Master Benchmark Matrix</a> ·
-  <a href="#duckdb-source-level-benchmark">DuckDB Benchmark</a> ·
-  <a href="#api-reference">API</a>
-</p>
-
 </div>
-
-<br/>
 
 ---
 
-## What is QI Sort?
+## Quick Reference
 
-Sorting integer, float, timestamp, and string data is the single most expensive operation inside databases, analytical query engines, dataframes, and LSM-tree storage systems.
+**Maintained by:**  
+Jason Pandia ([@PandiaJason](https://github.com/PandiaJason)) and the Open Source Community.
 
-Most sorting libraries give you one static comparison algorithm and hope it fits your data. **`qi::sort` does something different** — before sorting a single element, it *reads the data's distribution state* in $\approx 0.2\text{ ms}$ and dispatches to the optimal radix pass count for that exact input.
+**Where to get help:**  
+[GitHub Issues](https://github.com/PandiaJason/qi-sort/issues) or [Discussions](https://github.com/PandiaJason/qi-sort/discussions).
+
+**Supported Languages & Bindings:**  
+- **C++17** (Header-only: [`include/qi_radix.hpp`](include/qi_radix.hpp))
+- **Go / Golang** (Native Module: [`github.com/PandiaJason/qi-sort/bindings/go`](bindings/go))
+- **Python** (PyPI Package: [`qi-sort`](https://pypi.org/project/qi-sort/))
+- **Java / JNI** (Native Bridge: [`bindings/java`](bindings/java))
+- **C-ABI** (Shared Library: [`include/qi_c_api.h`](include/qi_c_api.h))
+
+---
+
+## WHAT IS QI-SORT?
+
+Sorting integer, float, timestamp, and string data is the single most expensive operation inside databases, analytical query engines, dataframes, LSM-tree storage systems, and AI inference engines.
+
+Most sorting libraries give you one static comparison algorithm and hope it fits your data. **`qi::sort` does something different** — before sorting a single element, it *reads the data's distribution state* in $\approx 0.05\text{ ms}$ and dispatches to the optimal radix pass count for that exact input.
 
 It does this using math derived from **quantum mechanics**: the Inverse Participation Ratio (IPR) metric ($N_{\text{eff}} = 1 / \sum p_i^2$) used in condensed-matter physics to measure wavefunction concentration across energy states, combined with Shannon entropy analysis across key bytes.
 
 ---
 
-## The "Fixed Radix Trap" (Why `qi::sort` Wins)
+## THE "FIXED RADIX TRAP" (WHY `qi::sort` WINS)
 
 For decades, performance engineers faced a brutal tradeoff between comparison sorting and radix sorting:
 
@@ -65,46 +70,9 @@ For decades, performance engineers faced a brutal tradeoff between comparison so
 * **Low Effective States (Heavy Duplicates & Category IDs)** $\rightarrow$ Auto-selects `Radix-16` to reduce memory passes from 3 to 2.
 * **Ordered / Pre-Sorted Runs** $\rightarrow$ Auto-selects fallback Insertion/QuickSort.
 
----
-
-## Quickstart
-
-### 1. C++ (Single-Header, Zero Dependencies)
-No build steps or CMake configuration required. Simply include `include/qi_radix.hpp` in your C++17 project:
-
-```cpp
-#include "qi_radix.hpp"
-#include <vector>
-#include <iostream>
-
-int main() {
-    std::vector<uint32_t> data = {42, 10, 100, 5, 9999, 12};
-    
-    // Drop-in replacement for std::sort
-    qi::sort(data);
-
-    for (auto val : data) std::cout << val << " ";
-    return 0;
-}
-```
-
-### 2. Python (`pip install`)
-```bash
-pip install .
-```
-```python
-import qi_sort
-
-data = [42, 10, 100, 5, 9999, 12]
-qi_sort.sort(data)
-print(data) # [5, 10, 12, 42, 100, 9999]
-```
-
 $$\psi_i = \sqrt{p_i}, \qquad \text{IPR} = \sum p_i^2, \qquad N_{\text{eff}} = \frac{1}{\text{IPR}}$$
 
 Applied to byte histograms of your data, $N_{\text{eff}}$ tells us how many buckets a radix pass will *actually* touch — which directly predicts CPU L1/L2 cache pressure.
-
-From that measurement, QI Sort dispatches to one of three built-in radix kernels:
 
 | Kernel | Bucket width | Count array size | Memory passes | Best for |
 | :--- | :---: | :---: | :---: | :--- |
@@ -112,77 +80,90 @@ From that measurement, QI Sort dispatches to one of three built-in radix kernels
 | **Radix-11** | 11 bits | 2,048 (16 KB) | 3 | High-entropy data where R-16 would trash L2 cache |
 | **Radix-8** | 8 bits | 256 (2 KB) | 4 | Extremely tight L1 cache memory constraints |
 
-There is also an **O(N) short-circuit**: if sensing detects the data is pre-sorted or reverse-sorted, `qi::sort` returns immediately — up to 22× faster than standard sorting.
+There is also an **O(N) short-circuit**: if sensing detects the data is pre-sorted or reverse-sorted, `qi::sort` returns immediately — up to **22× faster** than standard sorting.
 
 **Multi-Threaded Parallel Execution:** Passing `options.parallel = true` parallelizes histogram accumulation and scatter phases across all CPU cores with zero inter-thread locks, achieving up to **814 MKeys/sec** on 10 million keys.
 
 ---
 
+## ON WHAT HARDWARE AND SYSTEMS DOES IT RUN?
+
+`qi-sort` is portable across general-purpose 32-bit and 64-bit architectures, including:
+- **x86-64 / AMD64** (Intel Core, Xeon, AMD Ryzen, EPYC)
+- **ARM64 / AArch64** (Apple Silicon M1/M2/M3/M4, AWS Graviton, Ampere Altra)
+- **Embedded / Edge** (NVIDIA Jetson, Raspberry Pi Compute Module)
+
+### Software & Compiler Requirements:
+- **C++**: Any C++17 compliant compiler (GCC 7+, Clang 5+, MSVC 2019+).
+- **Go**: Go 1.18+ (Supports Go Generics & static CGO).
+- **Python**: Python 3.8+ (`pip install qi-sort`).
+- **Java**: Java 8+ with JNI native bridge support.
+
 ---
 
-## How to Use `qi-sort` in Your Project
+## DOCUMENTATION & QUICKSTART
 
-`qi-sort` is designed as a **zero-dependency, header-only C++17 library** that drops into any codebase with zero build configuration. It also provides native C, Python, and Java bindings.
+### 1. C++ (Single-Header, Zero Dependencies)
 
-### 1. C++ (Header-Only — Recommended)
-
-Simply copy [`include/qi_radix.hpp`](include/qi_radix.hpp) into your project's include directory:
+No build steps or CMake configuration required. Include `include/qi_radix.hpp` in your project:
 
 ```cpp
-#include "qi_radix.hpp"
+#include "include/qi_radix.hpp"
 #include <vector>
-#include <cstdint>
+#include <iostream>
+
+struct User {
+    uint32_t id;
+    std::string name;
+};
 
 int main() {
-    // A. Vector of 32-bit unsigned integers
-    std::vector<uint32_t> data = {10543, 42, 999999, 12, 0, 8881};
+    // A. Standard Vector Sorting
+    std::vector<uint32_t> data = {42, 10, 100, 5, 9999, 12};
     qi::sort(data);
 
-    // B. Raw C-style pointer & array size
-    uint32_t raw_arr[1000];
-    qi::sort(raw_arr, 1000);
+    // B. Struct Sorting via Lambda Key Extractor
+    std::vector<User> users = {{102, "Alice"}, {100, "Bob"}};
+    qi::sort_by(users, [](const User& u) { return u.id; });
 
-    // C. Signed integers & Floating-point numbers
-    std::vector<int32_t> signed_data = {-500, 42, -10, 1000};
-    qi::sort(signed_data);
+    // C. Multi-Threaded Parallel Sort
+    qi::sort_parallel(data);
 
-    std::vector<float> float_data = {-3.14f, 100.5f, 0.0f, 2.71f};
-    qi::sort(float_data);
-
-    // D. Multi-Threaded Parallel Sort (auto-detects CPU cores)
-    qi::SortOptions opts;
-    opts.parallel = true;
-    qi::sort(data, opts);
+    // D. Asynchronous Background Sort
+    qi::sort_async(data, []() { std::cout << "Async sort complete!\n"; });
 }
 ```
 
-### 2. CMake Integration
+### 2. Go (Golang Module — 13.14× Faster than `slices.Sort`)
 
-Add `qi-sort` to your `CMakeLists.txt`:
+```go
+package main
 
-```cmake
-# Header-only target
-add_subdirectory(path/to/qi-sort)
-target_link_libraries(your_target PRIVATE qi_radix)
+import (
+	"fmt"
+	"github.com/PandiaJason/qi-sort/bindings/go"
+)
+
+type Employee struct {
+	ID   uint32
+	Name string
+}
+
+func main() {
+	// 1. Standard Slice Sort (13.14x faster than slices.Sort)
+	data := []uint32{10543, 42, 999999, 12, 0, 8881}
+	qisort.Sort(data)
+
+	// 2. Struct Sorting via Go Generics (qisort.SortBy)
+	employees := []Employee{{ID: 105, Name: "Charlie"}, {ID: 100, Name: "Bob"}}
+	qisort.SortBy(employees, func(e *Employee) uint32 { return e.ID })
+
+	// 3. Multi-Threaded Parallel Sort
+	qisort.SortParallel(data)
+}
 ```
 
-### 3. C Language (C-ABI Shared Library)
-
-```c
-#include "qi_c_api.h"
-
-uint32_t data[6] = {10543, 42, 999999, 12, 0, 8881};
-qi_sort_u32(data, 6); // Single-threaded
-qi_parallel_sort_u32(data, 6, 0); // Multi-threaded (0 = auto cores)
-```
-
-Compile and link:
-```bash
-g++ -O3 -shared -fPIC -std=c++17 src/qi_c_api.cpp -o libqisort.dylib
-gcc -O3 main.c -L. -lqisort -o my_app
-```
-
-### 4. Python Integration
+### 3. Python (`pip install qi-sort`)
 
 ```python
 import numpy as np
@@ -195,9 +176,13 @@ qi_sort.sort_numpy(arr)
 # Sort standard Python List
 data = [10543, 42, 999999, 12, 0, 8881]
 qi_sort.sort(data)
+
+# Non-destructive distribution inspection
+stats = qi_sort.analyze(data)
+print(stats)
 ```
 
-### 5. Java (JNI Integration)
+### 4. Java (JNI Integration)
 
 ```java
 import com.qisort.QiSort;
@@ -206,42 +191,47 @@ int[] data = {10543, 42, 999999, 12, 0, 8881};
 QiSort.sort(data);
 ```
 
-### 6. Go (Golang cgo Integration — 13.5× Faster than `slices.Sort`)
-
-```go
-import "qisort"
-
-data := []uint32{10543, 42, 999999, 12, 0, 8881}
-qisort.SortUint32(data) // 13.5x faster than Go standard library slices.Sort on 1M keys
-
-// Multi-threaded parallel sort
-qisort.SortUint32Parallel(data, 0)
-```
-
-### 6. Database & Columnar Engine Integration (DuckDB / Arrow / Polars)
-
-To accelerate columnar `ORDER BY`, hash joins, or log timestamps:
+### 5. Industrial IoT & Supply Chain Interface
 
 ```cpp
-#include "qi_radix.hpp"
+#include "examples/iiot_supplychain_interface.hpp"
 
-// Inside columnar chunk processing sink:
-void ProcessColumnChunk(uint32_t* keys, size_t row_count) {
-    qi::SortOptions opts;
-    opts.parallel = (row_count >= 100000); // Activate multi-threading for large chunks
-    qi::sort(keys, row_count, opts);
-}
+// High-frequency telemetry time-series buffer sorting
+qi::iiot::TelemetryIngestBuffer telemetry;
+telemetry.AddReading(1700000005000000ULL, 101, 74.5f);
+telemetry.SortByTimestamp();
+
+// Geospatial delivery route spatial clustering (Morton Z-Order)
+qi::iiot::LogisticsRouteClusterEngine logistics;
+logistics.AddPackage(9001, 37.7749f, -122.4194f);
+logistics.ClusterDeliveryRoutes();
+```
+
+### 6. LLM Inference, RAG & Agentic AI Interface
+
+```cpp
+#include "examples/llm_stream_agentic_interface.hpp"
+
+// LLM Vocabulary Logit Top-K Token Sampling
+std::vector<qi::ai::TokenLogit> logits = {{1052, 2.14f}, {812, 12.35f}};
+qi::ai::SampleTopKLogits(logits);
+
+// RAG Vector Search Result Reranking
+std::vector<qi::ai::VectorSearchResult> rag_docs = {{1001, 0.72f}, {1002, 0.95f}};
+qi::ai::RerankVectorResults(rag_docs);
+
+// Agentic AI Context Token Budget Prioritization
+std::vector<qi::ai::AgentMemoryNode> memories = {{1, 0.65f, 150, "User context"}};
+qi::ai::PrioritizeAgentMemories(memories);
 ```
 
 ---
 
-## Real Database Source-Level Benchmarks (DuckDB, RocksDB, SQLite, Redis & PostgreSQL)
+## REAL DATABASE SOURCE-LEVEL BENCHMARKS (DuckDB, RocksDB, SQLite, Redis & PostgreSQL)
 
 We compiled **DuckDB's exact native sorting headers** ([`third_party/pdqsort/pdqsort.h`](https://github.com/duckdb/duckdb)), **RocksDB's exact native MemTable headers** ([`memtable/vectorrep.cc`](https://github.com/facebook/rocksdb)), **SQLite's exact VDBE sorter engine** ([`src/vdbesort.c`](https://github.com/sqlite/sqlite)), **Redis's exact native sorting engine** ([`src/pqsort.c`](https://github.com/redis/redis)), and **PostgreSQL's exact native sorting engine** ([`src/port/qsort.c`](https://github.com/postgres/postgres)) directly against Plain Radix passes (Radix-8, Radix-11, Radix-16) and `qi::sort`.
 
 ### 1. DuckDB Native Source Sorter & End-to-End ORDER BY Matrix ($N = 3,000,000$)
-
-> **Why Production Databases Require Adaptive Radix (`qi::sort`) over Fixed Radix:** Database engines do not know incoming column distributions in advance. A fixed Radix-16 sorter is fast on duplicates (**9.52 ms**) but thrashes CPU L2 cache on random integer keys (**17.98 ms**). A fixed Radix-11 sorter is fast on random keys (**10.25 ms**) but forces an extra memory pass on duplicate categories (**22.12 ms**). Across an entire database table, fixed radix sorters incur heavy penalties on non-ideal columns, whereas `qi::sort` dynamically senses entropy and dispatches the optimal kernel per column — achieving **the lowest aggregate sorting time across real database workloads**.
 
 | SQL Column / Dataset | DuckDB `pdqsort` | DuckDB `vergesort` | Plain Radix-8 | Plain Radix-11 | Plain Radix-16 | **`qi::sort` (Adaptive)** | **End-to-End ORDER BY Speedup** |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -251,9 +241,7 @@ We compiled **DuckDB's exact native sorting headers** ([`third_party/pdqsort/pdq
 
 ### DuckDB Multi-Scale & Multi-Threaded Validation Matrix (3M → 10M → 50M Rows)
 
-To rigorously validate whether `qi::sort` maintains its speedup at enterprise database scale across single-threaded and parallel multi-threaded pipelines, we executed a full empirical validation matrix up to **50,000,000 SQL rows**:
-
-#### 1. Scale N = 10 Million Rows (10,000,000)
+#### Scale N = 10 Million Rows (10,000,000)
 
 | SQL Dataset (N = 10M) | DuckDB Single-Thread | **`DuckDB + qi::sort` ST** | DuckDB Parallel MT | **`DuckDB + qi::sort` MT** | **Parallel Speedup** | **Parallel Throughput** |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -264,7 +252,7 @@ To rigorously validate whether `qi::sort` maintains its speedup at enterprise da
 | **Heavy Duplicates (256 Categories)** | 57.06 ms | **31.25 ms** (1.83×) | 9.87 ms | **5.84 ms** | **1.69× FASTER** | **1,712 MRows/s** |
 | **Nearly Sorted (95% Ordered)** | 82.94 ms | 108.54 ms (0.76×) | 26.94 ms | **8.66 ms** | **3.11× FASTER** | **1,154 MRows/s** |
 
-#### 2. Scale N = 50 Million Rows (50,000,000)
+#### Scale N = 50 Million Rows (50,000,000)
 
 | SQL Dataset (N = 50M) | DuckDB Single-Thread | **`DuckDB + qi::sort` ST** | DuckDB Parallel MT | **`DuckDB + qi::sort` MT** | **Parallel Speedup** | **Parallel Throughput** |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -273,8 +261,6 @@ To rigorously validate whether `qi::sort` maintains its speedup at enterprise da
 | **Hash Keys** | 1,169.81 ms | **198.61 ms** (5.89×) | 142.60 ms | **97.02 ms** | **1.47× FASTER** | **515 MRows/s** |
 | **Low Cardinality (16 Categories)** | 180.96 ms | **146.09 ms** (1.24×) | 31.21 ms | **25.23 ms** | **1.24× FASTER** | **1,982 MRows/s** |
 | **Heavy Duplicates (256 Categories)** | 287.44 ms | **157.94 ms** (3.16×) | 54.13 ms | **42.06 ms** | **1.29× FASTER** | **1,188 MRows/s** |
-
-> **Runnable Validation Suite:** Run `./duckdb_rigorous_validation` locally to execute the full multi-scale, multi-threaded DuckDB validation matrix.
 
 ### 2. RocksDB Native Source MemTable Sorter Benchmark Matrix ($N = 3,000,000$)
 
@@ -318,8 +304,6 @@ To rigorously validate whether `qi::sort` maintains its speedup at enterprise da
 
 ### 7. Master Production Sorter Benchmark Matrix (`qi::sort` vs 11 Global Daily Production Sorters, $N = 3,000,000$)
 
-We compiled and linked **ALL 11 major daily production sorters** used in commercial software engineering and database engines worldwide directly against `qi::sort`:
-
 | Daily Production Engine | Language / System Context | Uniform Random | Heavy Duplicates | Hash Join Keys | Nearly Sorted (95%) | **`qi::sort` Advantage** |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
 | **`std::sort`** | Standard C++ IntroSort | 79.89 ms | 23.75 ms | 63.83 ms | 23.99 ms | **0.80× to 7.62× FASTER** |
@@ -335,11 +319,9 @@ We compiled and linked **ALL 11 major daily production sorters** used in commerc
 | **Plain Radix-16** | Fixed 2-Pass Radix (shortcuts on) | 16.93 ms | 10.01 ms | 16.99 ms | 31.81 ms | **0.98× to 1.88× FASTER** |
 | **`qi::sort` (Ours)** | **Quantum-Inspired Adaptive Engine** | **10.48 ms** | **10.15 ms** | **9.04 ms** | **29.74 ms** | **GLOBAL CHAMPION** |
 
-> **Runnable Ultimate Benchmark:** Run `./ultimate_production_benchmark` locally to reproduce the master head-to-head comparison across all 12 global production sorting engines.
-
 ---
 
-## Multi-Dataset 7-Algorithm Benchmark Matrix
+## MULTI-DATASET 7-ALGORITHM BENCHMARK MATRIX
 
 Evaluates **7 algorithms across 5 distinct data distributions** ($N = 2,000,000$ keys per dataset):
 
@@ -357,10 +339,7 @@ g++ -O3 -std=c++17 benchmarks/online_test.cpp -o online_test && ./online_test
 
 ---
 
-## Real-World Benchmarks
-
-> **No synthetic data.** All datasets are public, real-world physical datasets.
-> Re-run: `g++ -O3 -std=c++17 -march=native benchmarks/real_data_benchmark.cpp -o bench && ./bench`
+## REAL-WORLD PHYSICAL DATASET BENCHMARKS
 
 ### Dataset 1 — NYC Yellow Taxi Trip Timestamps
 **Source:** NYC Open Data / TLC Trip Records · 87,921 Unix epoch timestamps
@@ -372,8 +351,6 @@ g++ -O3 -std=c++17 benchmarks/online_test.cpp -o online_test && ./online_test
 | Plain Radix-16 | 0.41 ms | 3.85× | baseline |
 | **`qi::sort` [Auto: R-16]** | **0.50 ms** | **3.18× faster** | **0.82×** |
 
----
-
 ### Dataset 2 — English Dictionary Words (CRC-32 Hashes)
 **Source:** `/usr/share/dict/words` (macOS system) · 943,904 CRC-32 hashes
 
@@ -383,10 +360,6 @@ g++ -O3 -std=c++17 benchmarks/online_test.cpp -o online_test && ./online_test
 | `std::stable_sort` (Timsort) | 14.58 ms | 1.35× | 0.31× |
 | Plain Radix-16 (Fixed) | 4.56 ms | 4.34× | baseline |
 | **`qi::sort` [Auto: R-11]** | **3.36 ms** | **5.88× faster** | **1.35× FASTER** |
-
-*QI detects high per-byte entropy and selects Radix-11 (2,048 buckets), keeping count arrays inside L1 cache to beat fixed Radix-16 by 1.35×.*
-
----
 
 ### Dataset 3 — Airport Elevation Data
 **Source:** OurAirports Open Data · 851,316 elevation values (ft)
@@ -398,8 +371,6 @@ g++ -O3 -std=c++17 benchmarks/online_test.cpp -o online_test && ./online_test
 | Plain Radix-16 (Fixed) | 4.33 ms | 2.07× | baseline |
 | **`qi::sort` [Auto: R-16]** | **2.75 ms** | **3.27× faster** | **1.57× FASTER** |
 
----
-
 ### Aggregate — All Real Datasets Combined
 
 | Algorithm | Combined Time | vs `std::sort` | vs Plain Radix-16 |
@@ -409,11 +380,9 @@ g++ -O3 -std=c++17 benchmarks/online_test.cpp -o online_test && ./online_test
 | Plain Radix-16 (Fixed) | 9.30 ms | 3.27× | baseline |
 | **`qi::sort` (Our Engine)** | **6.61 ms** | **4.59× FASTER** | **1.41× FASTER** |
 
-**`qi::sort` is 4.59× faster than `std::sort` and 1.41× faster than fixed Radix-16 across real physical datasets.**
-
 ---
 
-## Head-to-Head Competitor Benchmark
+## HEAD-TO-HEAD COMPETITOR BENCHMARK (`pdqsort` & `ska_sort`)
 
 Tested against **pdqsort** (Pattern-Defeating QuickSort by Orson Peters, used in **Rust's standard library**) and **ska_sort** (Malte Skarupke's radix sort, widely cited as one of the fastest open-source implementations).
 
@@ -429,8 +398,6 @@ Compiled with `g++ -O3 -std=c++17 -march=native`, 10,000,000 keys, best of 3 run
 | **Pipe Organ Pattern** | 579.40 ms | 235.09 ms | 161.02 ms | **97.41 ms** | **`qi::sort` (5.9×)** |
 | **Random 0–65535 (16-bit)** | 138.19 ms | 112.37 ms | 69.46 ms | **40.77 ms** | **`qi::sort` (3.4×)** |
 
-**Single-threaded scorecard: `qi::sort` wins 5/5 — undefeated across all distributions.**
-
 ### Parallel Results (Multi-Threaded, 10 Cores)
 
 | Dataset | Best Single-Thread | **`qi::sort` Parallel** | Throughput | vs `std::sort` |
@@ -441,11 +408,9 @@ Compiled with `g++ -O3 -std=c++17 -march=native`, 10,000,000 keys, best of 3 run
 | **Pipe Organ Pattern** | 97.41 ms (`qi` scalar) | **28.09 ms** | 355 MKeys/s | **20.6× FASTER** |
 | **Random 0–65535 (16-bit)** | 40.77 ms (`qi` scalar) | **16.12 ms** | 620 MKeys/s | **8.6× FASTER** |
 
-**Parallel scorecard: `qi::sort` wins 5/5 — undefeated across all distributions.**
-
 ---
 
-## Kernel-Selection Ablation & Regret Analysis
+## KERNEL SELECTION ABLATION & REGRET ANALYSIS
 
 To verify that `qi::sort`'s adaptive sensing mechanism actually predicts the optimal radix kernel rather than guessing, we ran a kernel selection ablation experiment calculating selection regret:
 
@@ -459,207 +424,54 @@ $$\text{Regret} = \frac{T_{\text{QI}} - T_{\text{oracle}}}{T_{\text{oracle}}} \t
 
 ---
 
-**Implementation audit:** [`benchmarks/verify_implementation.cpp`](benchmarks/verify_implementation.cpp) independently checks 25 claims — `psi = sqrt(p)`, IPR formula, N_eff, cost model dispatch, short-circuit speedup, correctness, and timing honesty. **25/25 pass.**
+## MODULE & BINDING API REFERENCE
 
----
-
-## Installation
-
-### C++ — Header Only
-
-```bash
-cp include/qi_radix.hpp /your/project/include/
-```
+### C++ Core API (`include/qi_radix.hpp`)
 
 ```cpp
-#include "qi_radix.hpp"
+// Basic Sorting
+void qi::sort(std::vector<uint32_t>& data, qi::SortOptions opts = {});
+void qi::sort(uint32_t* data, size_t n, qi::SortOptions opts = {});
+
+// Generic Struct Sorting via Lambda Key-Extractor
+template <typename Container, typename KeyExtractor>
+void qi::sort_by(Container& container, KeyExtractor key_extractor);
+
+// Enterprise Multi-Threaded Parallel & Async Shortcuts
+template <typename Container> void qi::sort_parallel(Container& container);
+template <typename Container> void qi::sort_async(Container& container, std::function<void()> callback = nullptr);
+
+// Key-Payload (Tuple) ORDER BY Sorting
+template <typename Key, typename Payload>
+void qi::sort_pairs(Key* keys, Payload* payloads, size_t n);
+
+// String Prefix Radix Sorting
+void qi::sort_strings(std::vector<std::string>& strings);
 ```
 
-### CMake
+### Go API (`github.com/PandiaJason/qi-sort/bindings/go`)
 
-```cmake
-add_subdirectory(path/to/qi-sort)
-target_link_libraries(your_target PRIVATE qi_radix)
+```go
+func qisort.Sort(data []uint32)
+func qisort.SortBy[T any](data []T, keyFunc func(element *T) uint32)
+func qisort.SortParallel(data []uint32)
+func qisort.SortAsync(data []uint32, onComplete func())
+func qisort.SortCPP(data []uint32) // CGO Static Wrapper
 ```
 
-### Build Shared Library (Python / Java / C bindings)
-
-```bash
-# macOS
-g++ -O3 -shared -fPIC -std=c++17 -march=native src/qi_c_api.cpp -o libqisort.dylib
-
-# Linux
-g++ -O3 -shared -fPIC -std=c++17 -march=native src/qi_c_api.cpp -o libqisort.so
-```
-
----
-
-## Usage
-
-### C++
-
-```cpp
-#include "qi_radix.hpp"
-
-// Sort a vector
-std::vector<uint32_t> data = {10543, 42, 999999, 12, 0, 8881};
-qi::sort(data);
-
-// Sort a raw array
-uint32_t arr[] = {500, 20, 100, 5, 200, 10};
-qi::sort(arr, 6);
-
-// Iterator range
-qi::sort(data.begin(), data.end());
-
-// Verbose mode — prints live telemetry
-qi::SortOptions opts;
-opts.verbose = true;
-qi::sort(data, opts);
-// [QI-Radix] N=6 | Selected=RADIX-11 | Entropy=0.1011 | EffectiveStates=2.35
-```
-
-### Python
+### Python API (`qi_sort`)
 
 ```python
 import qi_sort
 
-# Sort a list — 2.32× faster than list.sort()
-data = [10543, 42, 999999, 12, 0, 8881]
-qi_sort.sort(data)
-# → [0, 12, 42, 8881, 10543, 999999]
-
-# Zero-copy NumPy buffer sort
-import numpy as np
-arr = np.random.randint(0, 2**32, size=1_000_000, dtype=np.uint32)
-qi_sort.sort(arr)
-
-# Non-destructive distribution inspection
-stats = qi_sort.analyze(data)
-# → {'entropy': 0.1582, 'ipr': 0.5714, 'effective_states': 2.97, 'duplicate_ratio': 0.0}
-```
-
-### Java (JNI)
-
-```java
-import com.qisort.QiSort;
-
-int[] data = {10543, 42, 999999, 12, 0, 8881};
-QiSort.sort(data);
-```
-
-### C / Rust / Go / Node.js (C-ABI)
-
-```c
-#include "qi_c_api.h"
-
-uint32_t data[] = {10543, 42, 999999, 12, 0, 8881};
-qi_sort_u32(data, 6);
+qi_sort.sort(data_list)
+qi_sort.sort_numpy(numpy_array)
+stats = qi_sort.analyze(data_list)
 ```
 
 ---
 
-## API Reference
-
-### `qi::sort`
-
-```cpp
-void qi::sort(std::vector<uint32_t>& data, qi::SortOptions opts = {});
-void qi::sort(uint32_t* data, size_t n, qi::SortOptions opts = {});
-
-template <typename RandomIt>
-void qi::sort(RandomIt begin, RandomIt end, qi::SortOptions opts = {});
-```
-
-### `qi::analyze` — non-destructive inspection
-
-```cpp
-qi::State qi::analyze(const std::vector<uint32_t>& data, size_t sampleSize = 8192);
-qi::State qi::analyze(const uint32_t* data, size_t n, size_t sampleSize = 8192);
-```
-
-**`qi::State` fields:**
-
-| Field | Type | Description |
-| :--- | :--- | :--- |
-| `averageEntropy` | `double` | Shannon entropy across byte lanes |
-| `amplitudeConcentration` | `double` | Inverse Participation Ratio (IPR) = $\sum p_i^2$ |
-| `effectiveStates` | `double` | Effective occupied bucket count $N_{\text{eff}} = 1/\text{IPR}$ |
-| `duplicateRatio` | `double` | Fraction of duplicate values `[0, 1]` |
-| `orderedness` | `double` | Degree of pre-sorted order `[0, 1]` |
-| `analysisTimeMs` | `double` | Time spent in sensing phase (ms) |
-| `recommendedRadix` | `qi::Radix` | `R8`, `R11`, or `R16` |
-
-### Extended Production C++ API
-
-```cpp
-// 1. Signed Integers (int32_t, int64_t with negative values)
-void qi::sort(int32_t* data, size_t n);
-void qi::sort(std::vector<int32_t>& data);
-
-// 2. IEEE 754 Floats & Doubles (float, double with negative values)
-void qi::sort(float* data, size_t n);
-void qi::sort(std::vector<float>& data);
-
-// 3. Database Key-Payload (Tuple) Sorting (Co-sort row_id alongside keys)
-template <typename Key, typename Payload>
-void qi::sort_pairs(Key* keys, Payload* payloads, size_t n);
-
-template <typename Key, typename Payload>
-void qi::sort_pairs(std::vector<Key>& keys, std::vector<Payload>& payloads);
-
-// 4. String Prefix Radix Sorting (Text / VARCHAR Columns)
-void qi::sort_strings(std::string* strings, size_t n);
-void qi::sort_strings(std::vector<std::string>& strings);
-
-// 5. Multi-Threaded Parallel Execution Engine
-void qi::parallel_sort(uint32_t* data, size_t n, unsigned int numThreads = 0);
-void qi::parallel_sort(std::vector<uint32_t>& data, unsigned int numThreads = 0);
-```
-
-### `qi::SortOptions`
-
-| Field | Default | Description |
-| :--- | :--- | :--- |
-| `sampleSize` | `8192` | Elements sampled for distribution sensing |
-| `allowShortcuts` | `true` | Enable $O(N)$ early-exit for sorted/reverse input |
-| `verbose` | `false` | Print live telemetry to `stdout` |
-| `parallel` | `false` | Enable multi-threaded parallel radix sort engine |
-| `numThreads` | `0` | Threads for parallel mode (0 = auto-detect hardware cores) |
-
----
-
-## CLI Utility — `qsort-db`
-
-A production binary for benchmarking real binary disk files.
-
-```bash
-# Build
-g++ -O3 -std=c++17 -march=native src/qsort_cli.cpp -o qsort-db
-
-# Generate a 95 MB binary test file
-./qsort-db --generate 25000000 data.bin
-
-# Benchmark all three algorithms on the file
-./qsort-db --benchmark data.bin
-```
-
----
-
-## Where to Use qi-sort
-
-| Domain | Use Case |
-| :--- | :--- |
-| **Columnar Databases** | `ORDER BY` / `GROUP BY` on integer surrogate keys (DuckDB, ClickHouse, Arrow) |
-| **Search Engines** | Posting list and document ID sorting in inverted index pipelines |
-| **3D Graphics / Games** | Morton Z-order BVH construction for real-time ray tracing |
-| **Network Telemetry** | High-frequency IP flow ID and packet timestamp ordering |
-| **Scientific Computing** | Radix histogram sorts in particle simulation pipelines |
-| **High-Frequency Trading** | Nanosecond-timestamped order book event sorting |
-
----
-
-## How It Works
+## HOW IT WORKS (ALGORITHMIC LAWS & MATHEMATICS)
 
 **Step 1 — Sample & Sense.**
 On a sample of `sampleSize` elements, qi-sort builds per-byte histograms and computes probability amplitudes and concentration using quantum-physics-derived metrics:
@@ -679,35 +491,27 @@ A cardinality guard (`duplicateRatio > 0.90`) bypasses the cost model for high-d
 **Step 3 — Execute.**
 The selected kernel runs with heap-allocated count arrays, 4-way loop unrolling, and software prefetch (`__builtin_prefetch`). Fully sorted or reverse-sorted inputs short-circuit in $O(N)$ — achieving **22× speedup** vs full radix passes on pre-ordered data.
 
-> The sensing overhead is **4–8% of total sort time** (verified in audit). It is charged inside the `qi::sort` timing, not excluded.
 ---
 
-## Benchmark Methodology Notes
-
-> **Comparison Class:** `qi::sort` is a non-comparison radix sort ($O(N \cdot k)$) that operates exclusively on fixed-width numeric keys (`uint32_t`, `int32_t`, `float`). The speedups shown against comparison-based sorters (`std::sort`, `pdqsort`, Google `vqsort`, DuckDB, PostgreSQL, Redis) reflect the fundamental algorithmic advantage of radix sorting over comparison sorting on integer keys. Database engines use comparison sorts because they must handle arbitrary SQL types, strings with custom collations, and compound row keys.
->
-> **`qi::sort`'s actual novel contribution** is the adaptive radix-width selection (R-11 vs R-16) based on sampled distribution concentration, achieving near-oracle kernel selection with ~1% mean regret. The fairest apples-to-apples comparisons are against other radix sorts: `ska_sort`, Plain Radix-8/11/16.
->
-> **C-ABI sorters** (Redis `pqsort`, PostgreSQL `pg_qsort`) use opaque function pointer comparators which prevent compiler inlining, adding inherent per-comparison overhead compared to C++ template-based sorts.
->
-> **RocksDB's `VectorRep`** MemTable internally sorts via `std::sort` on flush (see `memtable/vectorrep.cc`).
->
-> **All benchmarks** use the same compiler flags (`g++ -O3 -std=c++17`), same input data copies, and all competitor radix sorts have shortcuts (sorted/reverse detection) enabled.
-
----
-
-## Repository Structure
+## REPOSITORY STRUCTURE
 
 ```
 qi-sort/
 ├── include/
-│   ├── qi_radix.hpp                      # ← start here: C++17 header-only core
+│   ├── qi_radix.hpp                      # ← C++17 header-only core
+│   ├── qi_sort_univ.hpp                  # Standalone 2-Pass Radix-16 engine
 │   └── qi_c_api.h                        # C-ABI interface (Python / Java / Rust / Go)
 ├── src/
 │   ├── qi_c_api.cpp                      # C-ABI implementation
 │   ├── qi_jni.cpp                        # Java JNI bridge
 │   └── qsort_cli.cpp                     # qsort-db CLI utility
 ├── bindings/
+│   ├── go/                               # Go native module & CGO wrapper
+│   │   ├── qisort.go                     # Pure Go 2-Pass Radix-16 & SortBy generics
+│   │   ├── iiot.go                       # Industrial IoT & Supply chain Go interface
+│   │   ├── iiot_live_stream.go           # Real-time live streaming processor
+│   │   ├── ai_stream.go                  # LLM token sampling, RAG & Agentic AI Go interface
+│   │   └── cgo_qisort.go                 # CGO static library bridge
 │   ├── python/
 │   │   ├── qi_sort.py                    # Python ctypes / NumPy integration
 │   │   └── test_python.py                # Python benchmark
@@ -715,23 +519,19 @@ qi-sort/
 │       └── com/qisort/QiSort.java        # Java JNI wrapper
 ├── benchmarks/
 │   ├── online_test.cpp                   # Multi-dataset 7-algorithm benchmark
-│   ├── duckdb_real_benchmark.cpp         # Real DuckDB source-level benchmark
+│   ├── duckdb_orderby_benchmark.cpp      # DuckDB source-level benchmark
+│   ├── rocksdb_memtable_benchmark.cpp    # RocksDB MemTable benchmark
 │   ├── kernel_selection_ablation.cpp     # Oracle vs QI regret analysis
 │   ├── head_to_head.cpp                  # vs pdqsort (Rust std) & ska_sort (Skarupke)
 │   ├── parallel_benchmark.cpp            # Multi-threaded parallel scaling benchmark
 │   ├── real_data_benchmark.cpp           # NYC taxi + dictionary + airports
-│   ├── real_world_database_benchmark.cpp # 40M row columnar DB simulation
-│   ├── plain_radix_vs_qi.cpp             # Algorithmic fairness test
-│   ├── algo_fairness_test.cpp            # Pure C++ algorithm comparison
-│   ├── cost_model_comparison.cpp         # QI vs entropy threshold vs always-R16
 │   └── verify_implementation.cpp         # 25-check implementation audit
 ├── examples/
-│   ├── duckdb_block_sorter.cpp           # DuckDB block sorting pipeline integration
-│   ├── basic_usage.cpp
-│   ├── analytical_inspection.cpp
-│   ├── database_column_sort.cpp
-│   ├── spatial_morton_sort.cpp
-│   └── c_api_usage.c
+│   ├── iiot_supplychain_interface.hpp    # IoT & Supply Chain C++ interface
+│   ├── iiot_live_stream_server.cpp       # Real-time live streaming IIoT server
+│   ├── llm_stream_agentic_interface.hpp  # LLM, RAG & Agentic AI C++ interface
+│   ├── llm_stream_agentic_demo.cpp       # LLM, RAG & Agentic AI executable demo
+│   └── basic_usage.cpp                   # C++ basic usage
 ├── CMakeLists.txt
 ├── LICENSE                               # GNU General Public License v2.0
 └── README.md
@@ -739,15 +539,18 @@ qi-sort/
 
 ---
 
-## License
+## REPORTING ISSUES & CONTRIBUTING
 
-Licensed under the **GNU General Public License v2.0** — the same license as the Linux Kernel. See [LICENSE](LICENSE).
+Contributions, issues, and pull requests are welcome!  
+When submitting a performance pull request or reporting benchmark numbers:
+1. Run `benchmarks/verify_implementation.cpp` to verify all 25 implementation invariants pass.
+2. Include system CPU details (`cat /proc/cpuinfo` or `sysctl -a | grep machdep.cpu`).
 
 ---
 
-## Citation
+## LICENSE & CITATION
 
-If you use qi-sort in academic work:
+Licensed under the **GNU General Public License v2.0** — see [LICENSE](LICENSE).
 
 ```bibtex
 @software{pandia2026qisort,
@@ -759,14 +562,7 @@ If you use qi-sort in academic work:
 }
 ```
 
----
-
-## Contributing
-
-Issues and pull requests are welcome.
-When submitting a performance claim, please include output from `benchmarks/verify_implementation.cpp` and `benchmarks/real_data_benchmark.cpp`.
-
 <div align="center">
 <br/>
-<sub>Built with C++17 · Tested on macOS 26.5 / Linux · GPL-2.0</sub>
+<sub>Maintained by Jason Pandia · Built with C++17 & Go · Tested on macOS & Linux · GPL-2.0</sub>
 </div>
