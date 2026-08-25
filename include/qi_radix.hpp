@@ -951,6 +951,29 @@ inline void sort_by(Container& container, KeyExtractor key_extractor) {
     }
 }
 
+/**
+ * @brief Enterprise API: Multi-threaded parallel sorting shortcut.
+ * Example: qi::sort_parallel(large_dataset);
+ */
+template <typename Container>
+inline void sort_parallel(Container& container) {
+    SortOptions opts;
+    opts.parallel = true;
+    sort(container.data(), container.size(), opts);
+}
+
+/**
+ * @brief Enterprise API: Asynchronous background sorting thread with completion callback.
+ * Example: qi::sort_async(data, []() { std::cout << "Done sorting!\n"; });
+ */
+template <typename Container>
+inline void sort_async(Container& container, std::function<void()> on_complete = nullptr) {
+    std::thread([&container, on_complete]() {
+        sort(container);
+        if (on_complete) on_complete();
+    }).detach();
+}
+
 } // namespace qi
 
 #endif // QI_RADIX_HPP
