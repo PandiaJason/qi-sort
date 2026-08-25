@@ -332,9 +332,31 @@ inline void radixSort11(u32* data, size_t n, bool allowShortcuts = true, u32 bit
     alignas(64) uint32_t c1[2048] = {};
     alignas(64) uint32_t c2[1024] = {};
 
-    // UNCONDITIONAL combined counting (1 read of data, 3 histogram updates, no branches)
-    // Compiler can unroll+pipeline this loop freely; no if-checks block vectorization
-    for (size_t i = 0; i < n; ++i) {
+    // UNCONDITIONAL 4-way unrolled combined counting (ILP acceleration)
+    size_t i = 0;
+    for (; i + 3 < n; i += 4) {
+        u32 v0 = data[i];
+        u32 v1 = data[i+1];
+        u32 v2 = data[i+2];
+        u32 v3 = data[i+3];
+
+        c0[v0 & 0x7FFu]++;
+        c1[(v0 >> 11) & 0x7FFu]++;
+        c2[v0 >> 22]++;
+
+        c0[v1 & 0x7FFu]++;
+        c1[(v1 >> 11) & 0x7FFu]++;
+        c2[v1 >> 22]++;
+
+        c0[v2 & 0x7FFu]++;
+        c1[(v2 >> 11) & 0x7FFu]++;
+        c2[v2 >> 22]++;
+
+        c0[v3 & 0x7FFu]++;
+        c1[(v3 >> 11) & 0x7FFu]++;
+        c2[v3 >> 22]++;
+    }
+    for (; i < n; ++i) {
         u32 v = data[i];
         c0[v & 0x7FFu]++;
         c1[(v >> 11) & 0x7FFu]++;
