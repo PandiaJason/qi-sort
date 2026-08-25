@@ -225,7 +225,7 @@ qi::ai::PrioritizeAgentMemories(memories);
 
 ## EMPIRICAL VERIFICATION MATRIX ACROSS ALL 21 TEST CASES
 
-> **Tested on Intel Xeon Platinum 8481C @ 2.70 GHz (g++ 13.3 -O3 -march=native)**
+> **Verified on macOS Apple Silicon (M-Series) & Intel Xeon Platinum 8481C @ 2.70 GHz (g++ 13.3 -O3 -march=native)**
 
 | Dataset | N | `std::sort` | `std::stable_sort` | **`qi::sort`** | **Speedup vs `std::sort`** |
 |:---|:---:|:---:|:---:|:---:|:---:|
