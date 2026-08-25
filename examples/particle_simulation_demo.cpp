@@ -2,13 +2,14 @@
 ===============================================================================
 INDUSTRY HEAD-TO-HEAD: 3D PARTICLE PHYSICS SIMULATION SORTING BENCHMARK
 ===============================================================================
-Compares qi::sort against the world's leading industry-grade sorting algorithms:
-  1. std::sort          — C++ Standard Library Introsort
-  2. pdqsort            — Pattern-Defeating QuickSort by Orson Peters
+Compares qi::sort against official, unmodified industry sorting libraries:
+  1. std::sort          — C++ Standard Library Introsort (GCC / Clang)
+  2. std::stable_sort   — C++ Standard Library Timsort (Python / Java / V8 JS baseline)
+  3. pdqsort            — Pattern-Defeating QuickSort by Orson Peters
                           (used in Rust's standard library `std::slice::sort`)
-  3. ska_sort           — Malte Skarupke's Radix Sorter
+  4. ska_sort           — Malte Skarupke's Radix Sorter
                           (widely used in AAA Game Physics Engines)
-  4. qi::sort           — Quick Index Radix Sorter (Our Engine)
+  5. qi::sort_by        — Quick Index 2-Pass Radix-16 Engine (Our Library)
 
 Evaluated on 250,000 active 3D Particles across 100 Physics Frames at 60 FPS Target.
 ===============================================================================
@@ -70,10 +71,11 @@ int main() {
         particles[i] = { dist(rng), dist(rng), dist(rng), vel_dist(rng), vel_dist(rng), vel_dist(rng), 0 };
     }
 
-    double total_std_ms = 0.0;
-    double total_pdq_ms = 0.0;
-    double total_ska_ms = 0.0;
-    double total_qi_ms  = 0.0;
+    double total_std_ms    = 0.0;
+    double total_stable_ms = 0.0;
+    double total_pdq_ms    = 0.0;
+    double total_ska_ms    = 0.0;
+    double total_qi_ms     = 0.0;
 
     std::cout << "Simulating 100 Physics Frames...\n\n";
 
@@ -101,7 +103,16 @@ int main() {
         auto t1 = std::chrono::high_resolution_clock::now();
         total_std_ms += std::chrono::duration<double, std::milli>(t1 - t0).count();
 
-        // 3. pdqsort (Rust std algorithm)
+        // 3. std::stable_sort (Timsort algorithm baseline)
+        auto p_stable = particles;
+        t0 = std::chrono::high_resolution_clock::now();
+        std::stable_sort(p_stable.begin(), p_stable.end(), [](const Particle& a, const Particle& b) {
+            return a.spatial_key < b.spatial_key;
+        });
+        t1 = std::chrono::high_resolution_clock::now();
+        total_stable_ms += std::chrono::duration<double, std::milli>(t1 - t0).count();
+
+        // 4. pdqsort (Official Rust std algorithm)
         auto p_pdq = particles;
         t0 = std::chrono::high_resolution_clock::now();
         pdqsort(p_pdq.begin(), p_pdq.end(), [](const Particle& a, const Particle& b) {
@@ -110,7 +121,7 @@ int main() {
         t1 = std::chrono::high_resolution_clock::now();
         total_pdq_ms += std::chrono::duration<double, std::milli>(t1 - t0).count();
 
-        // 4. ska_sort (AAA Game Physics Radix Sorter)
+        // 5. ska_sort (Official AAA Game Physics Radix Sorter)
         auto p_ska = particles;
         t0 = std::chrono::high_resolution_clock::now();
         ska_sort(p_ska.begin(), p_ska.end(), [](const Particle& p) {
@@ -119,7 +130,7 @@ int main() {
         t1 = std::chrono::high_resolution_clock::now();
         total_ska_ms += std::chrono::duration<double, std::milli>(t1 - t0).count();
 
-        // 5. qi::sort_by (Quick Index Engine)
+        // 6. qi::sort_by (Quick Index Engine)
         auto p_qi = particles;
         t0 = std::chrono::high_resolution_clock::now();
         qi::sort_by(p_qi, [](const Particle& p) { return p.spatial_key; });
@@ -127,15 +138,17 @@ int main() {
         total_qi_ms += std::chrono::duration<double, std::milli>(t1 - t0).count();
     }
 
-    double avg_std_ms = total_std_ms / NUM_FRAMES;
-    double avg_pdq_ms = total_pdq_ms / NUM_FRAMES;
-    double avg_ska_ms = total_ska_ms / NUM_FRAMES;
-    double avg_qi_ms  = total_qi_ms  / NUM_FRAMES;
+    double avg_std_ms    = total_std_ms    / NUM_FRAMES;
+    double avg_stable_ms = total_stable_ms / NUM_FRAMES;
+    double avg_pdq_ms    = total_pdq_ms    / NUM_FRAMES;
+    double avg_ska_ms    = total_ska_ms    / NUM_FRAMES;
+    double avg_qi_ms     = total_qi_ms     / NUM_FRAMES;
 
-    double fps_std = 1000.0 / (avg_std_ms + 2.0);
-    double fps_pdq = 1000.0 / (avg_pdq_ms + 2.0);
-    double fps_ska = 1000.0 / (avg_ska_ms + 2.0);
-    double fps_qi  = 1000.0 / (avg_qi_ms  + 2.0);
+    double fps_std    = 1000.0 / (avg_std_ms    + 2.0);
+    double fps_stable = 1000.0 / (avg_stable_ms + 2.0);
+    double fps_pdq    = 1000.0 / (avg_pdq_ms    + 2.0);
+    double fps_ska    = 1000.0 / (avg_ska_ms    + 2.0);
+    double fps_qi     = 1000.0 / (avg_qi_ms     + 2.0);
 
     std::cout << std::left << std::setw(34) << "Industry Physics Sorter"
               << std::setw(20) << "Avg Frame Time (ms)"
@@ -147,6 +160,11 @@ int main() {
               << std::setw(20) << (std::to_string(avg_std_ms).substr(0, 5) + " ms")
               << std::setw(20) << (std::to_string(fps_std).substr(0, 5) + " FPS")
               << "1.00x\n";
+
+    std::cout << std::left << std::setw(34) << "std::stable_sort (Timsort)"
+              << std::setw(20) << (std::to_string(avg_stable_ms).substr(0, 5) + " ms")
+              << std::setw(20) << (std::to_string(fps_stable).substr(0, 5) + " FPS")
+              << (std::to_string(avg_std_ms / avg_stable_ms).substr(0, 4) + "x\n");
 
     std::cout << std::left << std::setw(34) << "pdqsort (Rust std algorithm)"
               << std::setw(20) << (std::to_string(avg_pdq_ms).substr(0, 5) + " ms")
@@ -164,7 +182,7 @@ int main() {
               << (std::to_string(avg_std_ms / avg_qi_ms).substr(0, 4) + "x FASTER\n");
 
     std::cout << "\n=========================================================================\n";
-    std::cout << "  SUCCESS: Industry Head-to-Head Particle Physics Benchmark Complete!\n";
+    std::cout << "  SUCCESS: 5-Way Industry Particle Physics Sorter Benchmark Complete!\n";
     std::cout << "=========================================================================\n";
 
     return 0;
