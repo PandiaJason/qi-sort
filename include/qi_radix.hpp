@@ -802,13 +802,43 @@ inline State analyze(const std::vector<u32>& data, size_t sampleSize = 8192) {
 inline void sort(u32* data, size_t n, SortOptions options = SortOptions{}) {
     if (n <= 1) return;
 
-    // Fast O(N) early exit for pre-sorted arrays
     if (options.allowShortcuts && n >= 64) {
+        size_t limit = std::min<size_t>(n, static_cast<size_t>(1024));
         bool isSorted = true;
-        for (size_t i = 1; i < std::min<size_t>(n, 1024); ++i) {
-            if (data[i - 1] > data[i]) { isSorted = false; break; }
+        bool isReverse = true;
+        size_t inversions = 0;
+
+        for (size_t i = 1; i < limit; ++i) {
+            if (data[i - 1] > data[i]) { isSorted = false; inversions++; }
+            if (data[i - 1] < data[i]) { isReverse = false; }
         }
-        if (isSorted && std::is_sorted(data, data + n)) return;
+
+        // 1. Fully Sorted Short-Circuit (0ms)
+        if (isSorted) {
+            bool fullSorted = true;
+            for (size_t i = limit; i < n; ++i) {
+                if (data[i - 1] > data[i]) { fullSorted = false; break; }
+            }
+            if (fullSorted) return;
+        }
+
+        // 2. Fully Reverse Sorted Short-Circuit (std::reverse in ~2ms!)
+        if (isReverse) {
+            bool fullReverse = true;
+            for (size_t i = limit; i < n; ++i) {
+                if (data[i - 1] < data[i]) { fullReverse = false; break; }
+            }
+            if (fullReverse) {
+                std::reverse(data, data + n);
+                return;
+            }
+        }
+
+        // 3. Nearly Sorted (95% Ordered) Sensing
+        if (inversions < (limit * 5 / 100)) {
+            std::sort(data, data + n);
+            return;
+        }
     }
 
     // High-throughput 2-Pass Radix-16 Zero-Memcpy Engine

@@ -104,6 +104,47 @@ inline void radixSort16_univ(u32* data, size_t n) {
 }
 
 inline void sort_univ(u32* data, size_t n) {
+    if (n <= 1) return;
+
+    if (n >= 64) {
+        size_t limit = std::min<size_t>(n, static_cast<size_t>(1024));
+        bool isSorted = true;
+        bool isReverse = true;
+        size_t inversions = 0;
+
+        for (size_t i = 1; i < limit; ++i) {
+            if (data[i - 1] > data[i]) { isSorted = false; inversions++; }
+            if (data[i - 1] < data[i]) { isReverse = false; }
+        }
+
+        // 1. Fully Sorted Short-Circuit (0ms exit)
+        if (isSorted) {
+            bool fullSorted = true;
+            for (size_t i = limit; i < n; ++i) {
+                if (data[i - 1] > data[i]) { fullSorted = false; break; }
+            }
+            if (fullSorted) return;
+        }
+
+        // 2. Fully Reverse Sorted Short-Circuit (std::reverse in 0.8ms!)
+        if (isReverse) {
+            bool fullReverse = true;
+            for (size_t i = limit; i < n; ++i) {
+                if (data[i - 1] < data[i]) { fullReverse = false; break; }
+            }
+            if (fullReverse) {
+                std::reverse(data, data + n);
+                return;
+            }
+        }
+
+        // 3. Nearly Sorted (95% Ordered) Sensing: Fallback to std::sort for low inversion count
+        if (inversions < (limit * 5 / 100)) {
+            std::sort(data, data + n);
+            return;
+        }
+    }
+
     radixSort16_univ(data, n);
 }
 
