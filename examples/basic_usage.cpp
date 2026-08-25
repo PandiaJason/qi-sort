@@ -49,5 +49,24 @@ int main() {
     for (uint32_t x : rangeData) std::cout << x << " ";
     std::cout << "\n";
 
+    // 4. Struct Sorting via Key Extractor (qi::sort_by)
+    struct Employee {
+        uint32_t id;
+        std::string name;
+    };
+    std::vector<Employee> employees = {
+        {102, "Alice"},
+        {100, "Bob"},
+        {105, "Charlie"},
+        {101, "Dave"}
+    };
+
+    qi::sort_by(employees, [](const Employee& e) { return e.id; });
+
+    std::cout << "\nSorted Employees by ID:\n";
+    for (const auto& e : employees) {
+        std::cout << "  ID: " << e.id << ", Name: " << e.name << "\n";
+    }
+
     return 0;
 }

@@ -922,6 +922,35 @@ inline void sort(RandomIt begin, RandomIt end, SortOptions options = SortOptions
     sort(first, n, options);
 }
 
+/**
+ * @brief Sort a container of arbitrary structs using a Key Extractor lambda.
+ * Example: qi::sort_by(users, [](const User& u) { return u.id; });
+ */
+template <typename Container, typename KeyExtractor>
+inline void sort_by(Container& container, KeyExtractor key_extractor) {
+    using T = typename Container::value_type;
+    size_t n = container.size();
+    if (n <= 1) return;
+
+    using KeyType = decltype(key_extractor(container[0]));
+    std::vector<KeyType> keys(n);
+    std::vector<size_t> indices(n);
+    for (size_t i = 0; i < n; ++i) {
+        keys[i] = key_extractor(container[i]);
+        indices[i] = i;
+    }
+
+    sort_pairs(keys.data(), indices.data(), n);
+
+    std::vector<T> temp(n);
+    for (size_t i = 0; i < n; ++i) {
+        temp[i] = std::move(container[indices[i]]);
+    }
+    for (size_t i = 0; i < n; ++i) {
+        container[i] = std::move(temp[i]);
+    }
+}
+
 } // namespace qi
 
 #endif // QI_RADIX_HPP
