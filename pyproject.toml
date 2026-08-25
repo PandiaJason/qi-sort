@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "qi_sort"
-version = "0.3.49"
+version = "0.3.50"
 description = "Quantum-Inspired Adaptive Radix Sorting Engine"
 readme = "README.md"
 requires-python = ">=3.8"

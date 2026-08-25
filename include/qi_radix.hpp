@@ -863,8 +863,12 @@ inline void sort(u32* data, size_t n, SortOptions options = SortOptions{}) {
         }
     }
 
-    // Primary high-throughput L1-bound Radix-11 Engine (22.4ms per 5M keys)
-    detail::radixSort11(data, n);
+    // Large Array Multi-Core Scaling & L1-Bound Engine
+    if (n >= 500'000 || options.parallel) {
+        qi_univ::sort_univ(data, n);
+    } else {
+        detail::radixSort11(data, n);
+    }
 }
 
 // Low-Level Direct Radix Kernels (For Physics & Game Engines)
