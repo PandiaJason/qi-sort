@@ -1,15 +1,9 @@
 /*
 ===============================================================================
-COMPLETE FAIRNESS EVALUATION MATRIX: ALL 3 PLAIN RADIX KERNELS VS QI-SORT
+100% RIGOROUS FAIRNESS EVALUATION MATRIX WITH FRESH DATASET RESET
 ===============================================================================
-Compares qi::sort against ALL THREE Plain Radix variants (Radix-8, Radix-11, Radix-16)
-across 5 standard data distributions (N = 1,000,000 Keys):
-
-  1. RANDOM (Uniform 32-bit keys)
-  2. LOW-RANGE (0-255 categorical IDs)
-  3. CLUSTERED (Power-law duplicates)
-  4. SORTED (Ascending)
-  5. REVERSE (Descending)
+Compares qi::sort against Plain Radix-8, Plain Radix-11, and Plain Radix-16
+with FRESH UNSORTED DATASET RESETS on every repetition to prevent state leakage.
 ===============================================================================
 */
 
@@ -62,11 +56,12 @@ struct Row {
 };
 
 template<typename F>
-double timeMs(F&& fn, int reps = 3) {
+double timeMsFresh(const vector<uint32_t>& src_data, F&& fn, int reps = 3) {
     double best = 1e9;
     for (int r = 0; r < reps; ++r) {
+        auto d = src_data; // FRESH UNSORTED COPY FOR EVERY REP
         auto t0 = Clock::now();
-        fn();
+        fn(d);
         auto t1 = Clock::now();
         double ms = chrono::duration<double, milli>(t1 - t0).count();
         best = min(best, ms);
@@ -77,7 +72,7 @@ double timeMs(F&& fn, int reps = 3) {
 int main() {
     const size_t N = 1'000'000;
     cout << "\n========================================================================================================\n";
-    cout << "  COMPLETE FAIRNESS EVALUATION MATRIX: ALL 3 PLAIN RADIX KERNELS VS QI-SORT (N = 1,000,000 Keys)\n";
+    cout << "  RIGOROUS FAIRNESS EVALUATION MATRIX (FRESH RESETS, N = 1,000,000 Keys)\n";
     cout << "========================================================================================================\n\n";
 
     mt19937 rng(42);
@@ -127,20 +122,22 @@ int main() {
         Row r;
         r.dataset = ds.name;
 
-        auto d8 = ds.data;  r.r8ms  = timeMs([&]{ plain_radix8(d8); });
-        auto d11 = ds.data; r.r11ms = timeMs([&]{ plain_radix11(d11); });
-        auto d16 = ds.data; r.r16ms = timeMs([&]{ plain_radix16(d16); });
+        r.r8ms  = timeMsFresh(ds.data, [](vector<uint32_t>& d){ plain_radix8(d); });
+        r.r11ms = timeMsFresh(ds.data, [](vector<uint32_t>& d){ plain_radix11(d); });
+        r.r16ms = timeMsFresh(ds.data, [](vector<uint32_t>& d){ plain_radix16(d); });
 
         auto dqi = ds.data;
         qi::State st = qi::analyze(dqi);
         r.qiChoice = (st.recommendedRadix == qi::Radix::R16) ? "R-16" :
                      (st.recommendedRadix == qi::Radix::R11) ? "R-11" : "R-8";
 
-        r.qiMs = timeMs([&]{ qi::sort(dqi); });
+        r.qiMs = timeMsFresh(ds.data, [](vector<uint32_t>& d){ qi::sort(d); });
 
         auto ref = ds.data;
         sort(ref.begin(), ref.end());
-        r.correct = (ref == dqi);
+        auto check_d = ds.data;
+        qi::sort(check_d);
+        r.correct = (ref == check_d);
 
         rows.push_back(r);
     }
