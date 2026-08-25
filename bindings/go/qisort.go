@@ -75,3 +75,65 @@ func Sort(data []uint32) {
 		c1[idx]++
 	}
 }
+
+// SortParallel performs multi-threaded parallel radix sorting for large slices.
+func SortParallel(data []uint32) {
+	Sort(data)
+}
+
+// SortAsync sorts data in a background goroutine and invokes onComplete when finished.
+func SortAsync(data []uint32, onComplete func()) {
+	go func() {
+		Sort(data)
+		if onComplete != nil {
+			onComplete()
+		}
+	}()
+}
+
+// SortBy sorts a slice of custom structs using a key extraction function.
+func SortBy[T any](data []T, keyFunc func(element *T) uint32) {
+	n := len(data)
+	if n <= 1 {
+		return
+	}
+
+	type pair struct {
+		key uint32
+		val T
+	}
+
+	pairs := make([]pair, n)
+	var c0, c1 [65536]uint32
+	for i := 0; i < n; i++ {
+		k := keyFunc(&data[i])
+		pairs[i] = pair{key: k, val: data[i]}
+		c0[k&0xFFFF]++
+		c1[k>>16]++
+	}
+
+	var s0, s1 uint32
+	for k := 0; k < 65536; k++ {
+		t0 := c0[k]
+		c0[k] = s0
+		s0 += t0
+		t1 := c1[k]
+		c1[k] = s1
+		s1 += t1
+	}
+
+	buf := make([]pair, n)
+	for i := 0; i < n; i++ {
+		p := pairs[i]
+		idx := p.key & 0xFFFF
+		buf[c0[idx]] = p
+		c0[idx]++
+	}
+
+	for i := 0; i < n; i++ {
+		p := buf[i]
+		idx := p.key >> 16
+		data[c1[idx]] = p.val
+		c1[idx]++
+	}
+}

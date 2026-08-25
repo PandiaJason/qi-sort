@@ -8,6 +8,27 @@ import (
 	"github.com/PandiaJason/qi-sort/bindings/go"
 )
 
+type Employee struct {
+	ID   uint32
+	Name string
+}
+
+func TestSortBy(t *testing.T) {
+	employees := []Employee{
+		{ID: 105, Name: "Charlie"},
+		{ID: 100, Name: "Bob"},
+		{ID: 102, Name: "Alice"},
+	}
+
+	qisort.SortBy(employees, func(e *Employee) uint32 {
+		return e.ID
+	})
+
+	if employees[0].ID != 100 || employees[1].ID != 102 || employees[2].ID != 105 {
+		t.Fatalf("qisort.SortBy failed to sort Employee slice by ID")
+	}
+}
+
 func TestSort(t *testing.T) {
 	const N = 50000
 	rng := rand.New(rand.NewSource(42))
