@@ -845,6 +845,11 @@ inline void sort(u32* data, size_t n, SortOptions options = SortOptions{}) {
     qi_univ::sort_univ(data, n);
 }
 
+// Low-Level Direct Radix Kernels (For Physics & Game Engines)
+inline void radix_8(u32* data, size_t n) { detail::radixSort8(data, n); }
+inline void radix_11(u32* data, size_t n) { detail::radixSort11(data, n); }
+inline void radix_16(u32* data, size_t n) { detail::radixSort16(data, n); }
+
 inline void sort(std::vector<u32>& data, SortOptions options = SortOptions{}) {
     sort(data.data(), data.size(), options);
 }

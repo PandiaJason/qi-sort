@@ -379,6 +379,11 @@ void qi::sort_pairs(Key* keys, Payload* payloads, size_t n);
 
 // String Prefix Radix Sorting
 void qi::sort_strings(std::vector<std::string>& strings);
+
+// Low-Level Direct Radix Kernels (Zero-Overhead for Physics & Game Engines)
+void qi::radix_8(uint32_t* data, size_t n);  // Fixed 4-Pass Radix (256 buckets)
+void qi::radix_11(uint32_t* data, size_t n); // Fixed 3-Pass Radix (2,048 L1-bound buckets — 0.87ms)
+void qi::radix_16(uint32_t* data, size_t n); // Fixed 2-Pass Radix (65,536 buckets — 0.95ms)
 ```
 
 ### Go API (`github.com/PandiaJason/qi-sort/bindings/go`)
