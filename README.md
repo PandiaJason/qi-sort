@@ -54,6 +54,38 @@ It derives its entropy metrics from condensed-matter physics: the Inverse Partic
 
 ---
 
+## SYSTEM ARCHITECTURE & EXECUTION FLOW
+
+```
+                 Input Data Vector
+                         │
+                         ▼
+             ┌───────────────────────┐
+             │ Quick Index (QI)      │
+             │ Distribution Analysis │
+             └───────────┬───────────┘
+                         │
+             ┌───────────▼───────────┐
+             │ Select Execution      │
+             │ Strategy              │
+             └───────────┬───────────┘
+                         │
+         ┌───────────────┼───────────────┐
+         ▼               ▼               ▼
+     O(N) Check       Radix-11        Radix-16
+   Pre-Sorted/Reverse 3 Memory Passes 2 Memory Passes
+     (`std::reverse`)   (High Entropy) (Low Entropy)
+         │               │               │
+         └───────────────┼───────────────┘
+                         ▼
+                Sorted Output Vector
+```
+
+### Memory Mechanics: Zero-Memcpy 2-Pass Execution
+`qi-sort` is an out-of-place radix sorter that uses a single scratch buffer `buf`. It is termed **"Zero-Memcpy"** because Pass 1 writes from `buf` **directly back into the target `data` array**, eliminating the need for an explicit `std::memcpy(data, buf, ...)` pass at the end.
+
+---
+
 ## HARDWARE ARCHITECTURE & PLATFORM SCOPING
 
 Sorting performance is strictly governed by physical CPU microarchitecture and memory system topology:
@@ -320,7 +352,7 @@ We compiled **DuckDB's exact native sorting headers** ([`third_party/pdqsort/pdq
 | **Plain Radix-8** | Fixed 4-Pass Radix (shortcuts on) | 16.46 ms | 42.25 ms | 15.55 ms | 44.35 ms | **1.49× to 4.16× FASTER** |
 | **Plain Radix-11** | Fixed 3-Pass Radix (shortcuts on) | 10.32 ms | 22.40 ms | 9.37 ms | 30.37 ms | **0.98× to 2.20× FASTER** |
 | **Plain Radix-16** | Fixed 2-Pass Radix (shortcuts on) | 16.93 ms | 10.01 ms | 16.99 ms | 31.81 ms | **0.98× to 1.88× FASTER** |
-| **`qi::sort` (Ours)** | **Quantum-Inspired Adaptive Engine** | **10.48 ms** | **10.15 ms** | **9.04 ms** | **29.74 ms** | **GLOBAL CHAMPION** |
+| **`qi::sort` (Ours)** | **Quick Index Adaptive Engine** | **10.48 ms** | **10.15 ms** | **9.04 ms** | **29.74 ms** | **Best Observed Benchmark Throughput** |
 
 ---
 
@@ -423,7 +455,7 @@ Licensed under the **GNU General Public License v2.0** — see [LICENSE](LICENSE
 
 ```bibtex
 @software{pandia2026qisort,
-  title   = {QI-Sort: Quantum-Inspired Adaptive Radix Sorting Engine},
+  title   = {qi-sort: Quick Index Radix Sort},
   author  = {Pandia, Jason},
   year    = {2026},
   url     = {https://github.com/PandiaJason/qi-sort},
