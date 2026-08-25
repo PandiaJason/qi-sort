@@ -209,6 +209,9 @@ inline State analyzeData(const u32* data, size_t n, size_t sampleSize = 1024) {
             if (c > 0) {
                 occ++;
                 ipr_int_sum += static_cast<uint64_t>(c) * c;
+                double pk = static_cast<double>(c) * invN;
+                bs.probability[k] = pk;
+                bs.amplitude[k] = std::sqrt(pk);
             }
         }
 
