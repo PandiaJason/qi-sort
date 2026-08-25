@@ -56,6 +56,22 @@ QISORT_API void qi_analyze_u32(
     double* out_duplicate_ratio
 );
 
+/**
+ * @brief Sort a 64-bit unsigned integer array in-place.
+ */
+QISORT_API void qi_sort_u64(uint64_t* data, size_t n);
+QISORT_API void qi_parallel_sort_u64(uint64_t* data, size_t n, unsigned int num_threads);
+
+/**
+ * @brief Sort a 64-bit signed integer array in-place.
+ */
+QISORT_API void qi_sort_i64(int64_t* data, size_t n);
+
+/**
+ * @brief Sort a 64-bit double array in-place (IEEE 754).
+ */
+QISORT_API void qi_sort_f64(double* data, size_t n);
+
 #ifdef __cplusplus
 }
 #endif

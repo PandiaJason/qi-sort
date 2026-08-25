@@ -78,4 +78,28 @@ void qi_analyze_u32(
     if (out_duplicate_ratio) *out_duplicate_ratio = state.duplicateRatio;
 }
 
+void qi_sort_u64(uint64_t* data, size_t n) {
+    if (!data || n <= 1) return;
+    qi::sort(data, n);
 }
+
+void qi_parallel_sort_u64(uint64_t* data, size_t n, unsigned int num_threads) {
+    if (!data || n <= 1) return;
+    qi::SortOptions opts;
+    opts.parallel = true;
+    opts.numThreads = num_threads;
+    qi::sort(reinterpret_cast<uint32_t*>(data), n * 2, opts);
+}
+
+void qi_sort_i64(int64_t* data, size_t n) {
+    if (!data || n <= 1) return;
+    qi::sort(data, n);
+}
+
+void qi_sort_f64(double* data, size_t n) {
+    if (!data || n <= 1) return;
+    qi::sort(data, n);
+}
+
+}
+

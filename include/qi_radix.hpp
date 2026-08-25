@@ -804,6 +804,39 @@ inline void sortPairs(Key* keys, Payload* payloads, size_t n) {
     for (size_t i = 0; i < n; ++i) keys[i] = static_cast<Key>(encKeys[i]);
 }
 
+// ── 64-BIT RADIX-16 (4-PASS) ──
+// For uint64_t, int64_t, double keys: 4 passes × 16-bit digits = 64 bits covered.
+inline void radixSort64(u64* data, size_t n) {
+    if (n <= 1) return;
+    std::vector<u64> buffer(n);
+    u64* src = data;
+    u64* dst = buffer.data();
+
+    for (int pass = 0; pass < 4; ++pass) {
+        int shift = pass * 16;
+
+        alignas(64) uint32_t count[65536] = {};
+        for (size_t i = 0; i < n; ++i) {
+            count[(src[i] >> shift) & 0xFFFFu]++;
+        }
+
+        // Skip pass if all values fall in bucket 0
+        if (count[0] == n) continue;
+
+        uint32_t sum = 0;
+        for (int k = 0; k < 65536; ++k) {
+            uint32_t c = count[k]; count[k] = sum; sum += c;
+        }
+
+        for (size_t i = 0; i < n; ++i) {
+            u64 v = src[i];
+            dst[count[(v >> shift) & 0xFFFFu]++] = v;
+        }
+        std::swap(src, dst);
+    }
+    if (src != data) std::memcpy(data, src, n * sizeof(u64));
+}
+
 } // namespace detail
 
 // ============================================================================
@@ -867,6 +900,18 @@ inline void sort(u32* data, size_t n, SortOptions options = SortOptions{}) {
             std::sort(data, data + n);
             return;
         }
+    }
+
+    // Dispatch to parallel kernels if requested
+    if (options.parallel) {
+        unsigned int threads = options.numThreads;
+        State st = detail::analyzeData(data, n, std::min<size_t>(n, 1024));
+        if (st.bitOrSum <= 0xFFu || st.duplicateRatio > 0.40) {
+            detail::parallelRadixSort16(data, n, options.allowShortcuts, threads);
+        } else {
+            detail::parallelRadixSort11(data, n, options.allowShortcuts, threads);
+        }
+        return;
     }
 
     // 4. ULTRA-FAST SUB-MICROSECOND SENSING (1,024 elements sample = 0.003ms latency)
@@ -936,6 +981,67 @@ inline void sort(float* data, size_t n, SortOptions options = SortOptions{}) {
 }
 
 inline void sort(std::vector<float>& data, SortOptions options = SortOptions{}) {
+    sort(data.data(), data.size(), options);
+}
+
+/**
+ * @brief Overload for uint64_t arrays (4-pass Radix-16 engine).
+ */
+inline void sort(u64* data, size_t n, SortOptions options = SortOptions{}) {
+    if (n <= 1) return;
+    if (options.allowShortcuts && n >= 64) {
+        bool isSorted = true;
+        for (size_t i = 1; i < std::min<size_t>(n, 1024); ++i) {
+            if (data[i - 1] > data[i]) { isSorted = false; break; }
+        }
+        if (isSorted && std::is_sorted(data, data + n)) return;
+        bool isReverse = true;
+        for (size_t i = 1; i < std::min<size_t>(n, 1024); ++i) {
+            if (data[i - 1] < data[i]) { isReverse = false; break; }
+        }
+        if (isReverse && std::is_sorted(std::make_reverse_iterator(data + n), std::make_reverse_iterator(data))) {
+            std::reverse(data, data + n);
+            return;
+        }
+    }
+    detail::radixSort64(data, n);
+}
+
+inline void sort(std::vector<u64>& data, SortOptions options = SortOptions{}) {
+    sort(data.data(), data.size(), options);
+}
+
+/**
+ * @brief Overload for signed int64_t arrays.
+ */
+inline void sort(i64* data, size_t n, SortOptions options = SortOptions{}) {
+    if (n <= 1) return;
+    std::vector<u64> enc(n);
+    for (size_t i = 0; i < n; ++i) enc[i] = key_traits::encode(data[i]);
+    sort(enc.data(), n, options);
+    for (size_t i = 0; i < n; ++i) data[i] = static_cast<i64>(enc[i] ^ 0x8000000000000000ULL);
+}
+
+inline void sort(std::vector<i64>& data, SortOptions options = SortOptions{}) {
+    sort(data.data(), data.size(), options);
+}
+
+/**
+ * @brief Overload for double arrays (IEEE 754 64-bit).
+ */
+inline void sort(double* data, size_t n, SortOptions options = SortOptions{}) {
+    if (n <= 1) return;
+    std::vector<u64> enc(n);
+    for (size_t i = 0; i < n; ++i) enc[i] = key_traits::encode(data[i]);
+    sort(enc.data(), n, options);
+    for (size_t i = 0; i < n; ++i) {
+        u64 bits = enc[i];
+        u64 raw = (bits & 0x8000000000000000ULL) ? (bits ^ 0x8000000000000000ULL) : ~bits;
+        std::memcpy(&data[i], &raw, sizeof(double));
+    }
+}
+
+inline void sort(std::vector<double>& data, SortOptions options = SortOptions{}) {
     sort(data.data(), data.size(), options);
 }
 
@@ -1044,8 +1150,13 @@ inline void sort_parallel(Container& container) {
  */
 template <typename Container>
 inline void sort_async(Container& container, std::function<void()> on_complete = nullptr) {
-    std::thread([&container, on_complete]() {
-        sort(container);
+    // Use a shared_ptr to a copy to guarantee lifetime safety if caller scope exits
+    auto data_copy = std::make_shared<Container>(container);
+    auto* container_ptr = &container;
+    std::thread([data_copy, container_ptr, on_complete]() {
+        sort(*data_copy);
+        // Copy sorted result back to original container
+        *container_ptr = std::move(*data_copy);
         if (on_complete) on_complete();
     }).detach();
 }
