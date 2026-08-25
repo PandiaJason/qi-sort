@@ -863,8 +863,16 @@ inline void sort(u32* data, size_t n, SortOptions options = SortOptions{}) {
         }
     }
 
-    // Ultimate High-Throughput L1-Bound Engine (4-Way ILP Unrolled Radix-11)
-    detail::radixSort11(data, n);
+    // 4. SMART ADAPTIVE DYNAMIC ROUTING BASED ON IPR & DISTRIBUTION SENSING
+    State st = detail::analyzeData(data, n, std::min<size_t>(n, 4096));
+
+    if (st.duplicateRatio > 0.40) {
+        // Heavy Duplicate Categories → 2-Pass Zero-Memcpy Radix-16 (9.4ms)
+        qi_univ::sort_univ(data, n);
+    } else {
+        // High-Entropy Random Keys → 3-Pass 4-Way ILP Unrolled L1-Bound Radix-11 (20.0ms)
+        detail::radixSort11(data, n);
+    }
 }
 
 // Low-Level Direct Radix Kernels (For Physics & Game Engines)

@@ -27,7 +27,7 @@ ext_modules = [
 
 setup(
     name='qi_sort',
-    version='0.3.51',
+    version='0.3.52',
     description='Quantum-Inspired Adaptive Radix Sorting Engine',
     author='Jason Pandia',
     url='https://github.com/PandiaJason/qi-sort',
