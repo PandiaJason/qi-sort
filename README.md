@@ -2,12 +2,12 @@
 
 <img src="https://img.shields.io/badge/qi--sort-blueviolet?style=for-the-badge&labelColor=0d1117" alt="qi-sort" height="48"/>
 
-<h3>Quantum-Inspired Adaptive Radix Sorting Engine</h3>
+<h3>High-Throughput 2-Pass Radix-16 Sorting Engine</h3>
 
 <p>
 A <b>zero-dependency, single-header</b> C++17 sorting engine with <b>Go, Python, and Java</b> bindings<br/>
-featuring 2-Pass Radix-16 zero-memcpy execution, Inverse Participation Ratio (IPR) entropy sensing,<br/>
-and $O(N)$ branchless short-circuits — delivering <b>2.2×–6.4× speedups over <code>std::sort</code></b> on numeric keys.
+featuring 2-Pass Radix-16 zero-memcpy execution and $O(N)$ short-circuits for numeric keys,<br/>
+delivering <b>2.2×–6.4× speedups over <code>std::sort</code></b> on random and low-cardinality integer workloads.
 </p>
 
 <p>
