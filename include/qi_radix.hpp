@@ -863,12 +863,8 @@ inline void sort(u32* data, size_t n, SortOptions options = SortOptions{}) {
         }
     }
 
-    // Large Array Multi-Core Scaling & L1-Bound Engine
-    if (n >= 500'000 || options.parallel) {
-        qi_univ::sort_univ(data, n);
-    } else {
-        detail::radixSort11(data, n);
-    }
+    // Ultimate High-Throughput L1-Bound Engine (4-Way ILP Unrolled Radix-11)
+    detail::radixSort11(data, n);
 }
 
 // Low-Level Direct Radix Kernels (For Physics & Game Engines)
