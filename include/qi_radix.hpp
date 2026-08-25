@@ -3,7 +3,7 @@
 
 /*
 ===============================================================================
-QI-RADIX: Quick Index (QI) Radix Sorting Library (Header-Only)
+QI Sort: Quick Index Radix Sort (Header-Only C++17 Engine)
 ===============================================================================
 
 A modular, production-ready C++17 header-only library for ultra-fast adaptive

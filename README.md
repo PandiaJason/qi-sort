@@ -2,7 +2,7 @@
 
 <img src="https://img.shields.io/badge/qi--sort-blueviolet?style=for-the-badge&labelColor=0d1117" alt="qi-sort" height="48"/>
 
-<h3>Quick Index (QI) Radix Sorting Engine</h3>
+<h3>qi-sort: Quick Index Radix Sort</h3>
 
 <p>
 A <b>zero-dependency, single-header</b> C++17 sorting engine with <b>Go, Python, and Java</b> bindings<br/>
