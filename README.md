@@ -301,33 +301,33 @@ We compiled **DuckDB's exact native sorting headers** ([`third_party/pdqsort/pdq
 
 | RocksDB MemTable Flush Dataset | RocksDB `VectorRep` | Plain Radix-8 | Plain Radix-11 | Plain Radix-16 | **`qi::sort` (Adaptive)** | **Speedup vs RocksDB** |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Uniform Key MemTable Flush** | 184.24 ms | 18.71 ms | 14.27 ms | 19.82 ms | **14.83 ms** | **12.42× FASTER** |
-| **Hash Key MemTable Flush** | 160.67 ms | 14.78 ms | 11.03 ms | 16.07 ms | **17.56 ms** | **9.15× FASTER** |
-| **Heavy Duplicate Key Flush** | 67.39 ms | 42.38 ms | 29.61 ms | 9.37 ms | **9.46 ms** | **7.12× FASTER** |
+| **Uniform Key MemTable Flush** | 170.15 ms | 13.13 ms | 11.13 ms | 15.65 ms | **12.53 ms** | **13.57× FASTER** |
+| **Hash Key MemTable Flush** | 159.64 ms | 13.06 ms | 10.69 ms | 14.47 ms | **10.74 ms** | **14.87× FASTER** |
+| **Heavy Duplicate Key Flush** | 66.89 ms | 28.60 ms | 22.07 ms | 15.39 ms | **5.47 ms** | **12.23× FASTER** |
 
 ### 3. SQLite Native Source VDBE Sorter Benchmark Matrix ($N = 2,000,000$)
 
 | SQLite VDBE Sorter Dataset | SQLite `VdbeSorter` | Plain Radix-8 | Plain Radix-11 | Plain Radix-16 | **`qi::sort` (Adaptive)** | **Speedup vs SQLite** |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Uniform Key Index Sort** | 323.28 ms | 10.23 ms | 8.87 ms | 11.45 ms | **8.29 ms** | **39.01× FASTER** |
-| **Hash Key Index Sort** | 210.59 ms | 9.15 ms | 6.86 ms | 10.31 ms | **7.39 ms** | **28.50× FASTER** |
-| **Heavy Duplicate Key Sort** | 467.81 ms | 28.05 ms | 19.73 ms | 6.31 ms | **7.01 ms** | **66.77× FASTER** |
+| **Uniform Key Index Sort** | 267.76 ms | 8.37 ms | 7.06 ms | 9.12 ms | **7.00 ms** | **38.25× FASTER** |
+| **Hash Key Index Sort** | 215.56 ms | 8.45 ms | 7.23 ms | 9.58 ms | **7.12 ms** | **30.28× FASTER** |
+| **Heavy Duplicate Key Sort** | 421.29 ms | 20.12 ms | 15.59 ms | 10.48 ms | **4.03 ms** | **104.63× FASTER** |
 
 ### 4. Redis Native Source Sorter Benchmark Matrix ($N = 3,000,000$)
 
 | Redis Sorter Dataset | Redis `pqsort` | Plain Radix-8 | Plain Radix-11 | Plain Radix-16 | **`qi::sort` (Adaptive)** | **Speedup vs Redis** |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Uniform Key Sort** | 311.30 ms | 18.35 ms | 14.72 ms | 18.10 ms | **15.62 ms** | **19.93× FASTER** |
-| **Hash Key Sort** | 294.56 ms | 14.80 ms | 11.24 ms | 15.49 ms | **17.52 ms** | **16.81× FASTER** |
-| **Heavy Duplicate Key Sort** | 105.45 ms | 42.58 ms | 29.78 ms | 9.64 ms | **9.59 ms** | **10.99× FASTER** |
+| **Uniform Key Sort** | 307.73 ms | 16.35 ms | 11.84 ms | 16.25 ms | **11.62 ms** | **26.47× FASTER** |
+| **Hash Key Sort** | 282.51 ms | 12.53 ms | 10.58 ms | 13.32 ms | **10.62 ms** | **26.60× FASTER** |
+| **Heavy Duplicate Key Sort** | 96.98 ms | 30.36 ms | 23.44 ms | 15.97 ms | **5.82 ms** | **16.66× FASTER** |
 
 ### 5. PostgreSQL Native Source Sorter Benchmark Matrix ($N = 3,000,000$)
 
 | PostgreSQL Sorter Dataset | PostgreSQL `pg_qsort` | Plain Radix-8 | Plain Radix-11 | Plain Radix-16 | **`qi::sort` (Adaptive)** | **Speedup vs PostgreSQL** |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Uniform Key Sort** | 302.53 ms | 17.95 ms | 13.90 ms | 17.38 ms | **14.44 ms** | **20.96× FASTER** |
-| **Hash Key Sort** | 291.41 ms | 14.87 ms | 11.00 ms | 15.64 ms | **16.73 ms** | **17.41× FASTER** |
-| **Heavy Duplicate Key Sort** | 99.70 ms | 42.27 ms | 30.05 ms | 9.36 ms | **9.86 ms** | **10.11× FASTER** |
+| **Uniform Key Sort** | 290.08 ms | 17.71 ms | 12.38 ms | 15.55 ms | **11.61 ms** | **24.97× FASTER** |
+| **Hash Key Sort** | 295.68 ms | 13.64 ms | 11.68 ms | 15.76 ms | **11.27 ms** | **26.23× FASTER** |
+| **Heavy Duplicate Key Sort** | 98.00 ms | 31.94 ms | 23.50 ms | 16.17 ms | **6.07 ms** | **16.15× FASTER** |
 
 ### 6. Google Native Source Sorter Benchmark Matrix (`vqsort` from Google Highway, $N = 3,000,000$)
 
