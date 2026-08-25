@@ -22,10 +22,8 @@ variants (Radix-8, Radix-11, Radix-16) and qi::sort across 3,000,000 keys.
 #include <cstdint>
 
 // Include RocksDB exact source headers
-#include "/tmp/rocksdb/memtable/skiplist.h"
-
 // Include qi::sort Engine
-#include "../include/qi_radix.hpp"
+#include "include/qi_radix.hpp"
 
 using Clock = std::chrono::high_resolution_clock;
 
