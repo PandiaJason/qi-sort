@@ -235,12 +235,11 @@ inline State analyzeData(const u32* data, size_t n, size_t sampleSize = 1024) {
     state.highByteComplexity = (state.bytes[2].entropy + state.bytes[3].entropy) / 2.0;
 
     u32 activeMask = bitOr ^ bitAnd;
-    if (state.effectiveStates <= 16.0 || state.duplicateRatio >= 0.70 || state.orderedness > 0.80) {
-        state.recommendedRadix = Radix::R16;
-    } else if (activeMask <= 0x0000FFFFu) {
+    if (state.bitOrSum <= 0xFFu) {
         state.recommendedRadix = Radix::R8;
+    } else if (state.effectiveStates <= 64.0 || state.duplicateRatio >= 0.40) {
+        state.recommendedRadix = Radix::R16;
     } else {
-        // High-entropy / full 32-bit random data → 3-pass Radix-11 (23.8ms in Colab)
         state.recommendedRadix = Radix::R11;
     }
 
@@ -914,20 +913,21 @@ inline void sort(u32* data, size_t n, SortOptions options = SortOptions{}) {
         return;
     }
 
-    // 4. ULTRA-FAST SUB-MICROSECOND SENSING (1,024 elements sample = 0.003ms latency)
+    // 4. ULTRA-FAST SUB-MICROSECOND IPR SENSING (1,024 elements sample = 0.003ms latency)
     State st = detail::analyzeData(data, n, std::min<size_t>(n, 1024));
 
-    // Innovation 2: Single-Pass Low-Range Pruning (0-255 data completes in 1 pass = 1.1ms!)
-    if (st.bitOrSum <= 0xFFu) {
-        detail::radixSort8(data, n, true, st.bitOrSum);
-    }
-    // Innovation 3: Direct Radix-16 for Clustered/Duplicate Data
-    else if (st.duplicateRatio > 0.40) {
-        detail::radixSort16(data, n);
-    } 
-    // High-Entropy Random Keys → 3-Pass 4-Way ILP Unrolled L1-Bound Radix-11
-    else {
-        detail::radixSort11(data, n, true, st.bitOrSum);
+    // Dynamic Dispatch based on IPR sensing & recommended radix
+    switch (st.recommendedRadix) {
+        case Radix::R8:
+            detail::radixSort8(data, n, true, st.bitOrSum);
+            break;
+        case Radix::R16:
+            detail::radixSort16(data, n);
+            break;
+        case Radix::R11:
+        default:
+            detail::radixSort11(data, n, true, st.bitOrSum);
+            break;
     }
 }
 

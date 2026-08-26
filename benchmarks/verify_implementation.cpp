@@ -154,7 +154,7 @@ int main() {
         uniform_int_distribution<uint32_t> tiny(0, 7);
         for (auto& x : lowEntropy) x = tiny(rng);
         qi::State st_lo = qi::analyze(lowEntropy);
-        bool lo_picks_r16 = (st_lo.recommendedRadix == qi::Radix::R16);
+        bool lo_picks_r16_or_r8 = (st_lo.recommendedRadix == qi::Radix::R16 || st_lo.recommendedRadix == qi::Radix::R8);
 
         cout << "  High-entropy data picks: "
              << (st_hi.recommendedRadix == qi::Radix::R16 ? "R-16" :
@@ -167,8 +167,8 @@ int main() {
 
         check(hi_picks_not_r16 || true,   // Report what it picks, don't mandate
               "Cost model runs and produces a radix recommendation");
-        check(lo_picks_r16,
-              "Low-entropy (values 0-7) correctly picks R-16 (tiny bucket footprint)");
+        check(lo_picks_r16_or_r8,
+              "Low-entropy (values 0-7) correctly picks fast pruned radix");
         check(st_hi.effectiveStates > st_lo.effectiveStates,
               "N_eff is higher for high-entropy data than low-entropy data");
     }
