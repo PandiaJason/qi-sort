@@ -2,12 +2,15 @@
 ===============================================================================
 COMPREHENSIVE RADIX & COMPARISON HEAD-TO-HEAD: 3D PARTICLE PHYSICS BENCHMARK
 ===============================================================================
-Compares qi::sort Key-Only vs Struct Sorting alongside real industry sorters:
-  1. std::sort (Struct)   — C++ Standard Library Introsort (Struct Array)
-  2. pdqsort (Struct)     — Pattern-Defeating QuickSort (Rust std algorithm)
-  3. ska_sort (Struct)    — Malte Skarupke's Official Radix Sorter (Struct Array)
-  4. qi::sort_by (Struct) — Quick Index Struct Sorting Engine (Full 28-Byte Structs)
-  5. qi::sort (Keys Only) — Quick Index Adaptive Engine (32-bit Keys Only)
+Compares:
+  1. std::sort (Struct)      — C++ Standard Library Introsort (Struct Array)
+  2. pdqsort (Struct)        — Pattern-Defeating QuickSort (Rust std algorithm)
+  3. ska_sort (Struct)       — Malte Skarupke's Official Radix Sorter (Struct Array)
+  4. qi::sort_by (Struct)    — Quick Index Struct Sorting Engine (Full 28-Byte Structs)
+  5. Plain Radix-8 (Keys)    — Fixed 4-Pass Radix Engine (32-bit Keys)
+  6. Plain Radix-11 (Keys)   — Fixed 3-Pass Radix Engine (32-bit Keys)
+  7. Plain Radix-16 (Keys)   — Fixed 2-Pass Radix Engine (32-bit Keys)
+  8. qi::sort (Keys Only)    — Quick Index Adaptive Engine (32-bit Keys Only)
 
 Evaluated on 250,000 active 3D Particles across 100 Physics Frames at 60 FPS Target.
 ===============================================================================
@@ -54,7 +57,7 @@ int main() {
     const int NUM_FRAMES = 100;           // 100 Physics Frames
 
     std::cout << "=========================================================================\n";
-    std::cout << "  3D PARTICLE PHYSICS BENCHMARK: STRUCT SORTING VS KEY-ONLY SORTING\n";
+    std::cout << "  3D PARTICLE PHYSICS BENCHMARK: STRUCT SORTING VS RADIX VARIANTS\n";
     std::cout << "  N = " << NUM_PARTICLES << " Particles | 100 Physics Frames | 60 FPS Target (16.6ms)\n";
     std::cout << "=========================================================================\n\n";
 
@@ -70,10 +73,13 @@ int main() {
         particles[i] = { dist(rng), dist(rng), dist(rng), vel_dist(rng), vel_dist(rng), vel_dist(rng), 0 };
     }
 
-    double total_std_ms   = 0.0;
-    double total_pdq_ms   = 0.0;
-    double total_ska_ms   = 0.0;
-    double total_qi_by_ms = 0.0;
+    double total_std_ms    = 0.0;
+    double total_pdq_ms    = 0.0;
+    double total_ska_ms    = 0.0;
+    double total_qi_by_ms  = 0.0;
+    double total_r8_key_ms = 0.0;
+    double total_r11_key_ms= 0.0;
+    double total_r16_key_ms= 0.0;
     double total_qi_key_ms = 0.0;
 
     std::cout << "Simulating 100 Physics Frames...\n\n";
@@ -129,7 +135,28 @@ int main() {
         t1 = std::chrono::high_resolution_clock::now();
         total_qi_by_ms += std::chrono::duration<double, std::milli>(t1 - t0).count();
 
-        // E. qi::sort (Keys Only - 1 MB DRAM Move)
+        // E. Plain Radix-8 (Keys Only - 1 MB DRAM Move)
+        auto k_r8 = keys;
+        t0 = std::chrono::high_resolution_clock::now();
+        qi::radix_8(k_r8.data(), k_r8.size());
+        t1 = std::chrono::high_resolution_clock::now();
+        total_r8_key_ms += std::chrono::duration<double, std::milli>(t1 - t0).count();
+
+        // F. Plain Radix-11 (Keys Only - 1 MB DRAM Move)
+        auto k_r11 = keys;
+        t0 = std::chrono::high_resolution_clock::now();
+        qi::radix_11(k_r11.data(), k_r11.size());
+        t1 = std::chrono::high_resolution_clock::now();
+        total_r11_key_ms += std::chrono::duration<double, std::milli>(t1 - t0).count();
+
+        // G. Plain Radix-16 (Keys Only - 1 MB DRAM Move)
+        auto k_r16 = keys;
+        t0 = std::chrono::high_resolution_clock::now();
+        qi::radix_16(k_r16.data(), k_r16.size());
+        t1 = std::chrono::high_resolution_clock::now();
+        total_r16_key_ms += std::chrono::duration<double, std::milli>(t1 - t0).count();
+
+        // H. qi::sort (Keys Only - 1 MB DRAM Move)
         auto k_qi = keys;
         t0 = std::chrono::high_resolution_clock::now();
         qi::sort(k_qi);
@@ -137,11 +164,14 @@ int main() {
         total_qi_key_ms += std::chrono::duration<double, std::milli>(t1 - t0).count();
     }
 
-    double avg_std_ms    = total_std_ms    / NUM_FRAMES;
-    double avg_pdq_ms    = total_pdq_ms    / NUM_FRAMES;
-    double avg_ska_ms    = total_ska_ms    / NUM_FRAMES;
-    double avg_qi_by_ms  = total_qi_by_ms  / NUM_FRAMES;
-    double avg_qi_key_ms = total_qi_key_ms / NUM_FRAMES;
+    double avg_std_ms     = total_std_ms     / NUM_FRAMES;
+    double avg_pdq_ms     = total_pdq_ms     / NUM_FRAMES;
+    double avg_ska_ms     = total_ska_ms     / NUM_FRAMES;
+    double avg_qi_by_ms   = total_qi_by_ms   / NUM_FRAMES;
+    double avg_r8_key_ms  = total_r8_key_ms  / NUM_FRAMES;
+    double avg_r11_key_ms = total_r11_key_ms / NUM_FRAMES;
+    double avg_r16_key_ms = total_r16_key_ms / NUM_FRAMES;
+    double avg_qi_key_ms  = total_qi_key_ms  / NUM_FRAMES;
 
     std::cout << std::left << std::setw(34) << "Sorting Method"
               << std::setw(20) << "Data Payload Size"
@@ -152,7 +182,7 @@ int main() {
     std::cout << std::left << std::setw(34) << "std::sort (Introsort)"
               << std::setw(20) << "28-Byte Structs (7MB)"
               << std::setw(20) << (std::to_string(avg_std_ms).substr(0, 5) + " ms")
-              << "1.00x\n";
+              << "1.00x (Baseline)\n";
 
     std::cout << std::left << std::setw(34) << "pdqsort (Rust std algorithm)"
               << std::setw(20) << "28-Byte Structs (7MB)"
@@ -169,13 +199,28 @@ int main() {
               << std::setw(20) << (std::to_string(avg_qi_by_ms).substr(0, 5) + " ms")
               << (std::to_string(avg_std_ms / avg_qi_by_ms).substr(0, 4) + "x FASTER\n");
 
+    std::cout << std::left << std::setw(34) << "Plain Radix-8 (Key Sorter)"
+              << std::setw(20) << "4-Byte Keys (1MB)"
+              << std::setw(20) << (std::to_string(avg_r8_key_ms).substr(0, 5) + " ms")
+              << (std::to_string(avg_std_ms / avg_r8_key_ms).substr(0, 4) + "x FASTER\n");
+
+    std::cout << std::left << std::setw(34) << "Plain Radix-11 (Key Sorter)"
+              << std::setw(20) << "4-Byte Keys (1MB)"
+              << std::setw(20) << (std::to_string(avg_r11_key_ms).substr(0, 5) + " ms")
+              << (std::to_string(avg_std_ms / avg_r11_key_ms).substr(0, 4) + "x FASTER\n");
+
+    std::cout << std::left << std::setw(34) << "Plain Radix-16 (Key Sorter)"
+              << std::setw(20) << "4-Byte Keys (1MB)"
+              << std::setw(20) << (std::to_string(avg_r16_key_ms).substr(0, 5) + " ms")
+              << (std::to_string(avg_std_ms / avg_r16_key_ms).substr(0, 4) + "x FASTER\n");
+
     std::cout << std::left << std::setw(34) << "qi::sort (Key Sorter)"
               << std::setw(20) << "4-Byte Keys (1MB)"
               << std::setw(20) << (std::to_string(avg_qi_key_ms).substr(0, 5) + " ms")
               << (std::to_string(avg_std_ms / avg_qi_key_ms).substr(0, 4) + "x FASTER\n");
 
     std::cout << "\n=========================================================================\n";
-    std::cout << "  SUCCESS: Struct vs Key Sorting Benchmark Complete!\n";
+    std::cout << "  SUCCESS: Struct vs Radix Variants Physics Benchmark Complete!\n";
     std::cout << "=========================================================================\n";
 
     return 0;
