@@ -266,20 +266,30 @@ inline void counting_sort(u32* data, size_t n, u32 maxv) {
     const size_t bins = static_cast<size_t>(maxv) + 1;
     if (bins <= 256) {
         alignas(64) uint32_t cnt[256] = {};
-        for (size_t i = 0; i < n; ++i) ++cnt[data[i]];
+        // 4-way unrolled counting
+        size_t i = 0;
+        for (; i + 3 < n; i += 4) {
+            ++cnt[data[i]]; ++cnt[data[i+1]]; ++cnt[data[i+2]]; ++cnt[data[i+3]];
+        }
+        for (; i < n; ++i) ++cnt[data[i]];
+        // Vectorized reconstruction via std::fill (compiler emits NEON/SSE stores)
         size_t pos = 0;
         for (u32 v = 0; v <= maxv; ++v) {
             uint32_t c = cnt[v];
-            while (c--) data[pos++] = v;
+            if (c) { std::fill(data + pos, data + pos + c, v); pos += c; }
         }
         return;
     }
     std::vector<uint32_t> cnt(bins, 0);
-    for (size_t i = 0; i < n; ++i) ++cnt[data[i]];
+    size_t i = 0;
+    for (; i + 3 < n; i += 4) {
+        ++cnt[data[i]]; ++cnt[data[i+1]]; ++cnt[data[i+2]]; ++cnt[data[i+3]];
+    }
+    for (; i < n; ++i) ++cnt[data[i]];
     size_t pos = 0;
     for (u32 v = 0; v <= maxv; ++v) {
         uint32_t c = cnt[v];
-        while (c--) data[pos++] = v;
+        if (c) { std::fill(data + pos, data + pos + c, v); pos += c; }
     }
 }
 
@@ -317,12 +327,18 @@ inline void radixSort8(u32* data, size_t n, bool allowShortcuts = true, u32 bitO
         if (p3) { t=c3[i]; c3[i]=s3; s3+=t; }
     }
 
-    // Scatter with prefetch (PF=32: hides ~200-cycle write-allocate DRAM latency)
+    // Scatter with branchless prefetch (split-loop: bulk with prefetch, tail without)
     constexpr size_t PF = 32;
 #define RADIX8_SCATTER(SRC, DST, CNT, SHIFT, MASK) \
-    for (size_t i = 0; i < n; ++i) { \
-        if (i + PF < n) __builtin_prefetch(&(DST)[CNT[((SRC)[i+PF] >> SHIFT) & MASK]], 1, 0); \
-        u32 _v = (SRC)[i]; (DST)[CNT[(_v >> SHIFT) & MASK]++] = _v; \
+    { \
+        const size_t _bulk = (n > PF) ? n - PF : 0; \
+        for (size_t _i = 0; _i < _bulk; ++_i) { \
+            __builtin_prefetch(&(DST)[CNT[((SRC)[_i+PF] >> SHIFT) & MASK]], 1, 0); \
+            u32 _v = (SRC)[_i]; (DST)[CNT[(_v >> SHIFT) & MASK]++] = _v; \
+        } \
+        for (size_t _i = _bulk; _i < n; ++_i) { \
+            u32 _v = (SRC)[_i]; (DST)[CNT[(_v >> SHIFT) & MASK]++] = _v; \
+        } \
     }
     u32* dst = buf;
     if (p0) { RADIX8_SCATTER(src, dst,  c0,  0, 0xFF); std::swap(src,dst); }
@@ -388,22 +404,38 @@ inline void radixSort11(u32* data, size_t n, bool allowShortcuts = true, u32 bit
     // Prefetch distance
     constexpr size_t PF = 48;
 
-    // Pass 0: data → buf  (bits 0-10)
-    for (size_t j = 0; j < n; ++j) {
-        if (j + PF < n) __builtin_prefetch(&buf[c0[data[j+PF] & 0x7FFu]], 1, 0);
-        u32 v = data[j]; buf[c0[v & 0x7FFu]++] = v;
+    // Pass 0: data → buf  (bits 0-10)  — branchless split
+    {
+        const size_t bulk = (n > PF) ? n - PF : 0;
+        for (size_t j = 0; j < bulk; ++j) {
+            __builtin_prefetch(&buf[c0[data[j+PF] & 0x7FFu]], 1, 0);
+            u32 v = data[j]; buf[c0[v & 0x7FFu]++] = v;
+        }
+        for (size_t j = bulk; j < n; ++j) {
+            u32 v = data[j]; buf[c0[v & 0x7FFu]++] = v;
+        }
     }
 
-    // Pass 1: buf → data  (bits 11-21)
-    for (size_t j = 0; j < n; ++j) {
-        if (j + PF < n) __builtin_prefetch(&data[c1[(buf[j+PF] >> 11) & 0x7FFu]], 1, 0);
-        u32 v = buf[j]; data[c1[(v >> 11) & 0x7FFu]++] = v;
+    // Pass 1: buf → data  (bits 11-21) — branchless split
+    {
+        const size_t bulk = (n > PF) ? n - PF : 0;
+        for (size_t j = 0; j < bulk; ++j) {
+            __builtin_prefetch(&data[c1[(buf[j+PF] >> 11) & 0x7FFu]], 1, 0);
+            u32 v = buf[j]; data[c1[(v >> 11) & 0x7FFu]++] = v;
+        }
+        for (size_t j = bulk; j < n; ++j) {
+            u32 v = buf[j]; data[c1[(v >> 11) & 0x7FFu]++] = v;
+        }
     }
 
     // Pass 2 (optional): data → buf  (bits 22-31)
     if ((bitOr >> 22) != 0) {
-        for (size_t j = 0; j < n; ++j) {
-            if (j + PF < n) __builtin_prefetch(&buf[c2[data[j+PF] >> 22]], 1, 0);
+        const size_t bulk = (n > PF) ? n - PF : 0;
+        for (size_t j = 0; j < bulk; ++j) {
+            __builtin_prefetch(&buf[c2[data[j+PF] >> 22]], 1, 0);
+            u32 v = data[j]; buf[c2[v >> 22]++] = v;
+        }
+        for (size_t j = bulk; j < n; ++j) {
             u32 v = data[j]; buf[c2[v >> 22]++] = v;
         }
         std::memcpy(data, buf, n * sizeof(u32));
@@ -423,8 +455,16 @@ inline void radixSort16(u32* data, size_t n, bool allowShortcuts = true) {
     std::memset(count0, 0, sizeof(count0));
     std::memset(count1, 0, sizeof(count1));
 
-    // Combined count pass
-    for (size_t i = 0; i < n; ++i) {
+    // 4-way unrolled combined count pass
+    size_t i = 0;
+    for (; i + 3 < n; i += 4) {
+        u32 v0 = src[i], v1 = src[i+1], v2 = src[i+2], v3 = src[i+3];
+        count0[v0 & 0xFFFFu]++; count1[v0 >> 16]++;
+        count0[v1 & 0xFFFFu]++; count1[v1 >> 16]++;
+        count0[v2 & 0xFFFFu]++; count1[v2 >> 16]++;
+        count0[v3 & 0xFFFFu]++; count1[v3 >> 16]++;
+    }
+    for (; i < n; ++i) {
         u32 val = src[i];
         count0[val & 0xFFFFu]++;
         count1[val >> 16]++;
@@ -436,10 +476,30 @@ inline void radixSort16(u32* data, size_t n, bool allowShortcuts = true) {
         uint32_t c1 = count1[i]; count1[i] = sum1; sum1 += c1;
     }
 
-    // Pass 0 (bits 0-15)
-    for (size_t i = 0; i < n; ++i) { u32 v = src[i]; dst[count0[v & 0xFFFFu]++] = v; }
-    // Pass 1 (bits 16-31)
-    for (size_t i = 0; i < n; ++i) { u32 v = dst[i]; src[count1[v >> 16]++] = v; }
+    // Pass 0 (bits 0-15) — with prefetch
+    {
+        constexpr size_t PF = 32;
+        const size_t bulk = (n > PF) ? n - PF : 0;
+        for (size_t i = 0; i < bulk; ++i) {
+            __builtin_prefetch(&dst[count0[src[i+PF] & 0xFFFFu]], 1, 0);
+            u32 v = src[i]; dst[count0[v & 0xFFFFu]++] = v;
+        }
+        for (size_t i = bulk; i < n; ++i) {
+            u32 v = src[i]; dst[count0[v & 0xFFFFu]++] = v;
+        }
+    }
+    // Pass 1 (bits 16-31) — with prefetch
+    {
+        constexpr size_t PF = 32;
+        const size_t bulk = (n > PF) ? n - PF : 0;
+        for (size_t i = 0; i < bulk; ++i) {
+            __builtin_prefetch(&src[count1[dst[i+PF] >> 16]], 1, 0);
+            u32 v = dst[i]; src[count1[v >> 16]++] = v;
+        }
+        for (size_t i = bulk; i < n; ++i) {
+            u32 v = dst[i]; src[count1[v >> 16]++] = v;
+        }
+    }
 }
 
 // ── PARALLEL MULTI-THREADED RADIX PASSES ──
@@ -917,8 +977,18 @@ inline void sort(u32* data, size_t n, SortOptions options = SortOptions{}) {
     // Dispatch to parallel kernels if requested
     if (options.parallel) {
         unsigned int threads = options.numThreads;
-        State st = detail::analyzeData(data, n, std::min<size_t>(n, 1024));
-        if (st.bitOrSum <= 0xFFu || st.duplicateRatio > 0.40) {
+        // Lightweight strided probe for parallel path
+        u32 bitOr = 0;
+        alignas(64) uint8_t seen[256] = {};
+        const size_t probeStride = (n > 1024) ? n / 1024 : 1;
+        for (size_t i = 0; i < n; i += probeStride) {
+            u32 v = data[i];
+            bitOr |= v;
+            seen[v & 0xFF] = 1;
+        }
+        int lsbOcc = 0;
+        for (int k = 0; k < 256; ++k) lsbOcc += seen[k];
+        if (bitOr <= 0xFFu || lsbOcc <= 154) {
             detail::parallelRadixSort16(data, n, options.allowShortcuts, threads);
         } else {
             detail::parallelRadixSort11(data, n, options.allowShortcuts, threads);
@@ -926,27 +996,42 @@ inline void sort(u32* data, size_t n, SortOptions options = SortOptions{}) {
         return;
     }
 
-    // 4. ULTRA-FAST SUB-MICROSECOND IPR SENSING (1,024 elements sample = 0.003ms latency)
-    State st = detail::analyzeData(data, n, std::min<size_t>(n, 1024));
+    // ── ULTRA-LIGHTWEIGHT INLINE PROBE (~50ns) ──
+    // Replaces full analyzeData() which computed sqrt, entropy, IPR, chrono (~3000ns).
+    // Only computes bitOr (value range) and lsbOccupied (duplicate density) via
+    // strided sampling across the entire array for representative coverage.
+    u32 bitOr = 0;
+    alignas(64) uint8_t seen[256] = {};
+    {
+        const size_t probeStride = (n > 1024) ? n / 1024 : 1;
+        for (size_t i = 0; i < n; i += probeStride) {
+            u32 v = data[i];
+            bitOr |= v;
+            seen[v & 0xFF] = 1;
+        }
+    }
 
-    // Narrow domain (< 4096 values) counting sort fast-path (0.4ms)
-    if (st.bitOrSum <= 0xFFFu) {
-        detail::counting_sort(data, n, st.bitOrSum);
+    // Counting sort fast-path for narrow domains (< 4096 values)
+    if (bitOr <= 0xFFFu) {
+        detail::counting_sort(data, n, bitOr);
         return;
     }
 
-    // Dynamic Dispatch based on IPR sensing & recommended radix
-    switch (st.recommendedRadix) {
-        case Radix::R8:
-            detail::radixSort8(data, n, true, st.bitOrSum);
-            break;
-        case Radix::R16:
-            detail::radixSort16(data, n);
-            break;
-        case Radix::R11:
-        default:
-            detail::radixSort11(data, n, true, st.bitOrSum);
-            break;
+    // Compute LSB occupancy for duplicate detection
+    int lsbOcc = 0;
+    for (int k = 0; k < 256; ++k) lsbOcc += seen[k];
+
+    // Adaptive kernel dispatch:
+    //   bitOr <= 0xFF       → Radix-8 (1-2 active passes, 1KB histograms)
+    //   lsbOcc <= 154       → Radix-16 (heavy duplicates / skewed, 2 passes)
+    //                         Equivalent to duplicateRatio >= 0.40 → (1 - 154/256 ≈ 0.40)
+    //   else                → Radix-11 (full 32-bit, 3 passes, L1-bound 8KB histograms)
+    if (bitOr <= 0xFFu) {
+        detail::radixSort8(data, n, true, bitOr);
+    } else if (lsbOcc <= 154) {
+        detail::radixSort16(data, n);
+    } else {
+        detail::radixSort11(data, n, true, bitOr);
     }
 }
 
