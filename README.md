@@ -64,7 +64,16 @@ int main() {
 
 ---
 
-## 🏆 Benchmark Scorecards
+## 🏆 Key Achievements & Hardware Benchmarks
+
+- ⚡ **All-Time Speed Record:** **`3.18 ms` for 1,000,000 keys (`314.7 MKeys/s`)** on single-core modern silicon.
+- 🚀 **6.4× FASTER than C++ `std::sort`** (`20.82 ms` $\to$ `3.18 ms` on 1M keys).
+- 🦀 **6.0× FASTER than Rust stdlib `pdqsort`** (`222.72 ms` $\to$ `36.02 ms` on 10M keys).
+- 🐍 **3.9× FASTER than NumPy `ndarray.sort()`** on contiguous arrays in Python.
+- 🎯 **34.2× FASTER on Clustered Duplicates (0–255)** (`142.0 ms` $\to$ `4.15 ms` on 10M keys via Adaptive Counting Sort).
+- ⏩ **36.1× FASTER on Pre-Sorted Data** (`158.1 ms` $\to$ `4.38 ms` on 10M keys via 1ns Monotonic Fast-Path).
+
+---
 
 ### 1. Official Best-of-3 Benchmark (`qi::apex` vs Radix vs `qi::sort` vs `std::sort`)
 > **Hardware:** Apple Silicon M1 Pro | **Compiler:** `clang++ -O3 -std=c++17` | **Runs:** Best of 3
