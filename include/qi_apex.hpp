@@ -5,7 +5,7 @@
 ========================================================================================
   qi::apex ULTIMATE: The Ultimate Adaptive Hardware-Aware Sorting Engine (C++17)
 ========================================================================================
-  Author: Jason Pandia
+  Author: Jason Pandian
   License: GPL-2.0
   Repository: https://github.com/PandiaJason/qi-sort
 

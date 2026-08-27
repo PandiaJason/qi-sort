@@ -29,7 +29,7 @@ setup(
     name='qi_sort',
     version='0.4.0',
     description='qi-sort & qi::apex: High-Performance Adaptive Sorting Engine',
-    author='Jason Pandia',
+    author='Jason Pandian',
     url='https://github.com/PandiaJason/qi-sort',
     py_modules=['qi_sort'],
     package_dir={'': 'bindings/python'},

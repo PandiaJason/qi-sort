@@ -281,9 +281,9 @@ qi-sort/
 Licensed under the **GNU General Public License v2.0** — see [LICENSE](LICENSE).
 
 ```bibtex
-@software{pandia2026qisort,
+@software{pandian2026qisort,
   title   = {qi-sort & qi::apex: High-Performance Adaptive Sorting Suite},
-  author  = {Pandia, Jason},
+  author  = {Pandian, Jason},
   year    = {2026},
   url     = {https://github.com/PandiaJason/qi-sort},
   license = {GPL-2.0}
@@ -292,5 +292,5 @@ Licensed under the **GNU General Public License v2.0** — see [LICENSE](LICENSE
 
 <div align="center">
 <br/>
-<sub>Maintained by Jason Pandia · Built with modern C++17, Go, Python & Java · Tested on Apple Silicon & Intel Xeon · GPL-2.0</sub>
+<sub>Maintained by Jason Pandian · Built with modern C++17, Go, Python & Java · Tested on Apple Silicon & Intel Xeon · GPL-2.0</sub>
 </div>

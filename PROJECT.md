@@ -177,9 +177,9 @@ All benchmarks conducted on Apple Silicon (M-Series, `clang++ -O3 -std=c++17`) a
 Licensed under the **GNU General Public License v2.0** (GPL-2.0).
 
 ```bibtex
-@software{pandia2026qisort,
-  title   = {qi-sort: High-Performance Adaptive Radix Sorting Engine},
-  author  = {Pandia, Jason},
+@software{pandian2026qisort,
+  title   = {qi-sort: Quick Index Adaptive Radix Sorting Engine},
+  author  = {Pandian, Jason},
   year    = {2026},
   url     = {https://github.com/PandiaJason/qi-sort},
   license = {GPL-2.0}
