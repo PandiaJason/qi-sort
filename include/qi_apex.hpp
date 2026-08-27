@@ -386,7 +386,7 @@ inline void sort(u32* data, size_t n) {
 inline void parallel_sort(u32* data, size_t n, unsigned int numThreads = 0) {
     if (n <= 1) return;
     if (numThreads == 0) numThreads = std::thread::hardware_concurrency();
-    if (numThreads < 2 || n < 100000) {
+    if (numThreads < 2 || n < 500000) {
         sort(data, n);
         return;
     }
