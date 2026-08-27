@@ -267,23 +267,29 @@ inline void radixSort11(u32* data, size_t n) {
 
     constexpr size_t PF = 48;
 
-    // Pass 0: data -> buf (bits 0-10) — 4-way unrolled prefetch
+    // Pass 0: data -> buf (bits 0-10) — 8-way unrolled prefetch
     {
-        const size_t bulk = (n > PF + 3) ? n - PF - 3 : 0;
+        const size_t bulk = (n > PF + 7) ? n - PF - 7 : 0;
         size_t j = 0;
-        for (; j < bulk; j += 4) {
+        for (; j < bulk; j += 8) {
             __builtin_prefetch(&buf[c0[data[j+PF]   & 0x7FFu]], 1, 0);
             __builtin_prefetch(&buf[c0[data[j+PF+1] & 0x7FFu]], 1, 0);
             __builtin_prefetch(&buf[c0[data[j+PF+2] & 0x7FFu]], 1, 0);
             __builtin_prefetch(&buf[c0[data[j+PF+3] & 0x7FFu]], 1, 0);
+            __builtin_prefetch(&buf[c0[data[j+PF+4] & 0x7FFu]], 1, 0);
+            __builtin_prefetch(&buf[c0[data[j+PF+5] & 0x7FFu]], 1, 0);
+            __builtin_prefetch(&buf[c0[data[j+PF+6] & 0x7FFu]], 1, 0);
+            __builtin_prefetch(&buf[c0[data[j+PF+7] & 0x7FFu]], 1, 0);
 
             u32 v0 = data[j],   v1 = data[j+1];
             u32 v2 = data[j+2], v3 = data[j+3];
+            u32 v4 = data[j+4], v5 = data[j+5];
+            u32 v6 = data[j+6], v7 = data[j+7];
 
-            buf[c0[v0 & 0x7FFu]++] = v0;
-            buf[c0[v1 & 0x7FFu]++] = v1;
-            buf[c0[v2 & 0x7FFu]++] = v2;
-            buf[c0[v3 & 0x7FFu]++] = v3;
+            buf[c0[v0 & 0x7FFu]++] = v0; buf[c0[v1 & 0x7FFu]++] = v1;
+            buf[c0[v2 & 0x7FFu]++] = v2; buf[c0[v3 & 0x7FFu]++] = v3;
+            buf[c0[v4 & 0x7FFu]++] = v4; buf[c0[v5 & 0x7FFu]++] = v5;
+            buf[c0[v6 & 0x7FFu]++] = v6; buf[c0[v7 & 0x7FFu]++] = v7;
         }
         for (; j < n; ++j) {
             u32 v = data[j];
@@ -291,23 +297,29 @@ inline void radixSort11(u32* data, size_t n) {
         }
     }
 
-    // Pass 1: buf -> data (bits 11-21) — 4-way unrolled prefetch
+    // Pass 1: buf -> data (bits 11-21) — 8-way unrolled prefetch
     {
-        const size_t bulk = (n > PF + 3) ? n - PF - 3 : 0;
+        const size_t bulk = (n > PF + 7) ? n - PF - 7 : 0;
         size_t j = 0;
-        for (; j < bulk; j += 4) {
+        for (; j < bulk; j += 8) {
             __builtin_prefetch(&data[c1[(buf[j+PF]   >> 11) & 0x7FFu]], 1, 0);
             __builtin_prefetch(&data[c1[(buf[j+PF+1] >> 11) & 0x7FFu]], 1, 0);
             __builtin_prefetch(&data[c1[(buf[j+PF+2] >> 11) & 0x7FFu]], 1, 0);
             __builtin_prefetch(&data[c1[(buf[j+PF+3] >> 11) & 0x7FFu]], 1, 0);
+            __builtin_prefetch(&data[c1[(buf[j+PF+4] >> 11) & 0x7FFu]], 1, 0);
+            __builtin_prefetch(&data[c1[(buf[j+PF+5] >> 11) & 0x7FFu]], 1, 0);
+            __builtin_prefetch(&data[c1[(buf[j+PF+6] >> 11) & 0x7FFu]], 1, 0);
+            __builtin_prefetch(&data[c1[(buf[j+PF+7] >> 11) & 0x7FFu]], 1, 0);
 
             u32 v0 = buf[j],   v1 = buf[j+1];
             u32 v2 = buf[j+2], v3 = buf[j+3];
+            u32 v4 = buf[j+4], v5 = buf[j+5];
+            u32 v6 = buf[j+6], v7 = buf[j+7];
 
-            data[c1[(v0 >> 11) & 0x7FFu]++] = v0;
-            data[c1[(v1 >> 11) & 0x7FFu]++] = v1;
-            data[c1[(v2 >> 11) & 0x7FFu]++] = v2;
-            data[c1[(v3 >> 11) & 0x7FFu]++] = v3;
+            data[c1[(v0 >> 11) & 0x7FFu]++] = v0; data[c1[(v1 >> 11) & 0x7FFu]++] = v1;
+            data[c1[(v2 >> 11) & 0x7FFu]++] = v2; data[c1[(v3 >> 11) & 0x7FFu]++] = v3;
+            data[c1[(v4 >> 11) & 0x7FFu]++] = v4; data[c1[(v5 >> 11) & 0x7FFu]++] = v5;
+            data[c1[(v6 >> 11) & 0x7FFu]++] = v6; data[c1[(v7 >> 11) & 0x7FFu]++] = v7;
         }
         for (; j < n; ++j) {
             u32 v = buf[j];
@@ -317,21 +329,27 @@ inline void radixSort11(u32* data, size_t n) {
 
     // Pass 2: data -> buf -> memcpy (bits 22-31) — skipped if all upper bits zero
     if (c2[0] < static_cast<uint32_t>(n)) {
-        const size_t bulk = (n > PF + 3) ? n - PF - 3 : 0;
+        const size_t bulk = (n > PF + 7) ? n - PF - 7 : 0;
         size_t j = 0;
-        for (; j < bulk; j += 4) {
+        for (; j < bulk; j += 8) {
             __builtin_prefetch(&buf[c2[data[j+PF]   >> 22]], 1, 0);
             __builtin_prefetch(&buf[c2[data[j+PF+1] >> 22]], 1, 0);
             __builtin_prefetch(&buf[c2[data[j+PF+2] >> 22]], 1, 0);
             __builtin_prefetch(&buf[c2[data[j+PF+3] >> 22]], 1, 0);
+            __builtin_prefetch(&buf[c2[data[j+PF+4] >> 22]], 1, 0);
+            __builtin_prefetch(&buf[c2[data[j+PF+5] >> 22]], 1, 0);
+            __builtin_prefetch(&buf[c2[data[j+PF+6] >> 22]], 1, 0);
+            __builtin_prefetch(&buf[c2[data[j+PF+7] >> 22]], 1, 0);
 
             u32 v0 = data[j],   v1 = data[j+1];
             u32 v2 = data[j+2], v3 = data[j+3];
+            u32 v4 = data[j+4], v5 = data[j+5];
+            u32 v6 = data[j+6], v7 = data[j+7];
 
-            buf[c2[v0 >> 22]++] = v0;
-            buf[c2[v1 >> 22]++] = v1;
-            buf[c2[v2 >> 22]++] = v2;
-            buf[c2[v3 >> 22]++] = v3;
+            buf[c2[v0 >> 22]++] = v0; buf[c2[v1 >> 22]++] = v1;
+            buf[c2[v2 >> 22]++] = v2; buf[c2[v3 >> 22]++] = v3;
+            buf[c2[v4 >> 22]++] = v4; buf[c2[v5 >> 22]++] = v5;
+            buf[c2[v6 >> 22]++] = v6; buf[c2[v7 >> 22]++] = v7;
         }
         for (; j < n; ++j) {
             u32 v = data[j];
