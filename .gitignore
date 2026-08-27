@@ -42,6 +42,10 @@ ultimate_production_benchmark
 verify
 verify_vqsort_head2head
 b_*
+bench_*
+challenge_bench
+debug_*
+test_*
 compare
 test_features
 real_data_benchmark
