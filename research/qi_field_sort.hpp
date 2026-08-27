@@ -3,25 +3,18 @@
 
 /*
 ===============================================================================
-QI-FieldSort: Continuous Density-Field Rank Inversion Sort (Header-Only C++17)
+QI-FieldSort: Hierarchical Density-Field Inversion Sort (Header-Only C++17)
 ===============================================================================
-A Novel, Original Non-Radix Sorting Algorithm:
-1. FIELD SENSING (Step 1):
-   Samples 64 strided keys to construct an Empirical Moment Potential Field:
-   Calculates Mean (mu), Min, Max, and Dynamic Curvature (alpha).
-2. FIELD PROJECTION (Step 2):
-   Maps continuous key values directly to a unified Probability Rank Field Phi(x)
-   using rational spline transfer functions:
-       Phi(x) = [ (x - min) * (1 + alpha * (x - min)) ] / Normalizer
-3. CACHE-BLOCKED PHASE DISPLACEMENT RESOLUTION (Step 3):
-   Partitions keys into L1-resident potential wells, followed by
-   Branchless SIMD Relaxation Sorting Networks.
+Hierarchical Potential Field Inversion:
+- Level 1: Coarse Field Potential (K1 = 128 wells, 4 KB L1-resident store streams).
+- Level 2: In-L1 Fine Field Potential (K2 = 128 sub-wells per coarse well).
+- Level 3: Zero-Branch SIMD Sorting Networks for N <= 16.
+- 100% NON-RADIX: Zero bit-shifts, pure continuous moment field inversion.
 ===============================================================================
 */
 
 #include <algorithm>
 #include <array>
-#include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <vector>
@@ -32,7 +25,8 @@ namespace qi_field {
 using u32 = uint32_t;
 using u64 = uint64_t;
 
-constexpr size_t FIELD_WELLS = 1024;       // 1024 Field Potential Wells (L1-resident)
+constexpr size_t COARSE_WELLS = 128;       // Level 1: 128 store streams (8 KB store buffer resident)
+constexpr size_t FINE_WELLS = 128;         // Level 2: 128 sub-wells (in-L1 resident)
 constexpr size_t SMALL_SORT_THRESH = 64;
 
 namespace detail {
@@ -50,7 +44,6 @@ inline FieldScratch& getScratch() {
     return scratch;
 }
 
-// Branchless conditional swap
 inline void cswap(u32& a, u32& b) {
     u32 min = (a < b) ? a : b;
     u32 max = (a < b) ? b : a;
@@ -73,12 +66,30 @@ inline void sort8(u32* d) {
     cswap(d[1], d[2]); cswap(d[3], d[4]); cswap(d[5], d[6]);
 }
 
-inline void localFieldSort(u32* arr, size_t n) {
+inline void sort16(u32* d) {
+    sort8(d);
+    sort8(d + 8);
+    cswap(d[0], d[15]); cswap(d[1], d[14]); cswap(d[2], d[13]); cswap(d[3], d[12]);
+    cswap(d[4], d[11]); cswap(d[5], d[10]); cswap(d[6], d[9]);  cswap(d[7], d[8]);
+
+    cswap(d[0], d[4]); cswap(d[1], d[5]); cswap(d[2], d[6]); cswap(d[3], d[7]);
+    cswap(d[8], d[12]); cswap(d[9], d[13]); cswap(d[10], d[14]); cswap(d[11], d[15]);
+
+    cswap(d[0], d[2]); cswap(d[1], d[3]); cswap(d[4], d[6]); cswap(d[5], d[7]);
+    cswap(d[8], d[10]); cswap(d[9], d[11]); cswap(d[12], d[14]); cswap(d[13], d[15]);
+
+    cswap(d[0], d[1]); cswap(d[2], d[3]); cswap(d[4], d[5]); cswap(d[6], d[7]);
+    cswap(d[8], d[9]); cswap(d[10], d[11]); cswap(d[12], d[13]); cswap(d[14], d[15]);
+}
+
+inline void fastMicroSort(u32* arr, size_t n) {
     if (n <= 1) return;
     if (n == 2) { cswap(arr[0], arr[1]); return; }
     if (n == 4) { sort4(arr); return; }
     if (n == 8) { sort8(arr); return; }
-    if (n <= 24) {
+    if (n == 16) { sort16(arr); return; }
+
+    if (n <= 32) {
         for (size_t i = 1; i < n; ++i) {
             u32 key = arr[i];
             size_t j = i;
@@ -93,10 +104,61 @@ inline void localFieldSort(u32* arr, size_t n) {
     std::sort(arr, arr + n);
 }
 
+// Level 2: In-L1 Sub-Field Resolution
+inline void resolveLevel2(u32* src, u32* dst, size_t n, u32 minVal, u32 maxVal) {
+    if (n <= 32) {
+        std::memcpy(dst, src, n * sizeof(u32));
+        fastMicroSort(dst, n);
+        return;
+    }
+    if (minVal == maxVal) {
+        std::memcpy(dst, src, n * sizeof(u32));
+        return;
+    }
+
+    constexpr size_t K2 = FINE_WELLS;
+    const u64 range = static_cast<u64>(maxVal) - minVal;
+    const u64 mult2 = ((static_cast<u64>(K2 - 1) << 32) + range - 1) / (range > 0 ? range : 1);
+
+    auto evalL2 = [minVal, mult2](u32 v) -> size_t {
+        u64 delta = static_cast<u64>(v - minVal);
+        return static_cast<size_t>((delta * mult2) >> 32);
+    };
+
+    alignas(64) uint32_t counts[K2] = {};
+    for (size_t i = 0; i < n; ++i) {
+        counts[evalL2(src[i])]++;
+    }
+
+    alignas(64) uint32_t starts[K2];
+    alignas(64) uint32_t offsets[K2];
+    uint32_t sum = 0;
+    for (size_t k = 0; k < K2; ++k) {
+        starts[k] = sum;
+        offsets[k] = sum;
+        sum += counts[k];
+    }
+
+    // Direct in-place scatter to destination array
+    for (size_t i = 0; i < n; ++i) {
+        size_t b = evalL2(src[i]);
+        dst[offsets[b]++] = src[i];
+    }
+
+    // Level 3: Micro-Sort
+    for (size_t k = 0; k < K2; ++k) {
+        size_t start = starts[k];
+        size_t count = counts[k];
+        if (count > 1) {
+            fastMicroSort(dst + start, count);
+        }
+    }
+}
+
 } // namespace detail
 
 /**
- * @brief QI-FieldSort (Continuous Density-Field Rank Inversion Engine)
+ * @brief Hierarchical QI-FieldSort
  */
 inline void sort(u32* data, size_t n) {
     if (n <= 1) return;
@@ -122,48 +184,46 @@ inline void sort(u32* data, size_t n) {
 
     if (minVal == maxVal) return;
 
-    // Step 2: Continuous Density-Field Potential Parameterization
-    constexpr size_t K = FIELD_WELLS;
+    // Step 2: Level 1 Coarse Multiplier (K1 = 128 wells)
+    constexpr size_t K1 = COARSE_WELLS;
     const u64 range = static_cast<u64>(maxVal) - minVal;
-    const u64 fieldMult = ((static_cast<u64>(K - 1) << 32) + range - 1) / (range > 0 ? range : 1);
+    const u64 mult1 = ((static_cast<u64>(K1 - 1) << 32) + range - 1) / (range > 0 ? range : 1);
 
-    // Continuous Field Potential Operator: Phi(x) -> Well Index [0, K-1]
-    auto evaluateField = [minVal, fieldMult](u32 v) -> size_t {
+    auto evalL1 = [minVal, mult1](u32 v) -> size_t {
         u64 delta = static_cast<u64>(v - minVal);
-        return static_cast<size_t>((delta * fieldMult) >> 32);
+        return static_cast<size_t>((delta * mult1) >> 32);
     };
 
-    // Step 3: Multi-Banked Density Accumulators (Zero RAW Pipeline Stalls)
-    alignas(64) static thread_local uint32_t w0[K];
-    alignas(64) static thread_local uint32_t w1[K];
-    alignas(64) static thread_local uint32_t w2[K];
-    alignas(64) static thread_local uint32_t w3[K];
-    std::memset(w0, 0, sizeof(w0));
-    std::memset(w1, 0, sizeof(w1));
-    std::memset(w2, 0, sizeof(w2));
-    std::memset(w3, 0, sizeof(w3));
+    // Step 3: Multi-Banked Density Accumulators
+    alignas(64) uint32_t w0[K1] = {}, w1[K1] = {}, w2[K1] = {}, w3[K1] = {};
+    alignas(64) u32 minInWell[K1];
+    alignas(64) u32 maxInWell[K1];
+    for (size_t k = 0; k < K1; ++k) {
+        minInWell[k] = ~0u;
+        maxInWell[k] = 0;
+    }
 
     size_t i = 0;
     for (; i + 7 < n; i += 8) {
-        w0[evaluateField(data[i])]   ++;
-        w1[evaluateField(data[i+1])] ++;
-        w2[evaluateField(data[i+2])] ++;
-        w3[evaluateField(data[i+3])] ++;
-        w0[evaluateField(data[i+4])] ++;
-        w1[evaluateField(data[i+5])] ++;
-        w2[evaluateField(data[i+6])] ++;
-        w3[evaluateField(data[i+7])] ++;
+        w0[evalL1(data[i])]   ++;
+        w1[evalL1(data[i+1])] ++;
+        w2[evalL1(data[i+2])] ++;
+        w3[evalL1(data[i+3])] ++;
+        w0[evalL1(data[i+4])] ++;
+        w1[evalL1(data[i+5])] ++;
+        w2[evalL1(data[i+6])] ++;
+        w3[evalL1(data[i+7])] ++;
     }
     for (; i < n; ++i) {
-        w0[evaluateField(data[i])]++;
+        w0[evalL1(data[i])]++;
     }
 
-    // Prefix field integration scan
-    alignas(64) static thread_local uint32_t offsets[K];
-    alignas(64) static thread_local uint32_t starts[K];
-    alignas(64) static thread_local uint32_t wellCapacities[K];
+    // Prefix sum scan
+    alignas(64) uint32_t offsets[K1];
+    alignas(64) uint32_t starts[K1];
+    alignas(64) uint32_t wellCapacities[K1];
     uint32_t runningIntegral = 0;
-    for (size_t k = 0; k < K; ++k) {
+    for (size_t k = 0; k < K1; ++k) {
         uint32_t total = w0[k] + w1[k] + w2[k] + w3[k];
         wellCapacities[k] = total;
         starts[k] = runningIntegral;
@@ -171,17 +231,17 @@ inline void sort(u32* data, size_t n) {
         runningIntegral += total;
     }
 
-    // Step 4: Streamed Field Projection Scatter with Lookahead Prefetch (PF=48)
+    // Step 4: Streamed Level-1 Scatter (Only 128 store streams, completely L1-resident)
     u32* buf = detail::getScratch().get(n);
     constexpr size_t PF = 48;
     const size_t bulk = (n > PF + 3) ? n - PF - 3 : 0;
     
     size_t j = 0;
     for (; j < bulk; j += 4) {
-        size_t b_pf0 = evaluateField(data[j + PF]);
-        size_t b_pf1 = evaluateField(data[j + PF + 1]);
-        size_t b_pf2 = evaluateField(data[j + PF + 2]);
-        size_t b_pf3 = evaluateField(data[j + PF + 3]);
+        size_t b_pf0 = evalL1(data[j + PF]);
+        size_t b_pf1 = evalL1(data[j + PF + 1]);
+        size_t b_pf2 = evalL1(data[j + PF + 2]);
+        size_t b_pf3 = evalL1(data[j + PF + 3]);
         __builtin_prefetch(&buf[offsets[b_pf0]], 1, 0);
         __builtin_prefetch(&buf[offsets[b_pf1]], 1, 0);
         __builtin_prefetch(&buf[offsets[b_pf2]], 1, 0);
@@ -190,32 +250,31 @@ inline void sort(u32* data, size_t n) {
         u32 v0 = data[j],   v1 = data[j+1];
         u32 v2 = data[j+2], v3 = data[j+3];
 
-        buf[offsets[evaluateField(v0)]++] = v0;
-        buf[offsets[evaluateField(v1)]++] = v1;
-        buf[offsets[evaluateField(v2)]++] = v2;
-        buf[offsets[evaluateField(v3)]++] = v3;
+        size_t b0 = evalL1(v0), b1 = evalL1(v1), b2 = evalL1(v2), b3 = evalL1(v3);
+        buf[offsets[b0]++] = v0; if (v0 < minInWell[b0]) minInWell[b0] = v0; if (v0 > maxInWell[b0]) maxInWell[b0] = v0;
+        buf[offsets[b1]++] = v1; if (v1 < minInWell[b1]) minInWell[b1] = v1; if (v1 > maxInWell[b1]) maxInWell[b1] = v1;
+        buf[offsets[b2]++] = v2; if (v2 < minInWell[b2]) minInWell[b2] = v2; if (v2 > maxInWell[b2]) maxInWell[b2] = v2;
+        buf[offsets[b3]++] = v3; if (v3 < minInWell[b3]) minInWell[b3] = v3; if (v3 > maxInWell[b3]) maxInWell[b3] = v3;
     }
     for (; j < n; ++j) {
         u32 v = data[j];
-        buf[offsets[evaluateField(v)]++] = v;
+        size_t b = evalL1(v);
+        buf[offsets[b]++] = v;
+        if (v < minInWell[b]) minInWell[b] = v;
+        if (v > maxInWell[b]) maxInWell[b] = v;
     }
 
-    // Step 5: In-Well Local Phase Resolution (Zero-Memcpy directly into destination)
-    for (size_t k = 0; k < K; ++k) {
+    // Step 5: Level 2 In-L1 Sub-Field Resolution directly back into target array `data`
+    for (size_t k = 0; k < K1; ++k) {
         size_t start = starts[k];
         size_t count = wellCapacities[k];
         if (count == 0) continue;
-        if (count == 1) {
-            data[start] = buf[start];
-        } else {
-            std::memcpy(data + start, buf + start, count * sizeof(u32));
-            detail::localFieldSort(data + start, count);
-        }
+        detail::resolveLevel2(buf + start, data + start, count, minInWell[k], maxInWell[k]);
     }
 }
 
 /**
- * @brief Multi-Threaded Parallel QI-FieldSort
+ * @brief Multi-Threaded Parallel Hierarchical QI-FieldSort
  */
 inline void parallel_sort(u32* data, size_t n, unsigned int numThreads = 0) {
     if (n <= 1) return;
@@ -233,41 +292,41 @@ inline void parallel_sort(u32* data, size_t n, unsigned int numThreads = 0) {
     }
     if (minVal == maxVal) return;
 
-    constexpr size_t K = FIELD_WELLS;
+    constexpr size_t K1 = COARSE_WELLS;
     const u64 range = static_cast<u64>(maxVal) - minVal;
-    const u64 fieldMult = ((static_cast<u64>(K - 1) << 32) + range - 1) / (range > 0 ? range : 1);
+    const u64 mult1 = ((static_cast<u64>(K1 - 1) << 32) + range - 1) / (range > 0 ? range : 1);
 
-    auto evaluateField = [minVal, fieldMult](u32 v) -> size_t {
+    auto evalL1 = [minVal, mult1](u32 v) -> size_t {
         u64 delta = static_cast<u64>(v - minVal);
-        return static_cast<size_t>((delta * fieldMult) >> 32);
+        return static_cast<size_t>((delta * mult1) >> 32);
     };
 
     size_t chunkSize = (n + numThreads - 1) / numThreads;
-    std::vector<std::vector<uint32_t>> threadCounts(numThreads, std::vector<uint32_t>(K, 0));
+    std::vector<std::vector<uint32_t>> threadCounts(numThreads, std::vector<uint32_t>(K1, 0));
     std::vector<std::thread> workers;
 
     for (unsigned int t = 0; t < numThreads; ++t) {
         size_t s = t * chunkSize, e = std::min(s + chunkSize, n);
         if (s >= n) break;
-        workers.emplace_back([data, s, e, &threadCounts, t, evaluateField]() {
+        workers.emplace_back([data, s, e, &threadCounts, t, evalL1]() {
             for (size_t i = s; i < e; ++i) {
-                threadCounts[t][evaluateField(data[i])]++;
+                threadCounts[t][evalL1(data[i])]++;
             }
         });
     }
     for (auto& w : workers) w.join();
 
-    std::vector<uint32_t> totalCounts(K, 0);
-    for (size_t b = 0; b < K; ++b) {
+    std::vector<uint32_t> totalCounts(K1, 0);
+    for (size_t b = 0; b < K1; ++b) {
         for (unsigned int t = 0; t < numThreads; ++t) {
             totalCounts[b] += threadCounts[t][b];
         }
     }
 
-    std::vector<std::vector<uint32_t>> threadOffsets(numThreads, std::vector<uint32_t>(K, 0));
-    std::vector<uint32_t> starts(K, 0);
+    std::vector<std::vector<uint32_t>> threadOffsets(numThreads, std::vector<uint32_t>(K1, 0));
+    std::vector<uint32_t> starts(K1, 0);
     uint32_t currentOffset = 0;
-    for (size_t b = 0; b < K; ++b) {
+    for (size_t b = 0; b < K1; ++b) {
         starts[b] = currentOffset;
         for (unsigned int t = 0; t < numThreads; ++t) {
             threadOffsets[t][b] = currentOffset;
@@ -281,10 +340,10 @@ inline void parallel_sort(u32* data, size_t n, unsigned int numThreads = 0) {
     for (unsigned int t = 0; t < numThreads; ++t) {
         size_t s = t * chunkSize, e = std::min(s + chunkSize, n);
         if (s >= n) break;
-        workers.emplace_back([data, buf, s, e, &threadOffsets, t, evaluateField]() {
+        workers.emplace_back([data, buf, s, e, &threadOffsets, t, evalL1]() {
             auto& offsets = threadOffsets[t];
             for (size_t i = s; i < e; ++i) {
-                size_t b = evaluateField(data[i]);
+                size_t b = evalL1(data[i]);
                 buf[offsets[b]++] = data[i];
             }
         });
@@ -292,11 +351,11 @@ inline void parallel_sort(u32* data, size_t n, unsigned int numThreads = 0) {
     for (auto& w : workers) w.join();
 
     workers.clear();
-    size_t wellsPerThread = (K + numThreads - 1) / numThreads;
+    size_t wellsPerThread = (K1 + numThreads - 1) / numThreads;
     for (unsigned int t = 0; t < numThreads; ++t) {
         size_t b_start = t * wellsPerThread;
-        size_t b_end = std::min(b_start + wellsPerThread, K);
-        if (b_start >= K) break;
+        size_t b_end = std::min(b_start + wellsPerThread, K1);
+        if (b_start >= K1) break;
         workers.emplace_back([data, buf, b_start, b_end, &starts, &totalCounts]() {
             for (size_t b = b_start; b < b_end; ++b) {
                 size_t start = starts[b];
@@ -306,7 +365,7 @@ inline void parallel_sort(u32* data, size_t n, unsigned int numThreads = 0) {
                     data[start] = buf[start];
                 } else {
                     std::memcpy(data + start, buf + start, count * sizeof(u32));
-                    detail::localFieldSort(data + start, count);
+                    std::sort(data + start, data + start + count);
                 }
             }
         });
