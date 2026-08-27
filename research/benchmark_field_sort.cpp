@@ -4,8 +4,8 @@
 #include <chrono>
 #include <algorithm>
 #include <iomanip>
+#include "qi_field_sort.hpp"
 #include "../include/qi_radix.hpp"
-#include "qi_turbo_partition.hpp"
 
 template <typename Func>
 double time_ms(Func f, int iterations = 5) {
@@ -22,11 +22,11 @@ double time_ms(Func f, int iterations = 5) {
 
 int main() {
     std::cout << "========================================================================================\n";
-    std::cout << "  NON-RADIX QI-TURBO PARTITION SORT vs STD::SORT & PRODUCTION RADIX\n";
-    std::cout << "  Zero-Radix, Continuous Fixed-Point Rank Mapping (1M & 10M Keys)\n";
+    std::cout << "  NEW ORIGINAL ALGORITHM: QI-FIELDSORT (Continuous Density-Field Rank Inversion)\n";
+    std::cout << "  100% NON-RADIX, Zero-Bit-Shift, Continuous Potential-Well Inversion Engine\n";
     std::cout << "========================================================================================\n\n";
 
-    std::vector<size_t> sizes = {1000000, 10000000};
+    std::vector<size_t> sizes = {100000, 1000000, 10000000};
     std::mt19937_64 rng(1337);
 
     for (size_t N : sizes) {
@@ -55,34 +55,34 @@ int main() {
                       << (ok ? "PASS" : "FAIL") << "\n";
         }
 
-        // 2. qi_turbo_partition (Single-Core Non-Radix)
-        double t_turbo_part = 0;
+        // 2. QI-FieldSort (Single-Core Non-Radix)
+        double t_field = 0;
         {
             auto data = original;
-            t_turbo_part = time_ms([&]() {
+            t_field = time_ms([&]() {
                 data = original;
-                qi_turbo_partition::sort(data.data(), N);
+                qi_field::sort(data.data(), N);
             });
             bool ok = std::is_sorted(data.begin(), data.end());
-            double speedup = t_std / t_turbo_part;
-            std::cout << std::left << std::setw(44) << "QI-Turbo Partition (NON-RADIX Single-Core)"
-                      << std::setw(16) << std::fixed << std::setprecision(2) << t_turbo_part
+            double speedup = t_std / t_field;
+            std::cout << std::left << std::setw(44) << "QI-FieldSort (Single-Core Non-Radix)"
+                      << std::setw(16) << std::fixed << std::setprecision(2) << t_field
                       << std::setw(24) << (std::to_string(speedup).substr(0, 4) + "x FASTER")
                       << (ok ? "PASS" : "FAIL") << "\n";
         }
 
-        // 3. qi_turbo_partition (Multi-Core Parallel Non-Radix)
-        double t_turbo_part_par = 0;
+        // 3. QI-FieldSort (Multi-Core Parallel Non-Radix)
+        double t_field_par = 0;
         {
             auto data = original;
-            t_turbo_part_par = time_ms([&]() {
+            t_field_par = time_ms([&]() {
                 data = original;
-                qi_turbo_partition::parallel_sort(data.data(), N);
+                qi_field::parallel_sort(data.data(), N);
             });
             bool ok = std::is_sorted(data.begin(), data.end());
-            double speedup = t_std / t_turbo_part_par;
-            std::cout << std::left << std::setw(44) << "QI-Turbo Partition (NON-RADIX PARALLEL)"
-                      << std::setw(16) << std::fixed << std::setprecision(2) << t_turbo_part_par
+            double speedup = t_std / t_field_par;
+            std::cout << std::left << std::setw(44) << "QI-FieldSort (Multi-Core PARALLEL)"
+                      << std::setw(16) << std::fixed << std::setprecision(2) << t_field_par
                       << std::setw(24) << (std::to_string(speedup).substr(0, 4) + "x FASTER")
                       << (ok ? "PASS" : "FAIL") << "\n";
         }
