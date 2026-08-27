@@ -22,7 +22,7 @@ double time_ms(Func f, int iterations = 5) {
 
 int main() {
     std::cout << "========================================================================================\n";
-    std::cout << "  OFFICIAL BENCHMARK: QI-APEX vs QI::SORT vs STD::SORT\n";
+    std::cout << "  OFFICIAL BENCHMARK: qi::apex vs qi::sort vs std::sort\n";
     std::cout << "========================================================================================\n\n";
 
     std::vector<size_t> sizes = {100000, 1000000, 10000000};
@@ -69,31 +69,31 @@ int main() {
                       << (ok ? "PASS" : "FAIL") << "\n";
         }
 
-        // 3. QI-APEX (Single-Core)
+        // 3. qi::apex (Single-Core)
         {
             auto data = original;
             double t = time_ms([&]() {
                 data = original;
-                qi_apex::sort(data.data(), N);
+                qi::apex::sort(data.data(), N);
             });
             bool ok = std::is_sorted(data.begin(), data.end());
             double mkeys = (N / 1e6) / (t / 1000.0);
-            std::cout << std::left << std::setw(44) << "QI-APEX (Single-Core)"
+            std::cout << std::left << std::setw(44) << "qi::apex (Single-Core)"
                       << std::setw(16) << std::fixed << std::setprecision(2) << t
                       << std::setw(24) << mkeys
                       << (ok ? "PASS" : "FAIL") << "\n";
         }
 
-        // 4. QI-APEX (Multi-Core Parallel)
+        // 4. qi::apex (Multi-Core Parallel)
         {
             auto data = original;
             double t = time_ms([&]() {
                 data = original;
-                qi_apex::parallel_sort(data.data(), N);
+                qi::apex::parallel_sort(data.data(), N);
             });
             bool ok = std::is_sorted(data.begin(), data.end());
             double mkeys = (N / 1e6) / (t / 1000.0);
-            std::cout << std::left << std::setw(44) << "QI-APEX (Multi-Core PARALLEL)"
+            std::cout << std::left << std::setw(44) << "qi::apex (Multi-Core PARALLEL)"
                       << std::setw(16) << std::fixed << std::setprecision(2) << t
                       << std::setw(24) << mkeys
                       << (ok ? "PASS" : "FAIL") << "\n";
@@ -113,11 +113,11 @@ int main() {
         auto data = original;
         double t = time_ms([&]() {
             data = original;
-            qi_apex::sort(data.data(), N);
+            qi::apex::sort(data.data(), N);
         });
         bool ok = std::is_sorted(data.begin(), data.end());
         double mkeys = (N / 1e6) / (t / 1000.0);
-        std::cout << std::left << std::setw(44) << "QI-APEX (Single-Core)"
+        std::cout << std::left << std::setw(44) << "qi::apex (Single-Core)"
                   << std::setw(16) << std::fixed << std::setprecision(2) << t
                   << std::setw(24) << mkeys
                   << (ok ? "PASS" : "FAIL") << "\n\n";
@@ -133,11 +133,11 @@ int main() {
         auto data = original;
         double t = time_ms([&]() {
             data = original;
-            qi_apex::sort(data.data(), N);
+            qi::apex::sort(data.data(), N);
         });
         bool ok = std::is_sorted(data.begin(), data.end());
         double mkeys = (N / 1e6) / (t / 1000.0);
-        std::cout << std::left << std::setw(44) << "QI-APEX (Single-Core)"
+        std::cout << std::left << std::setw(44) << "qi::apex (Single-Core)"
                   << std::setw(16) << std::fixed << std::setprecision(2) << t
                   << std::setw(24) << mkeys
                   << (ok ? "PASS" : "FAIL") << "\n\n";

@@ -3,13 +3,13 @@
 
 /*
 ===============================================================================
-QI-APEX: The Quick Index Apex Adaptive Sorting Engine (Header-Only C++17)
+qi-apex: The Quick Index Apex Adaptive Sorting Engine (Header-Only C++17)
 ===============================================================================
 Author: Jason Pandia
 License: GPL-2.0
 Repository: https://github.com/PandiaJason/qi-sort
 
-THE FIVE ARCHITECTURAL PILLARS OF QI-APEX:
+THE FIVE ARCHITECTURAL PILLARS OF qi::apex:
 1. 50ns Strided Distribution Probe:
    Pure-integer bitwise OR + LSB histogram occupancy. Zero floating-point math.
 2. 4-Banked Dual-Histogram Counting (32 KB L1-Data Cache Resident):
@@ -34,7 +34,8 @@ THE FIVE ARCHITECTURAL PILLARS OF QI-APEX:
 #include <vector>
 #include <thread>
 
-namespace qi_apex {
+namespace qi {
+namespace apex {
 
 using u32 = uint32_t;
 using u64 = uint64_t;
@@ -365,7 +366,7 @@ inline void radixSort16(u32* data, size_t n) {
 } // namespace detail
 
 /**
- * @brief QI-APEX: Adaptive Single-Core Sorting Engine
+ * @brief qi::apex Single-Core Sorting Engine
  */
 inline void sort(u32* data, size_t n) {
     if (n <= 1) return;
@@ -409,7 +410,7 @@ inline void sort(u32* data, size_t n) {
 }
 
 /**
- * @brief QI-APEX: Lock-Free Multi-Threaded Parallel Sorting Engine
+ * @brief qi::apex Lock-Free Multi-Threaded Parallel Sorting Engine
  */
 inline void parallel_sort(u32* data, size_t n, unsigned int numThreads = 0) {
     if (n <= 1) return;
@@ -524,11 +525,15 @@ inline void parallel_sort(std::vector<u32>& vec, unsigned int numThreads = 0) {
     parallel_sort(vec.data(), vec.size(), numThreads);
 }
 
-} // namespace qi_apex
+} // namespace apex
+} // namespace qi
 
-// Compatibility alias for qi_beast
+// Global aliases for convenience
+namespace qi_apex {
+    using namespace qi::apex;
+}
 namespace qi_beast {
-    using namespace qi_apex;
+    using namespace qi::apex;
 }
 
 #endif // QI_APEX_HPP
