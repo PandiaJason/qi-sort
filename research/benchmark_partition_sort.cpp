@@ -7,24 +7,6 @@
 #include "qi_partition_sort.hpp"
 #include "../include/qi_radix.hpp"
 
-// Classic QuickSort for baseline
-void classicQuickSort(uint32_t* arr, int low, int high) {
-    if (low < high) {
-        uint32_t pivot = arr[high];
-        int i = (low - 1);
-        for (int j = low; j <= high - 1; j++) {
-            if (arr[j] < pivot) {
-                i++;
-                std::swap(arr[i], arr[j]);
-            }
-        }
-        std::swap(arr[i + 1], arr[high]);
-        int pi = i + 1;
-        classicQuickSort(arr, low, pi - 1);
-        classicQuickSort(arr, pi + 1, high);
-    }
-}
-
 template <typename Func>
 double time_ms(Func f, int iterations = 3) {
     double best = 1e9;
@@ -41,22 +23,20 @@ double time_ms(Func f, int iterations = 3) {
 int main() {
     std::cout << "========================================================================================\n";
     std::cout << "  EXPERIMENTAL NON-RADIX ALGORITHM EVALUATION: QI PARTITION SORT\n";
-    std::cout << "  Mechanism: Empirical Quantile Sampling + L1-Resident Multiway Partitioning\n";
+    std::cout << "  Single-Core & Multi-Core Micro-Bucket Rank Partitioning vs std::sort & Radix Engine\n";
     std::cout << "========================================================================================\n\n";
 
-    std::vector<size_t> sizes = {100000, 1000000, 5000000};
-
+    std::vector<size_t> sizes = {100000, 1000000, 10000000};
     std::mt19937_64 rng(42);
 
     for (size_t N : sizes) {
         std::cout << "--- Dataset Size: N = " << N << " Elements ---\n";
-        std::cout << std::left << std::setw(32) << "Algorithm"
+        std::cout << std::left << std::setw(36) << "Algorithm / Engine"
                   << std::setw(16) << "Time (ms)"
                   << std::setw(24) << "Speedup vs std::sort"
                   << "Verification\n";
         std::cout << "----------------------------------------------------------------------------------------\n";
 
-        // Generate datasets
         std::vector<uint32_t> original(N);
         for (size_t i = 0; i < N; ++i) original[i] = rng();
 
@@ -69,27 +49,13 @@ int main() {
                 std::sort(data.data(), data.data() + N);
             });
             bool ok = std::is_sorted(data.begin(), data.end());
-            std::cout << std::left << std::setw(32) << "std::sort (Introsort)"
+            std::cout << std::left << std::setw(36) << "std::sort (Introsort Baseline)"
                       << std::setw(16) << std::fixed << std::setprecision(2) << t_std
                       << std::setw(24) << "1.00x (Baseline)"
                       << (ok ? "PASS" : "FAIL") << "\n";
         }
 
-        // 2. Classic Quicksort (only on smaller sizes)
-        if (N <= 1000000) {
-            auto data = original;
-            double t_qs = time_ms([&]() {
-                data = original;
-                classicQuickSort(data.data(), 0, N - 1);
-            });
-            bool ok = std::is_sorted(data.begin(), data.end());
-            std::cout << std::left << std::setw(32) << "Classic Hoare Quicksort"
-                      << std::setw(16) << std::fixed << std::setprecision(2) << t_qs
-                      << std::setw(24) << (std::to_string(t_std / t_qs).substr(0, 4) + "x")
-                      << (ok ? "PASS" : "FAIL") << "\n";
-        }
-
-        // 3. QI Partition Sort (Experimental Non-Radix)
+        // 2. QI Partition Sort (Single-Core Non-Radix)
         double t_qpart = 0;
         {
             auto data = original;
@@ -99,23 +65,55 @@ int main() {
             });
             bool ok = std::is_sorted(data.begin(), data.end());
             double speedup = t_std / t_qpart;
-            std::cout << std::left << std::setw(32) << "QI Partition Sort (Non-Radix)"
+            std::cout << std::left << std::setw(36) << "QI Partition Sort (Single-Core)"
                       << std::setw(16) << std::fixed << std::setprecision(2) << t_qpart
                       << std::setw(24) << (std::to_string(speedup).substr(0, 4) + "x FASTER")
                       << (ok ? "PASS" : "FAIL") << "\n";
         }
 
-        // 4. Reference: qi::sort (Production Adaptive Radix baseline)
+        // 3. QI Partition Sort (Multi-Core Parallel Non-Radix)
+        double t_qpart_par = 0;
         {
             auto data = original;
-            double t_qradix = time_ms([&]() {
+            t_qpart_par = time_ms([&]() {
+                data = original;
+                qi_partition::parallel_sort(data.data(), N);
+            });
+            bool ok = std::is_sorted(data.begin(), data.end());
+            double speedup = t_std / t_qpart_par;
+            std::cout << std::left << std::setw(36) << "QI Partition Sort (Multi-Core PARALLEL)"
+                      << std::setw(16) << std::fixed << std::setprecision(2) << t_qpart_par
+                      << std::setw(24) << (std::to_string(speedup).substr(0, 4) + "x FASTER")
+                      << (ok ? "PASS" : "FAIL") << "\n";
+        }
+
+        // 4. qi::sort (Single-Core Production Radix Engine)
+        double t_qradix = 0;
+        {
+            auto data = original;
+            t_qradix = time_ms([&]() {
                 data = original;
                 qi::sort(data.data(), N);
             });
             bool ok = std::is_sorted(data.begin(), data.end());
             double speedup = t_std / t_qradix;
-            std::cout << std::left << std::setw(32) << "qi::sort (Radix Engine Ref)"
+            std::cout << std::left << std::setw(36) << "qi::sort (Single-Core Radix)"
                       << std::setw(16) << std::fixed << std::setprecision(2) << t_qradix
+                      << std::setw(24) << (std::to_string(speedup).substr(0, 4) + "x FASTER")
+                      << (ok ? "PASS" : "FAIL") << "\n";
+        }
+
+        // 5. qi::parallel_sort (Multi-Core Production Radix Engine)
+        {
+            auto data = original;
+            double t_qradix_par = time_ms([&]() {
+                data = original;
+                qi::parallel_sort(data.data(), N);
+            });
+            bool ok = std::is_sorted(data.begin(), data.end());
+            double speedup = t_std / t_qradix_par;
+            std::cout << std::left << std::setw(36) << "qi::parallel_sort (Multi-Core Radix)"
+                      << std::setw(16) << std::fixed << std::setprecision(2) << t_qradix_par
                       << std::setw(24) << (std::to_string(speedup).substr(0, 4) + "x FASTER")
                       << (ok ? "PASS" : "FAIL") << "\n";
         }
