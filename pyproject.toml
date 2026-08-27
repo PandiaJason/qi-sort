@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "qi_sort"
-version = "0.3.61"
-description = "Quantum-Inspired Adaptive Radix Sorting Engine"
+version = "0.4.0"
+description = "qi-sort & qi::apex: High-Performance Adaptive Sorting Suite for Modern Hardware"
 readme = "README.md"
 requires-python = ">=3.8"
 license = { text = "GPL-2.0-only" }
@@ -19,7 +19,7 @@ classifiers = [
     "Programming Language :: C++",
     "Programming Language :: Python :: 3"
 ]
-keywords = ["sorting", "radix-sort", "c++17", "high-performance", "adaptive-sort"]
+keywords = ["sorting", "radix-sort", "c++17", "high-performance", "adaptive-sort", "apex", "simd"]
 
 [project.urls]
 Homepage = "https://github.com/PandiaJason/qi-sort"

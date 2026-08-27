@@ -18,7 +18,7 @@ ext_modules = [
     Extension(
         'qi_sort_cpp',
         sources=['src/qi_python_module.cpp', 'src/qi_c_api.cpp'],
-        include_dirs=['.', 'include'],
+        include_dirs=['.', 'include', 'research'],
         extra_compile_args=cpp_args,
         extra_link_args=link_args,
         language='c++',
@@ -27,8 +27,8 @@ ext_modules = [
 
 setup(
     name='qi_sort',
-    version='0.3.61',
-    description='Quantum-Inspired Adaptive Radix Sorting Engine',
+    version='0.4.0',
+    description='qi-sort & qi::apex: High-Performance Adaptive Sorting Engine',
     author='Jason Pandia',
     url='https://github.com/PandiaJason/qi-sort',
     py_modules=['qi_sort'],

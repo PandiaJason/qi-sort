@@ -1,5 +1,6 @@
 include include/*.hpp
 include include/*.h
+include research/*.hpp
 include src/*.cpp
 include src/*.h
 include LICENSE
