@@ -1,5 +1,6 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
+#include "../include/qi_apex.hpp"
 #include "../include/qi_radix.hpp"
 
 // ── sort_ptr(ptr_int, n) ────────────────────────────────────────────────────
@@ -13,7 +14,7 @@ static PyObject* py_qi_sort_ptr(PyObject* self, PyObject* args) {
     if (n > 1) {
         uint32_t* ptr = reinterpret_cast<uint32_t*>(static_cast<uintptr_t>(ptr_int));
         Py_BEGIN_ALLOW_THREADS
-        qi::sort(ptr, static_cast<size_t>(n));
+        qi::apex::sort(ptr, static_cast<size_t>(n));
         Py_END_ALLOW_THREADS
     }
     Py_RETURN_NONE;

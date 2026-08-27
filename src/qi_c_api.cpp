@@ -1,24 +1,88 @@
-#if __has_include("qi_c_api.h")
-#include "qi_c_api.h"
-#include "qi_radix.hpp"
-#else
 #include "../include/qi_c_api.h"
+#include "../include/qi_apex.hpp"
 #include "../include/qi_radix.hpp"
-#endif
+#include "../research/qi_field_sort.hpp"
+#include "../research/qi_wave_sort.hpp"
+#include "../research/qi_partition_sort.hpp"
+#include "../research/qi_turbo_radix.hpp"
 
 extern "C" {
 
+// ── 1. FLAGSHIP: qi::apex ULTIMATE ──
+void qi_apex_sort_u32(uint32_t* data, size_t n) {
+    if (!data || n <= 1) return;
+    qi::apex::sort(data, n);
+}
+
+void qi_apex_parallel_sort_u32(uint32_t* data, size_t n, unsigned int num_threads) {
+    if (!data || n <= 1) return;
+    qi::apex::parallel_sort(data, n, num_threads);
+}
+
+void qi_apex_sort_i32(int32_t* data, size_t n) {
+    if (!data || n <= 1) return;
+    qi::apex::sort(data, n);
+}
+
+void qi_apex_sort_f32(float* data, size_t n) {
+    if (!data || n <= 1) return;
+    qi::apex::sort(data, n);
+}
+
+void qi_apex_sort_u64(uint64_t* data, size_t n) {
+    if (!data || n <= 1) return;
+    qi::apex::sort(data, n);
+}
+
+void qi_apex_sort_i64(int64_t* data, size_t n) {
+    if (!data || n <= 1) return;
+    qi::apex::sort(data, n);
+}
+
+void qi_apex_sort_f64(double* data, size_t n) {
+    if (!data || n <= 1) return;
+    qi::apex::sort(data, n);
+}
+
+void qi_sort_pairs_u32_u64(uint32_t* keys, uint64_t* payloads, size_t n) {
+    if (!keys || !payloads || n <= 1) return;
+    qi::apex::sort_pairs(keys, payloads, n);
+}
+
+// ── 2. BASELINE: qi::sort ──
 void qi_sort_u32(uint32_t* data, size_t n) {
     if (!data || n <= 1) return;
-    qi::sort(data, n);
+    qi::apex::sort(data, n); // defaults to fastest apex engine
 }
 
 void qi_parallel_sort_u32(uint32_t* data, size_t n, unsigned int num_threads) {
     if (!data || n <= 1) return;
-    qi::SortOptions opts;
-    opts.parallel = true;
-    opts.numThreads = num_threads;
-    qi::sort(data, n, opts);
+    qi::apex::parallel_sort(data, n, num_threads);
+}
+
+void qi_sort_i32(int32_t* data, size_t n) {
+    if (!data || n <= 1) return;
+    qi::apex::sort(data, n);
+}
+
+void qi_sort_f32(float* data, size_t n) {
+    if (!data || n <= 1) return;
+    qi::apex::sort(data, n);
+}
+
+void qi_sort_u64(uint64_t* data, size_t n) {
+    if (!data || n <= 1) return;
+    qi::apex::sort(data, n);
+}
+
+void qi_sort_i64(int64_t* data, size_t n) {
+    if (!data || n <= 1) return;
+    qi::apex::sort(data, n);
+}
+
+void qi_sort_f64(double* data, size_t n) {
+    if (!data || n <= 1) return;
+    qi::apex::sort(data, n);
 }
 
 void qi_radix8_u32(uint32_t* data, size_t n, int allow_shortcuts) {
@@ -33,35 +97,31 @@ void qi_radix11_u32(uint32_t* data, size_t n, int allow_shortcuts) {
 
 void qi_radix16_u32(uint32_t* data, size_t n, int allow_shortcuts) {
     if (!data || n <= 1) return;
-    qi::detail::radixSort16(data, n, allow_shortcuts != 0);
+    qi::detail::radixSort16(data, n);
 }
 
-void qi_sort_i32(int32_t* data, size_t n) {
+// ── 3. RESEARCH & NOVEL MODELS ──
+void qi_field_sort_u32(uint32_t* data, size_t n) {
     if (!data || n <= 1) return;
-    qi::sort(data, n);
+    qi_field::sort(data, n);
 }
 
-void qi_parallel_sort_i32(int32_t* data, size_t n, unsigned int num_threads) {
+void qi_wave_sort_u32(uint32_t* data, size_t n) {
     if (!data || n <= 1) return;
-    qi::SortOptions opts;
-    opts.parallel = true;
-    opts.numThreads = num_threads;
-    qi::sort(data, n, opts);
+    qi_wave::sort(data, n);
 }
 
-void qi_sort_f32(float* data, size_t n) {
+void qi_partition_sort_u32(uint32_t* data, size_t n) {
     if (!data || n <= 1) return;
-    qi::sort(data, n);
+    qi_partition::sort(data, n);
 }
 
-void qi_parallel_sort_f32(float* data, size_t n, unsigned int num_threads) {
+void qi_turbo_sort_u32(uint32_t* data, size_t n) {
     if (!data || n <= 1) return;
-    qi::SortOptions opts;
-    opts.parallel = true;
-    opts.numThreads = num_threads;
-    qi::sort(data, n, opts);
+    qi_turbo::sort(data, n);
 }
 
+// ── 4. SENSING PROFILER ──
 void qi_analyze_u32(
     const uint32_t* data,
     size_t n,
@@ -78,28 +138,4 @@ void qi_analyze_u32(
     if (out_duplicate_ratio) *out_duplicate_ratio = state.duplicateRatio;
 }
 
-void qi_sort_u64(uint64_t* data, size_t n) {
-    if (!data || n <= 1) return;
-    qi::sort(data, n);
-}
-
-void qi_parallel_sort_u64(uint64_t* data, size_t n, unsigned int num_threads) {
-    if (!data || n <= 1) return;
-    qi::SortOptions opts;
-    opts.parallel = true;
-    opts.numThreads = num_threads;
-    qi::sort(reinterpret_cast<uint32_t*>(data), n * 2, opts);
-}
-
-void qi_sort_i64(int64_t* data, size_t n) {
-    if (!data || n <= 1) return;
-    qi::sort(data, n);
-}
-
-void qi_sort_f64(double* data, size_t n) {
-    if (!data || n <= 1) return;
-    qi::sort(data, n);
-}
-
-}
-
+} // extern "C"
