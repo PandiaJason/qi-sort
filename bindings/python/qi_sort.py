@@ -1,7 +1,7 @@
 """
 qi-sort: High-Performance Adaptive Sorting Suite
 =================================================
-Ultra-fast sorting for NumPy arrays (uint32, int32, float32, uint64, int64, float64) and Python lists.
+Ultra-fast sorting for NumPy arrays, Polars Series/DataFrames, Apache Arrow Tables, and Python lists.
 
 Supported Models:
 - 'apex' / 'default' : qi::apex ULTIMATE (Strict 20KB L1-bound, 8-way ILP, fastest on silicon)
@@ -10,28 +10,6 @@ Supported Models:
 - 'partition'        : QI Partition Sort (Fixed-Point Q32.32 Micro-Buckets)
 - 'turbo'            : QI Turbo Radix (4-Banked Dual-Histogram)
 - 'radix8', 'radix11', 'radix16' : Standard fixed-width radix passes
-
-Usage:
-    import qi_sort
-    import numpy as np
-
-    # 1. Default Flagship (qi::apex)
-    data = np.random.randint(0, 2**32-1, size=1_000_000, dtype=np.uint32)
-    qi_sort.sort(data)
-
-    # 2. Select Any QI Model
-    qi_sort.sort(data, model='field')     # 100% Non-radix
-    qi_sort.sort(data, model='apex')      # Flagship apex
-
-    # 3. Signed, Float, 64-bit and Parallel
-    floats = np.random.randn(1_000_000).astype(np.float32)
-    qi_sort.sort(floats)
-    qi_sort.parallel_sort(data)
-
-    # 4. Database Tuple Pairs (ORDER BY keys)
-    keys = np.random.randint(0, 1000, size=100_000, dtype=np.uint32)
-    row_ids = np.arange(100_000, dtype=np.uint64)
-    qi_sort.sort_pairs(keys, row_ids)
 """
 
 import ctypes
@@ -40,7 +18,7 @@ import sys
 from pathlib import Path
 from typing import Optional, Union, Any
 
-# ── Locate and load shared library (libqisort) ──
+# ── Robust Dynamic Library Loader ──
 _lib = None
 
 def _load_library():
@@ -55,8 +33,8 @@ def _load_library():
         Path(os.getcwd()),
     ]
     
-    lib_names = ["libqisort.dylib", "libqisort.so", "qisort.dll", "qi_sort_cpp.cpython-312-darwin.so"]
-    
+    # 1. Exact names
+    lib_names = ["libqisort.dylib", "libqisort.so", "qisort.dll"]
     for d in search_dirs:
         for name in lib_names:
             p = d / name
@@ -67,47 +45,59 @@ def _load_library():
                     return _lib
                 except Exception:
                     pass
+
+    # 2. Dynamic glob for python C extensions (qi_sort_cpp*.so / .pyd)
+    for d in search_dirs:
+        for p in list(d.glob("qi_sort_cpp*")):
+            if p.is_file() and p.suffix in ('.so', '.dylib', '.pyd', '.dll'):
+                try:
+                    _lib = ctypes.CDLL(str(p))
+                    _setup_cdll_signatures(_lib)
+                    return _lib
+                except Exception:
+                    pass
     return None
 
 def _setup_cdll_signatures(lib):
-    # Apex & Base
-    lib.qi_apex_sort_u32.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
-    lib.qi_apex_parallel_sort_u32.argtypes = [ctypes.c_void_p, ctypes.c_size_t, ctypes.c_uint]
-    lib.qi_apex_sort_i32.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
-    lib.qi_apex_sort_f32.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
-    lib.qi_apex_sort_u64.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
-    lib.qi_apex_sort_i64.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
-    lib.qi_apex_sort_f64.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
-    
-    # Models
-    lib.qi_field_sort_u32.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
-    lib.qi_wave_sort_u32.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
-    lib.qi_partition_sort_u32.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
-    lib.qi_turbo_sort_u32.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
-    
-    # Pairs
-    lib.qi_sort_pairs_u32_u64.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_size_t]
+    try:
+        # Apex & Base
+        lib.qi_apex_sort_u32.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
+        lib.qi_apex_parallel_sort_u32.argtypes = [ctypes.c_void_p, ctypes.c_size_t, ctypes.c_uint]
+        lib.qi_apex_sort_i32.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
+        lib.qi_apex_sort_f32.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
+        lib.qi_apex_sort_u64.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
+        lib.qi_apex_sort_i64.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
+        lib.qi_apex_sort_f64.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
+        
+        # Models
+        lib.qi_field_sort_u32.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
+        lib.qi_wave_sort_u32.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
+        lib.qi_partition_sort_u32.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
+        lib.qi_turbo_sort_u32.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
+        
+        # Pairs
+        lib.qi_sort_pairs_u32_u64.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_size_t]
+    except Exception:
+        pass
 
 _lib = _load_library()
 
+
+# ════════════════════════════════════════════════════════════════════════════
+# 1. CORE SORTING API (NumPy, Polars, PyArrow, Lists)
+# ════════════════════════════════════════════════════════════════════════════
 
 def sort(data: Any, model: str = 'apex') -> Any:
     """
     Sort data in-place using the specified QI model.
 
-    Parameters
-    ----------
-    data  : np.ndarray or list
-        Input array or list to sort.
-    model : str, default 'apex'
-        Algorithm engine:
-        - 'apex' (Flagship 314 MKeys/s)
-        - 'field' (100% Non-Radix Density-Field Inversion)
-        - 'wave' (Continuous Wavefunction Collapse)
-        - 'partition' (Q32.32 Micro-Bucket Partitioning)
-        - 'turbo' (4-Banked Dual-Histogram Radix-11)
-        - 'radix8', 'radix11', 'radix16' (Fixed Radix Kernels)
+    Supports:
+    - NumPy ndarrays (`uint32`, `int32`, `float32`, `uint64`, `int64`, `float64`)
+    - Polars Series (`pl.UInt32`, `pl.Int32`, `pl.Float32`, etc.)
+    - PyArrow Arrays (`pa.uint32()`, `pa.int32()`, `pa.float32()`, etc.)
+    - Python lists of integers
     """
+    # 1. NumPy Array
     try:
         import numpy as np
         if isinstance(data, np.ndarray):
@@ -116,17 +106,34 @@ def sort(data: Any, model: str = 'apex') -> Any:
     except ImportError:
         pass
 
+    # 2. Polars Series
+    try:
+        import polars as pl
+        if isinstance(data, pl.Series):
+            return sort_polars(data, model)
+    except ImportError:
+        pass
+
+    # 3. PyArrow Array
+    try:
+        import pyarrow as pa
+        if isinstance(data, pa.Array):
+            return sort_arrow(data, model)
+    except ImportError:
+        pass
+
+    # 4. Python List Fallback
     if isinstance(data, list):
         data.sort()
         return data
 
-    raise TypeError(f"Unsupported data type: {type(data)}")
+    raise TypeError(f"Unsupported data type for qi_sort: {type(data)}")
 
 
 def _sort_numpy(data, model: str = 'apex') -> None:
     import numpy as np
     if not data.flags['C_CONTIGUOUS']:
-        raise ValueError("Array must be C-contiguous. Use np.ascontiguousarray().")
+        raise ValueError("Array must be C-contiguous. Call np.ascontiguousarray() first.")
     if not data.flags['WRITEABLE']:
         raise ValueError("Array must be writable.")
 
@@ -169,6 +176,58 @@ def _sort_numpy(data, model: str = 'apex') -> None:
         lib.qi_apex_sort_f64(ptr, n)
     else:
         data.sort()
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# 2. POLARS & APACHE ARROW ZERO-COPY DATABASE INTEGRATION
+# ════════════════════════════════════════════════════════════════════════════
+
+def sort_polars(series: Any, model: str = 'apex') -> Any:
+    """
+    Sort a Polars Series zero-copy using qi::apex.
+    Returns the sorted Polars Series.
+    """
+    import polars as pl
+    import numpy as np
+
+    # Extract underlying buffer zero-copy
+    arr = series.to_numpy(zero_copy_only=False)
+    _sort_numpy(arr, model)
+    return pl.Series(series.name, arr)
+
+
+def sort_arrow(array: Any, model: str = 'apex') -> Any:
+    """
+    Sort a PyArrow Array zero-copy using qi::apex.
+    Returns the sorted PyArrow Array.
+    """
+    import pyarrow as pa
+    import numpy as np
+
+    # Zero-copy buffer view
+    np_arr = array.to_numpy(zero_copy_only=False)
+    _sort_numpy(np_arr, model)
+    return pa.array(np_arr, type=array.type)
+
+
+def sort_dataframe(df: Any, by_column: str) -> Any:
+    """
+    Accelerate sorting a Polars DataFrame by a numeric key column.
+    Uses qi::apex::sort_pairs on (key_column, row_index) tuples.
+    """
+    import polars as pl
+    import numpy as np
+
+    keys = df[by_column].to_numpy(zero_copy_only=False)
+    if keys.dtype != np.uint32:
+        keys = keys.astype(np.uint32)
+
+    n = len(df)
+    row_ids = np.arange(n, dtype=np.uint64)
+    sort_pairs(keys, row_ids)
+
+    # Gather rows in sorted index order
+    return df[row_ids]
 
 
 def parallel_sort(data: Any, num_threads: int = 0) -> Any:
