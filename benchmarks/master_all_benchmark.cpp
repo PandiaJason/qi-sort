@@ -34,53 +34,49 @@ double time_ms(Func f, int iterations = 3) {
 void runBenchmarkRow(const string& testName, vector<u32>& original) {
     const size_t N = original.size();
     
-    // 1. std::sort
+    // Single-Threaded Competitors (1T)
     auto d_std = original;
     double t_std = time_ms([&]() { d_std = original; std::sort(d_std.begin(), d_std.end()); });
     assert(is_sorted(d_std.begin(), d_std.end()));
 
-    // 2. pdqsort
     auto d_pdq = original;
     double t_pdq = time_ms([&]() { d_pdq = original; pdqsort(d_pdq.begin(), d_pdq.end()); });
     assert(is_sorted(d_pdq.begin(), d_pdq.end()));
 
-    // 3. spreadsort
     auto d_spread = original;
     double t_spread = time_ms([&]() { d_spread = original; boost_compat::spreadsort(d_spread.begin(), d_spread.end()); });
     assert(is_sorted(d_spread.begin(), d_spread.end()));
 
-    // 4. qi::sort
     auto d_qi = original;
     double t_qi = time_ms([&]() { d_qi = original; qi::sort(d_qi.data(), N); });
     assert(is_sorted(d_qi.begin(), d_qi.end()));
 
-    // 5. qi::apex (Single-Core)
     auto d_apex = original;
     double t_apex = time_ms([&]() { d_apex = original; qi::apex::sort(d_apex.data(), N); });
     assert(is_sorted(d_apex.begin(), d_apex.end()));
 
-    // 6. qi::apex (Parallel)
+    // Multi-Threaded Competitor (MT)
     auto d_par = original;
     double t_par = time_ms([&]() { d_par = original; qi::apex::parallel_sort(d_par.data(), N); });
     assert(is_sorted(d_par.begin(), d_par.end()));
 
-    // Find best
-    double best_time = min({t_std, t_pdq, t_spread, t_qi, t_apex, t_par});
-    string winner = "";
-    if (best_time == t_par) winner = "apex (Parallel)";
-    else if (best_time == t_apex) winner = "qi::apex (Single)";
-    else if (best_time == t_qi) winner = "qi::sort";
-    else if (best_time == t_pdq) winner = "pdqsort";
-    else winner = "spreadsort";
+    // 1T Winner among tested sorters
+    double best_1t = min({t_std, t_pdq, t_spread, t_qi, t_apex});
+    string winner_1t = "";
+    if (best_1t == t_apex) winner_1t = "qi::apex (1T)";
+    else if (best_1t == t_qi) winner_1t = "qi::sort (1T)";
+    else if (best_1t == t_pdq) winner_1t = "pdqsort (1T)";
+    else if (best_1t == t_std) winner_1t = "std::sort (1T)";
+    else winner_1t = "spreadsort (1T)";
 
-    cout << left << setw(32) << testName
-         << setw(12) << fixed << setprecision(2) << t_std
-         << setw(12) << t_pdq
-         << setw(12) << t_spread
-         << setw(12) << t_qi
-         << setw(12) << t_apex
-         << setw(12) << t_par
-         << setw(18) << winner << "\n";
+    cout << left << setw(30) << testName
+         << setw(11) << fixed << setprecision(2) << t_std
+         << setw(11) << t_pdq
+         << setw(11) << t_spread
+         << setw(11) << t_qi
+         << setw(11) << t_apex
+         << setw(16) << winner_1t
+         << setw(12) << t_par << "\n";
 }
 
 int main() {
@@ -98,14 +94,14 @@ int main() {
     cout << "========================================================================================================================\n";
     cout << "  SCALE: N = 1,000,000 KEYS (4 MB RAM)\n";
     cout << "========================================================================================================================\n";
-    cout << left << setw(32) << "Workload Distribution"
-         << setw(12) << "std::sort"
-         << setw(12) << "pdqsort"
-         << setw(12) << "spread"
-         << setw(12) << "qi::sort"
-         << setw(12) << "qi::apex"
-         << setw(12) << "apex (Par)"
-         << setw(18) << "Winner\n";
+    cout << left << setw(30) << "Workload Distribution"
+         << setw(11) << "std::sort"
+         << setw(11) << "pdqsort"
+         << setw(11) << "spread"
+         << setw(11) << "qi::sort"
+         << setw(11) << "qi::apex"
+         << setw(16) << "Winner (1T)"
+         << setw(12) << "apex (Par MT)\n";
     cout << "------------------------------------------------------------------------------------------------------------------------\n";
 
     const size_t N1M = 1000000;
@@ -158,14 +154,14 @@ int main() {
     cout << "========================================================================================================================\n";
     cout << "  SCALE: N = 10,000,000 KEYS (40 MB RAM)\n";
     cout << "========================================================================================================================\n";
-    cout << left << setw(32) << "Workload Distribution"
-         << setw(12) << "std::sort"
-         << setw(12) << "pdqsort"
-         << setw(12) << "spread"
-         << setw(12) << "qi::sort"
-         << setw(12) << "qi::apex"
-         << setw(12) << "apex (Par)"
-         << setw(18) << "Winner\n";
+    cout << left << setw(30) << "Workload Distribution"
+         << setw(11) << "std::sort"
+         << setw(11) << "pdqsort"
+         << setw(11) << "spread"
+         << setw(11) << "qi::sort"
+         << setw(11) << "qi::apex"
+         << setw(16) << "Winner (1T)"
+         << setw(12) << "apex (Par MT)\n";
     cout << "------------------------------------------------------------------------------------------------------------------------\n";
 
     const size_t N10M = 10000000;
