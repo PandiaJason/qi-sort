@@ -2,12 +2,12 @@
 
 <img src="https://img.shields.io/badge/qi--sort-blueviolet?style=for-the-badge&labelColor=0d1117" alt="qi-sort" height="48"/>
 
-# `qi-sort`, `qi::apex` & `qi::hyperfield`
+# `qi-sort` & `qi::apex`
 ### Ultra-High-Performance Hardware-Aware Sorting Suite for Modern Computing
 
 <p align="center">
   A <b>zero-dependency, single-header</b> C++17 sorting suite with <b>Go, Python, and Java</b> bindings.<br/>
-  Featuring <b><code>qi::apex</code></b> (Strict 20 KB L1-Bound LSD Radix), <b><code>qi::hyperfield</code></b> (Shifted Dynamic-Window Sorter), and <b><code>qi::sort</code></b> (50ns Adaptive Router)<br/>
+  Featuring <b><code>qi::apex</code></b> (Strict 20 KB L1-Bound LSD Radix & Shifted Counting Engine)<br/>
   delivering <b>6.4× speedup over <code>std::sort</code></b> and up to <b>3,095 MKeys/s</b> on real-world datasets.
 </p>
 

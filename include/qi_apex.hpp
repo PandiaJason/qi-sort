@@ -175,6 +175,36 @@ inline void countingSort(u32* data, size_t n, u32 maxv) {
     }
 }
 
+// ── TIER 1.5: Shifted Dynamic-Window Counting Sort (Range <= 65536) ──
+inline void shiftedCountingSort(u32* data, size_t n, u32 min_val, u32 range) {
+    alignas(64) static thread_local uint32_t counts[65536];
+    std::memset(counts, 0, range * sizeof(uint32_t));
+
+    for (size_t i = 0; i + 7 < n; i += 8) {
+        counts[data[i]   - min_val]++;
+        counts[data[i+1] - min_val]++;
+        counts[data[i+2] - min_val]++;
+        counts[data[i+3] - min_val]++;
+        counts[data[i+4] - min_val]++;
+        counts[data[i+5] - min_val]++;
+        counts[data[i+6] - min_val]++;
+        counts[data[i+7] - min_val]++;
+    }
+    for (size_t i = (n / 8) * 8; i < n; ++i) {
+        counts[data[i] - min_val]++;
+    }
+
+    size_t idx = 0;
+    for (size_t offset = 0; offset < range; ++offset) {
+        uint32_t cnt = counts[offset];
+        if (cnt > 0) {
+            u32 val = min_val + static_cast<u32>(offset);
+            for (size_t k = 0; k < cnt; ++k) data[idx + k] = val;
+            idx += cnt;
+        }
+    }
+}
+
 // ── TIER 2: Compact Radix-8 (Values <= 65535, 1-2 Passes) ──
 inline void radixSort8(u32* data, size_t n, u32 bitOr) {
     u32* buf = getScratch().get32(n);
