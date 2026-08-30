@@ -1,172 +1,163 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 580" width="100%" height="100%">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 560" width="100%" height="100%">
   <defs>
-    <!-- Shadow for Card -->
-    <filter id="cardShadow" x="-5%" y="-5%" width="110%" height="110%">
-      <feDropShadow dx="0" dy="4" stdDeviation="12" flood-color="#000000" flood-opacity="0.04"/>
-    </filter>
-    <filter id="limeGlow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#D2F831" flood-opacity="0.3"/>
+    <!-- Glowing Drop Shadow for Neon Lime -->
+    <filter id="neonGlow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#D2F831" flood-opacity="0.4"/>
     </filter>
 
     <style>
-      .canvas-bg { fill: #F8F9FA; }
-      .card-bg { fill: #FFFFFF; stroke: #ECEFF1; stroke-width: 1.2; }
-      .chart-box { fill: #FAFAFA; stroke: #E2E8F0; stroke-width: 1.2; }
-      .title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 19px; font-weight: 700; fill: #0F172A; text-anchor: middle; letter-spacing: -0.3px; }
-      .subtitle { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 12px; fill: #64748B; text-anchor: middle; }
-      .axis-title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 13.5px; fill: #334155; font-weight: 600; text-anchor: middle; }
-      .y-label { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 12.5px; fill: #1E293B; font-weight: 600; text-anchor: end; }
-      .x-label { font-family: "SF Mono", Monaco, Menlo, Consolas, monospace; font-size: 12px; fill: #64748B; text-anchor: middle; }
-      .tick { stroke: #CBD5E1; stroke-width: 1.2; }
-      .grid { stroke: #F1F5F9; stroke-dasharray: 3,3; stroke-width: 1; }
-      .legend-box { fill: #FFFFFF; stroke: #E2E8F0; stroke-width: 1.2; rx: 8px; }
-      .legend-text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 11.5px; fill: #1E293B; font-weight: 600; }
-      .bar-apex { fill: #D2F831; stroke: #18181B; stroke-width: 0.8; }
-      .bar-qisort { fill: #E8F8B6; stroke: #18181B; stroke-width: 0.8; }
-      .bar-ska { fill: #94A3B8; stroke: #18181B; stroke-width: 0.8; }
-      .bar-pdq { fill: #334155; stroke: #18181B; stroke-width: 0.8; }
-      .bar-std { fill: #0F172A; stroke: #18181B; stroke-width: 0.8; }
+      .bg { fill: #000000; }
+      .chart-box { fill: #000000; stroke: #FFFFFF; stroke-width: 1.5; }
+      .title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 20px; font-weight: 700; fill: #FFFFFF; text-anchor: middle; letter-spacing: -0.2px; }
+      .axis-title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 14px; fill: #FFFFFF; font-weight: 600; text-anchor: middle; }
+      .y-label { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 13px; fill: #FFFFFF; font-weight: 600; text-anchor: end; }
+      .x-label { font-family: "SF Mono", Monaco, Menlo, Consolas, monospace; font-size: 12px; fill: #FFFFFF; text-anchor: middle; font-weight: 500; }
+      .tick { stroke: #FFFFFF; stroke-width: 1.5; }
+      .grid { stroke: #27272A; stroke-dasharray: 2,2; stroke-width: 1; }
+      .legend-box { fill: #000000; stroke: #FFFFFF; stroke-width: 1.2; }
+      .legend-text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 11.5px; fill: #FFFFFF; font-weight: 600; }
+      .bar-apex { fill: #D2F831; stroke: #FFFFFF; stroke-width: 0.6; }
+      .bar-qisort { fill: #E8F8B6; stroke: #FFFFFF; stroke-width: 0.6; }
+      .bar-ska { fill: #A1A1AA; stroke: #FFFFFF; stroke-width: 0.6; }
+      .bar-pdq { fill: #52525B; stroke: #FFFFFF; stroke-width: 0.6; }
+      .bar-std { fill: #27272A; stroke: #FFFFFF; stroke-width: 0.6; }
     </style>
   </defs>
 
-  <!-- Outer Canvas -->
-  <rect width="800" height="580" class="canvas-bg"/>
-
-  <!-- Inner Pure White Card Container -->
-  <rect x="20" y="16" width="760" height="548" rx="16" class="card-bg" filter="url(#cardShadow)"/>
+  <!-- Full Pure Black Background -->
+  <rect width="760" height="560" class="bg"/>
 
   <!-- Logo Pill Accent from image -->
-  <g transform="translate(45, 34)">
-    <circle cx="12" cy="12" r="11" fill="#E8F8B6" opacity="0.8"/>
-    <circle cx="12" cy="12" r="7" fill="#D2F831" filter="url(#limeGlow)"/>
+  <g transform="translate(40, 24)">
+    <circle cx="12" cy="12" r="11" fill="#E8F8B6" opacity="0.5"/>
+    <circle cx="12" cy="12" r="7" fill="#D2F831" filter="url(#neonGlow)"/>
   </g>
 
-  <!-- Title & Subtitle -->
-  <text x="400" y="38" class="title">Sorting 10⁶ elements</text>
-  <text x="400" y="55" class="subtitle">Lower is better · Cycles per element (Apple Silicon M1 @ 3.2GHz)</text>
+  <!-- Title -->
+  <text x="440" y="36" class="title">Sorting 10⁶ elements</text>
 
-  <!-- Chart Bounding Box (x: 185 to 740, y: 75 to 495) -->
-  <rect x="185" y="75" width="555" height="420" rx="6" class="chart-box"/>
+  <!-- Chart Bounding Box (x: 180 to 720, y: 55 to 485) -->
+  <rect x="180" y="55" width="540" height="430" class="chart-box"/>
 
   <!-- Vertical Ticks & Grid Lines (0, 50, 100, 150, 200, 250, 300, 350) -->
-  <!-- scale = 555 / 350 = 1.5857 px per cycle -->
-  <line x1="185" y1="75" x2="185" y2="500" class="tick"/>
-  <text x="185" y="518" class="x-label">0</text>
+  <!-- scale = 540 / 350 = 1.5428 px per cycle -->
+  <line x1="180" y1="55" x2="180" y2="492" class="tick"/>
+  <text x="180" y="508" class="x-label">0</text>
 
-  <line x1="264" y1="75" x2="264" y2="495" class="grid"/>
-  <line x1="264" y1="495" x2="264" y2="500" class="tick"/>
-  <text x="264" y="518" class="x-label">50</text>
+  <line x1="257" y1="55" x2="257" y2="485" class="grid"/>
+  <line x1="257" y1="485" x2="257" y2="492" class="tick"/>
+  <text x="257" y="508" class="x-label">50</text>
 
-  <line x1="343" y1="75" x2="343" y2="495" class="grid"/>
-  <line x1="343" y1="495" x2="343" y2="500" class="tick"/>
-  <text x="343" y="518" class="x-label">100</text>
+  <line x1="334" y1="55" x2="334" y2="485" class="grid"/>
+  <line x1="334" y1="485" x2="334" y2="492" class="tick"/>
+  <text x="334" y="508" class="x-label">100</text>
 
-  <line x1="422" y1="75" x2="422" y2="495" class="grid"/>
-  <line x1="422" y1="495" x2="422" y2="500" class="tick"/>
-  <text x="422" y="518" class="x-label">150</text>
+  <line x1="411" y1="55" x2="411" y2="485" class="grid"/>
+  <line x1="411" y1="485" x2="411" y2="492" class="tick"/>
+  <text x="411" y="508" class="x-label">150</text>
 
-  <line x1="501" y1="75" x2="501" y2="495" class="grid"/>
-  <line x1="501" y1="495" x2="501" y2="500" class="tick"/>
-  <text x="501" y="518" class="x-label">200</text>
+  <line x1="488" y1="55" x2="488" y2="485" class="grid"/>
+  <line x1="488" y1="485" x2="488" y2="492" class="tick"/>
+  <text x="488" y="508" class="x-label">200</text>
 
-  <line x1="580" y1="75" x2="580" y2="495" class="grid"/>
-  <line x1="580" y1="495" x2="580" y2="500" class="tick"/>
-  <text x="580" y="518" class="x-label">250</text>
+  <line x1="565" y1="55" x2="565" y2="485" class="grid"/>
+  <line x1="565" y1="485" x2="565" y2="492" class="tick"/>
+  <text x="565" y="508" class="x-label">250</text>
 
-  <line x1="660" y1="75" x2="660" y2="495" class="grid"/>
-  <line x1="660" y1="495" x2="660" y2="500" class="tick"/>
-  <text x="660" y="518" class="x-label">300</text>
+  <line x1="642" y1="55" x2="642" y2="485" class="grid"/>
+  <line x1="642" y1="485" x2="642" y2="492" class="tick"/>
+  <text x="642" y="508" class="x-label">300</text>
 
-  <line x1="740" y1="75" x2="740" y2="500" class="tick"/>
-  <text x="740" y="518" class="x-label">350</text>
+  <line x1="720" y1="55" x2="720" y2="492" class="tick"/>
+  <text x="720" y="508" class="x-label">350</text>
 
   <!-- X-Axis Label -->
-  <text x="460" y="545" class="axis-title">Cycles per element</text>
+  <text x="450" y="534" class="axis-title">Cycles per element (Apple Silicon M1 @ 3.2GHz)</text>
 
-  <!-- ==================== ROWS (Height per row = 52.5px) ==================== -->
+  <!-- ==================== ROWS (Height per row = 53.75px) ==================== -->
 
-  <!-- ROW 1: Shuffled (y: 82) -->
-  <text x="175" y="108" class="y-label">Shuffled</text>
-  <rect x="185" y="82" width="49" height="7" rx="1.5" class="bar-apex"/>
-  <rect x="185" y="90" width="54" height="7" rx="1.5" class="bar-qisort"/>
-  <rect x="185" y="98" width="105" height="7" rx="1.5" class="bar-ska"/>
-  <rect x="185" y="106" width="179" height="7" rx="1.5" class="bar-pdq"/>
-  <rect x="185" y="114" width="344" height="7" rx="1.5" class="bar-std"/>
+  <!-- ROW 1: Shuffled (y: 62) -->
+  <text x="170" y="88" class="y-label">Shuffled</text>
+  <rect x="180" y="62" width="48" height="7" rx="1" class="bar-apex"/>
+  <rect x="180" y="70" width="53" height="7" rx="1" class="bar-qisort"/>
+  <rect x="180" y="78" width="102" height="7" rx="1" class="bar-ska"/>
+  <rect x="180" y="86" width="174" height="7" rx="1" class="bar-pdq"/>
+  <rect x="180" y="94" width="335" height="7" rx="1" class="bar-std"/>
 
-  <!-- ROW 2: Shuffled (16 values) (y: 134) -->
-  <text x="175" y="160" class="y-label">Shuffled (16 values)</text>
-  <rect x="185" y="134" width="19" height="7" rx="1.5" class="bar-apex"/>
-  <rect x="185" y="142" width="19" height="7" rx="1.5" class="bar-qisort"/>
-  <rect x="185" y="150" width="75" height="7" rx="1.5" class="bar-ska"/>
-  <rect x="185" y="158" width="35" height="7" rx="1.5" class="bar-pdq"/>
-  <rect x="185" y="166" width="197" height="7" rx="1.5" class="bar-std"/>
+  <!-- ROW 2: Shuffled (16 values) (y: 116) -->
+  <text x="170" y="142" class="y-label">Shuffled (16 values)</text>
+  <rect x="180" y="116" width="18" height="7" rx="1" class="bar-apex"/>
+  <rect x="180" y="124" width="18" height="7" rx="1" class="bar-qisort"/>
+  <rect x="180" y="132" width="73" height="7" rx="1" class="bar-ska"/>
+  <rect x="180" y="140" width="34" height="7" rx="1" class="bar-pdq"/>
+  <rect x="180" y="148" width="192" height="7" rx="1" class="bar-std"/>
 
-  <!-- ROW 3: All equal (y: 186) -->
-  <text x="175" y="212" class="y-label">All equal</text>
-  <rect x="185" y="186" width="7" height="7" rx="1.5" class="bar-apex"/>
-  <rect x="185" y="194" width="7" height="7" rx="1.5" class="bar-qisort"/>
-  <rect x="185" y="202" width="73" height="7" rx="1.5" class="bar-ska"/>
-  <rect x="185" y="210" width="10" height="7" rx="1.5" class="bar-pdq"/>
-  <rect x="185" y="218" width="60" height="7" rx="1.5" class="bar-std"/>
+  <!-- ROW 3: All equal (y: 170) -->
+  <text x="170" y="196" class="y-label">All equal</text>
+  <rect x="180" y="170" width="6" height="7" rx="1" class="bar-apex"/>
+  <rect x="180" y="178" width="6" height="7" rx="1" class="bar-qisort"/>
+  <rect x="180" y="186" width="71" height="7" rx="1" class="bar-ska"/>
+  <rect x="180" y="194" width="9" height="7" rx="1" class="bar-pdq"/>
+  <rect x="180" y="202" width="58" height="7" rx="1" class="bar-std"/>
 
-  <!-- ROW 4: Ascending (y: 238) -->
-  <text x="175" y="264" class="y-label">Ascending</text>
-  <rect x="185" y="238" width="7" height="7" rx="1.5" class="bar-apex"/>
-  <rect x="185" y="246" width="7" height="7" rx="1.5" class="bar-qisort"/>
-  <rect x="185" y="254" width="116" height="7" rx="1.5" class="bar-ska"/>
-  <rect x="185" y="262" width="9" height="7" rx="1.5" class="bar-pdq"/>
-  <rect x="185" y="270" width="78" height="7" rx="1.5" class="bar-std"/>
+  <!-- ROW 4: Ascending (y: 224) -->
+  <text x="170" y="250" class="y-label">Ascending</text>
+  <rect x="180" y="224" width="6" height="7" rx="1" class="bar-apex"/>
+  <rect x="180" y="232" width="6" height="7" rx="1" class="bar-qisort"/>
+  <rect x="180" y="240" width="113" height="7" rx="1" class="bar-ska"/>
+  <rect x="180" y="248" width="8" height="7" rx="1" class="bar-pdq"/>
+  <rect x="180" y="256" width="76" height="7" rx="1" class="bar-std"/>
 
-  <!-- ROW 5: Descending (y: 290) -->
-  <text x="175" y="316" class="y-label">Descending</text>
-  <rect x="185" y="290" width="10" height="7" rx="1.5" class="bar-apex"/>
-  <rect x="185" y="298" width="10" height="7" rx="1.5" class="bar-qisort"/>
-  <rect x="185" y="306" width="123" height="7" rx="1.5" class="bar-ska"/>
-  <rect x="185" y="314" width="14" height="7" rx="1.5" class="bar-pdq"/>
-  <rect x="185" y="322" width="86" height="7" rx="1.5" class="bar-std"/>
+  <!-- ROW 5: Descending (y: 278) -->
+  <text x="170" y="304" class="y-label">Descending</text>
+  <rect x="180" y="278" width="9" height="7" rx="1" class="bar-apex"/>
+  <rect x="180" y="286" width="9" height="7" rx="1" class="bar-qisort"/>
+  <rect x="180" y="294" width="120" height="7" rx="1" class="bar-ska"/>
+  <rect x="180" y="302" width="13" height="7" rx="1" class="bar-pdq"/>
+  <rect x="180" y="310" width="84" height="7" rx="1" class="bar-std"/>
 
-  <!-- ROW 6: Pipe organ (y: 342) -->
-  <text x="175" y="368" class="y-label">Pipe organ</text>
-  <rect x="185" y="342" width="74" height="7" rx="1.5" class="bar-apex"/>
-  <rect x="185" y="350" width="73" height="7" rx="1.5" class="bar-qisort"/>
-  <rect x="185" y="358" width="138" height="7" rx="1.5" class="bar-ska"/>
-  <rect x="185" y="366" width="188" height="7" rx="1.5" class="bar-pdq"/>
-  <rect x="185" y="374" width="406" height="7" rx="1.5" class="bar-std"/>
+  <!-- ROW 6: Pipe organ (y: 332) -->
+  <text x="170" y="358" class="y-label">Pipe organ</text>
+  <rect x="180" y="332" width="72" height="7" rx="1" class="bar-apex"/>
+  <rect x="180" y="340" width="71" height="7" rx="1" class="bar-qisort"/>
+  <rect x="180" y="348" width="134" height="7" rx="1" class="bar-ska"/>
+  <rect x="180" y="356" width="183" height="7" rx="1" class="bar-pdq"/>
+  <rect x="180" y="364" width="395" height="7" rx="1" class="bar-std"/>
 
-  <!-- ROW 7: Push front (y: 394) -->
-  <text x="175" y="420" class="y-label">Push front</text>
-  <rect x="185" y="394" width="49" height="7" rx="1.5" class="bar-apex"/>
-  <rect x="185" y="402" width="54" height="7" rx="1.5" class="bar-qisort"/>
-  <rect x="185" y="410" width="143" height="7" rx="1.5" class="bar-ska"/>
-  <rect x="185" y="418" width="73" height="7" rx="1.5" class="bar-pdq"/>
-  <rect x="185" y="426" width="497" height="7" rx="1.5" class="bar-std"/>
+  <!-- ROW 7: Push front (y: 386) -->
+  <text x="170" y="412" class="y-label">Push front</text>
+  <rect x="180" y="386" width="48" height="7" rx="1" class="bar-apex"/>
+  <rect x="180" y="394" width="53" height="7" rx="1" class="bar-qisort"/>
+  <rect x="180" y="402" width="139" height="7" rx="1" class="bar-ska"/>
+  <rect x="180" y="410" width="71" height="7" rx="1" class="bar-pdq"/>
+  <rect x="180" y="418" width="484" height="7" rx="1" class="bar-std"/>
 
-  <!-- ROW 8: Push middle (y: 446) -->
-  <text x="175" y="472" class="y-label">Push middle</text>
-  <rect x="185" y="446" width="49" height="7" rx="1.5" class="bar-apex"/>
-  <rect x="185" y="454" width="54" height="7" rx="1.5" class="bar-qisort"/>
-  <rect x="185" y="462" width="85" height="7" rx="1.5" class="bar-ska"/>
-  <rect x="185" y="470" width="11" height="7" rx="1.5" class="bar-pdq"/>
-  <rect x="185" y="478" width="281" height="7" rx="1.5" class="bar-std"/>
+  <!-- ROW 8: Push middle (y: 440) -->
+  <text x="170" y="466" class="y-label">Push middle</text>
+  <rect x="180" y="440" width="48" height="7" rx="1" class="bar-apex"/>
+  <rect x="180" y="448" width="53" height="7" rx="1" class="bar-qisort"/>
+  <rect x="180" y="456" width="83" height="7" rx="1" class="bar-ska"/>
+  <rect x="180" y="464" width="10" height="7" rx="1" class="bar-pdq"/>
+  <rect x="180" y="472" width="274" height="7" rx="1" class="bar-std"/>
 
   <!-- ==================== LEGEND BOX ==================== -->
-  <g transform="translate(565, 205)">
-    <rect width="160" height="126" rx="8" class="legend-box" filter="url(#cardShadow)"/>
+  <g transform="translate(555, 185)">
+    <rect width="155" height="120" rx="4" class="legend-box"/>
     
-    <rect x="12" y="12" width="18" height="9" rx="1.5" class="bar-apex"/>
-    <text x="38" y="20" class="legend-text">qi::apex</text>
+    <rect x="10" y="10" width="20" height="9" rx="1" class="bar-apex"/>
+    <text x="38" y="18" class="legend-text">qi::apex</text>
 
-    <rect x="12" y="34" width="18" height="9" rx="1.5" class="bar-qisort"/>
-    <text x="38" y="42" class="legend-text">qi::sort</text>
+    <rect x="10" y="32" width="20" height="9" rx="1" class="bar-qisort"/>
+    <text x="38" y="40" class="legend-text">qi::sort</text>
 
-    <rect x="12" y="56" width="18" height="9" rx="1.5" class="bar-ska"/>
-    <text x="38" y="64" class="legend-text">ska_sort</text>
+    <rect x="10" y="54" width="20" height="9" rx="1" class="bar-ska"/>
+    <text x="38" y="62" class="legend-text">ska_sort</text>
 
-    <rect x="12" y="78" width="18" height="9" rx="1.5" class="bar-pdq"/>
-    <text x="38" y="86" class="legend-text">pdqsort</text>
+    <rect x="10" y="76" width="20" height="9" rx="1" class="bar-pdq"/>
+    <text x="38" y="84" class="legend-text">pdqsort</text>
 
-    <rect x="12" y="100" width="18" height="9" rx="1.5" class="bar-std"/>
-    <text x="38" y="108" class="legend-text">std::sort</text>
+    <rect x="10" y="98" width="20" height="9" rx="1" class="bar-std"/>
+    <text x="38" y="106" class="legend-text">std::sort</text>
   </g>
 
 </svg>
