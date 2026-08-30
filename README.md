@@ -19,6 +19,8 @@
 
 ## `qi::apex` Microarchitecture
 
+> **Hardware-Aware 20 KB L1-Bound Radix Pipeline · 3-Pass 32-bit Execution**
+
 The execution engine of **`qi::apex`** is structured into three microarchitectural stages engineered to eliminate CPU pipeline stalls and cache evictions:
 
 <p align="center">
