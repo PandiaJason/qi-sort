@@ -1,6 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 560" width="100%" height="100%">
   <defs>
-    <!-- Glowing Drop Shadow for Neon Lime -->
     <filter id="neonGlow" x="-10%" y="-10%" width="120%" height="120%">
       <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#D2F831" flood-opacity="0.4"/>
     </filter>
@@ -9,132 +8,101 @@
       .bg { fill: #000000; }
       .chart-box { fill: #000000; stroke: #FFFFFF; stroke-width: 1.5; }
       .title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 20px; font-weight: 700; fill: #FFFFFF; text-anchor: middle; letter-spacing: -0.2px; }
-      .axis-title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 14px; fill: #FFFFFF; font-weight: 600; text-anchor: middle; }
-      .y-label { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 13px; fill: #FFFFFF; font-weight: 600; text-anchor: end; }
+      .axis-title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 13.5px; fill: #FFFFFF; font-weight: 600; text-anchor: middle; }
+      .y-label { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 12px; fill: #FFFFFF; font-weight: 600; text-anchor: end; }
       .x-label { font-family: "SF Mono", Monaco, Menlo, Consolas, monospace; font-size: 12px; fill: #FFFFFF; text-anchor: middle; font-weight: 500; }
       .tick { stroke: #FFFFFF; stroke-width: 1.5; }
       .grid { stroke: #262626; stroke-dasharray: 2,2; stroke-width: 1; }
       .legend-box { fill: #000000; stroke: #FFFFFF; stroke-width: 1.2; }
       .legend-text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 11.5px; fill: #FFFFFF; font-weight: 600; }
       
-      /* Color Tokens (Zero Blue Tint, Pure Neutral White-Greys) */
-      .bar-apex { fill: #D2F831; stroke: #FFFFFF; stroke-width: 0.6; } /* 1. Electric Lime */
-      .bar-qisort { fill: #E8F8B6; stroke: #FFFFFF; stroke-width: 0.6; } /* 2. Soft Lime Glow */
-      .bar-pdq { fill: #F2F2F2; stroke: #FFFFFF; stroke-width: 0.6; } /* 3. Pure Neutral White-Grey */
-      .bar-ska { fill: #CCCCCC; stroke: #FFFFFF; stroke-width: 0.6; } /* 4. Pure Silver Grey */
-      .bar-std { fill: #888888; stroke: #FFFFFF; stroke-width: 0.6; } /* 5. Pure Medium Ash Grey */
+      /* Zero Blue Tint Pure Neutral Monochrome */
+      .bar-apex { fill: #D2F831; stroke: #FFFFFF; stroke-width: 0.6; }
+      .bar-qisort { fill: #E8F8B6; stroke: #FFFFFF; stroke-width: 0.6; }
+      .bar-pdq { fill: #F2F2F2; stroke: #FFFFFF; stroke-width: 0.6; }
+      .bar-ska { fill: #CCCCCC; stroke: #FFFFFF; stroke-width: 0.6; }
+      .bar-std { fill: #888888; stroke: #FFFFFF; stroke-width: 0.6; }
     </style>
   </defs>
 
-  <!-- Full Pure Black Background -->
   <rect width="760" height="560" class="bg"/>
 
-  <!-- Logo Pill Accent from image -->
-  <g transform="translate(40, 24)">
+  <g transform="translate(35, 24)">
     <circle cx="12" cy="12" r="11" fill="#E8F8B6" opacity="0.5"/>
     <circle cx="12" cy="12" r="7" fill="#D2F831" filter="url(#neonGlow)"/>
   </g>
 
-  <!-- Title -->
-  <text x="440" y="36" class="title">Sorting 10⁷ elements</text>
+  <text x="450" y="36" class="title">Sorting 10⁷ elements (N = 10,000,000)</text>
+  <rect x="210" y="55" width="510" height="430" class="chart-box"/>
+  <line x1="210.0" y1="55" x2="210.0" y2="485" class="grid"/>
+  <line x1="210.0" y1="485" x2="210.0" y2="492" class="tick"/>
+  <text x="210.0" y="508" class="x-label">0</text>
+  <line x1="312.0" y1="55" x2="312.0" y2="485" class="grid"/>
+  <line x1="312.0" y1="485" x2="312.0" y2="492" class="tick"/>
+  <text x="312.0" y="508" class="x-label">40</text>
+  <line x1="414.0" y1="55" x2="414.0" y2="485" class="grid"/>
+  <line x1="414.0" y1="485" x2="414.0" y2="492" class="tick"/>
+  <text x="414.0" y="508" class="x-label">80</text>
+  <line x1="516.0" y1="55" x2="516.0" y2="485" class="grid"/>
+  <line x1="516.0" y1="485" x2="516.0" y2="492" class="tick"/>
+  <text x="516.0" y="508" class="x-label">120</text>
+  <line x1="618.0" y1="55" x2="618.0" y2="485" class="grid"/>
+  <line x1="618.0" y1="485" x2="618.0" y2="492" class="tick"/>
+  <text x="618.0" y="508" class="x-label">160</text>
+  <line x1="720.0" y1="55" x2="720.0" y2="485" class="grid"/>
+  <line x1="720.0" y1="485" x2="720.0" y2="492" class="tick"/>
+  <text x="720.0" y="508" class="x-label">200</text>
 
-  <!-- Chart Bounding Box (x: 180 to 720, y: 55 to 485) -->
-  <rect x="180" y="55" width="540" height="430" class="chart-box"/>
+  <text x="465.0" y="531" class="axis-title">Cycles per element (Apple Silicon M1 @ 3.2GHz)</text>
+  <text x="200" y="85.9" class="y-label">Uniform Random 32-bit</text>
+  <rect x="210" y="65.4" width="33.6" height="6.5" rx="1" class="bar-apex"/>
+  <rect x="210" y="72.9" width="31.4" height="6.5" rx="1" class="bar-qisort"/>
+  <rect x="210" y="80.4" width="180.0" height="6.5" rx="1" class="bar-pdq"/>
+  <rect x="210" y="87.9" width="147.1" height="6.5" rx="1" class="bar-ska"/>
+  <rect x="210" y="95.4" width="186.6" height="6.5" rx="1" class="bar-std"/>
+  <text x="200" y="139.6" class="y-label">Byte Duplicates (0–255)</text>
+  <rect x="210" y="119.1" width="3.3" height="6.5" rx="1" class="bar-apex"/>
+  <rect x="210" y="126.6" width="3.5" height="6.5" rx="1" class="bar-qisort"/>
+  <rect x="210" y="134.1" width="48.7" height="6.5" rx="1" class="bar-pdq"/>
+  <rect x="210" y="141.6" width="63.2" height="6.5" rx="1" class="bar-ska"/>
+  <rect x="210" y="149.1" width="64.2" height="6.5" rx="1" class="bar-std"/>
+  <text x="200" y="193.4" class="y-label">Periodic Sawtooth (1K)</text>
+  <rect x="210" y="172.9" width="3.2" height="6.5" rx="1" class="bar-apex"/>
+  <rect x="210" y="180.4" width="3.4" height="6.5" rx="1" class="bar-qisort"/>
+  <rect x="210" y="187.9" width="69.0" height="6.5" rx="1" class="bar-pdq"/>
+  <rect x="210" y="195.4" width="79.7" height="6.5" rx="1" class="bar-ska"/>
+  <rect x="210" y="202.9" width="86.7" height="6.5" rx="1" class="bar-std"/>
+  <text x="200" y="247.1" class="y-label">16-bit Range (0–65,535)</text>
+  <rect x="210" y="226.6" width="17.8" height="6.5" rx="1" class="bar-apex"/>
+  <rect x="210" y="234.1" width="32.7" height="6.5" rx="1" class="bar-qisort"/>
+  <rect x="210" y="241.6" width="91.4" height="6.5" rx="1" class="bar-pdq"/>
+  <rect x="210" y="249.1" width="57.4" height="6.5" rx="1" class="bar-ska"/>
+  <rect x="210" y="256.6" width="111.9" height="6.5" rx="1" class="bar-std"/>
+  <text x="200" y="300.9" class="y-label">Already Sorted Monotonic</text>
+  <rect x="210" y="280.4" width="3.5" height="6.5" rx="1" class="bar-apex"/>
+  <rect x="210" y="287.9" width="3.5" height="6.5" rx="1" class="bar-qisort"/>
+  <rect x="210" y="295.4" width="6.3" height="6.5" rx="1" class="bar-pdq"/>
+  <rect x="210" y="302.9" width="111.0" height="6.5" rx="1" class="bar-ska"/>
+  <rect x="210" y="310.4" width="8.6" height="6.5" rx="1" class="bar-std"/>
+  <text x="200" y="354.6" class="y-label">Reverse Sorted Monotonic</text>
+  <rect x="210" y="334.1" width="5.1" height="6.5" rx="1" class="bar-apex"/>
+  <rect x="210" y="341.6" width="5.3" height="6.5" rx="1" class="bar-qisort"/>
+  <rect x="210" y="349.1" width="10.6" height="6.5" rx="1" class="bar-pdq"/>
+  <rect x="210" y="356.6" width="118.2" height="6.5" rx="1" class="bar-ska"/>
+  <rect x="210" y="364.1" width="14.5" height="6.5" rx="1" class="bar-std"/>
+  <text x="200" y="408.4" class="y-label">Nearly Sorted (~98%)</text>
+  <rect x="210" y="387.9" width="91.5" height="6.5" rx="1" class="bar-apex"/>
+  <rect x="210" y="395.4" width="83.8" height="6.5" rx="1" class="bar-qisort"/>
+  <rect x="210" y="402.9" width="80.6" height="6.5" rx="1" class="bar-pdq"/>
+  <rect x="210" y="410.4" width="136.9" height="6.5" rx="1" class="bar-ska"/>
+  <rect x="210" y="417.9" width="83.9" height="6.5" rx="1" class="bar-std"/>
+  <text x="200" y="462.1" class="y-label">Pipe Organ (Mirrored Ramp)</text>
+  <rect x="210" y="441.6" width="109.8" height="6.5" rx="1" class="bar-apex"/>
+  <rect x="210" y="449.1" width="112.4" height="6.5" rx="1" class="bar-qisort"/>
+  <rect x="210" y="456.6" width="199.2" height="6.5" rx="1" class="bar-pdq"/>
+  <rect x="210" y="464.1" width="130.3" height="6.5" rx="1" class="bar-ska"/>
+  <rect x="210" y="471.6" width="476.8" height="6.5" rx="1" class="bar-std"/>
 
-  <!-- Vertical Ticks & Grid Lines (0, 40, 80, 120, 160, 200) -->
-  <!-- scale = 540 / 200 = 2.7 px per cycle -->
-  <line x1="180" y1="55" x2="180" y2="492" class="tick"/>
-  <text x="180" y="508" class="x-label">0</text>
-
-  <line x1="288" y1="55" x2="288" y2="485" class="grid"/>
-  <line x1="288" y1="485" x2="288" y2="492" class="tick"/>
-  <text x="288" y="508" class="x-label">40</text>
-
-  <line x1="396" y1="55" x2="396" y2="485" class="grid"/>
-  <line x1="396" y1="485" x2="396" y2="492" class="tick"/>
-  <text x="396" y="508" class="x-label">80</text>
-
-  <line x1="504" y1="55" x2="504" y2="485" class="grid"/>
-  <line x1="504" y1="485" x2="504" y2="492" class="tick"/>
-  <text x="504" y="508" class="x-label">120</text>
-
-  <line x1="612" y1="55" x2="612" y2="485" class="grid"/>
-  <line x1="612" y1="485" x2="612" y2="492" class="tick"/>
-  <text x="612" y="508" class="x-label">160</text>
-
-  <line x1="720" y1="55" x2="720" y2="492" class="tick"/>
-  <text x="720" y="508" class="x-label">200</text>
-
-  <!-- X-Axis Label -->
-  <text x="450" y="534" class="axis-title">Cycles per element (Apple Silicon M1 @ 3.2GHz)</text>
-
-  <!-- ==================== ROWS (Height per row = 53.75px) ==================== -->
-
-  <!-- ROW 1: Shuffled (y: 62) -->
-  <text x="170" y="88" class="y-label">Shuffled</text>
-  <rect x="180" y="62" width="36" height="7" rx="1" class="bar-apex"/>
-  <rect x="180" y="70" width="33" height="7" rx="1" class="bar-qisort"/>
-  <rect x="180" y="78" width="191" height="7" rx="1" class="bar-pdq"/>
-  <rect x="180" y="86" width="156" height="7" rx="1" class="bar-ska"/>
-  <rect x="180" y="94" width="198" height="7" rx="1" class="bar-std"/>
-
-  <!-- ROW 2: Shuffled (16 values) (y: 116) -->
-  <text x="170" y="142" class="y-label">Shuffled (16 values)</text>
-  <rect x="180" y="116" width="19" height="7" rx="1" class="bar-apex"/>
-  <rect x="180" y="124" width="35" height="7" rx="1" class="bar-qisort"/>
-  <rect x="180" y="132" width="97" height="7" rx="1" class="bar-pdq"/>
-  <rect x="180" y="140" width="61" height="7" rx="1" class="bar-ska"/>
-  <rect x="180" y="148" width="119" height="7" rx="1" class="bar-std"/>
-
-  <!-- ROW 3: All equal (y: 170) -->
-  <text x="170" y="196" class="y-label">All equal</text>
-  <rect x="180" y="170" width="4" height="7" rx="1" class="bar-apex"/>
-  <rect x="180" y="178" width="4" height="7" rx="1" class="bar-qisort"/>
-  <rect x="180" y="186" width="52" height="7" rx="1" class="bar-pdq"/>
-  <rect x="180" y="194" width="67" height="7" rx="1" class="bar-ska"/>
-  <rect x="180" y="202" width="68" height="7" rx="1" class="bar-std"/>
-
-  <!-- ROW 4: Ascending (y: 224) -->
-  <text x="170" y="250" class="y-label">Ascending</text>
-  <rect x="180" y="224" width="4" height="7" rx="1" class="bar-apex"/>
-  <rect x="180" y="232" width="4" height="7" rx="1" class="bar-qisort"/>
-  <rect x="180" y="240" width="7" height="7" rx="1" class="bar-pdq"/>
-  <rect x="180" y="248" width="117" height="7" rx="1" class="bar-ska"/>
-  <rect x="180" y="256" width="9" height="7" rx="1" class="bar-std"/>
-
-  <!-- ROW 5: Descending (y: 278) -->
-  <text x="170" y="304" class="y-label">Descending</text>
-  <rect x="180" y="278" width="5" height="7" rx="1" class="bar-apex"/>
-  <rect x="180" y="286" width="6" height="7" rx="1" class="bar-qisort"/>
-  <rect x="180" y="294" width="11" height="7" rx="1" class="bar-pdq"/>
-  <rect x="180" y="302" width="125" height="7" rx="1" class="bar-ska"/>
-  <rect x="180" y="310" width="15" height="7" rx="1" class="bar-std"/>
-
-  <!-- ROW 6: Pipe organ (y: 332) -->
-  <text x="170" y="358" class="y-label">Pipe organ</text>
-  <rect x="180" y="332" width="116" height="7" rx="1" class="bar-apex"/>
-  <rect x="180" y="340" width="119" height="7" rx="1" class="bar-qisort"/>
-  <rect x="180" y="348" width="211" height="7" rx="1" class="bar-pdq"/>
-  <rect x="180" y="356" width="138" height="7" rx="1" class="bar-ska"/>
-  <rect x="180" y="364" width="505" height="7" rx="1" class="bar-std"/>
-
-  <!-- ROW 7: Push front (y: 386) -->
-  <text x="170" y="412" class="y-label">Push front</text>
-  <rect x="180" y="386" width="4" height="7" rx="1" class="bar-apex"/>
-  <rect x="180" y="394" width="4" height="7" rx="1" class="bar-qisort"/>
-  <rect x="180" y="402" width="73" height="7" rx="1" class="bar-pdq"/>
-  <rect x="180" y="410" width="145" height="7" rx="1" class="bar-ska"/>
-  <rect x="180" y="418" width="22" height="7" rx="1" class="bar-std"/>
-
-  <!-- ROW 8: Push middle (y: 440) -->
-  <text x="170" y="466" class="y-label">Push middle</text>
-  <rect x="180" y="440" width="4" height="7" rx="1" class="bar-apex"/>
-  <rect x="180" y="448" width="4" height="7" rx="1" class="bar-qisort"/>
-  <rect x="180" y="456" width="73" height="7" rx="1" class="bar-pdq"/>
-  <rect x="180" y="464" width="85" height="7" rx="1" class="bar-ska"/>
-  <rect x="180" y="472" width="92" height="7" rx="1" class="bar-std"/>
-
-  <!-- ==================== LEGEND BOX ==================== -->
   <g transform="translate(555, 185)">
     <rect width="155" height="120" rx="4" class="legend-box"/>
     
@@ -153,5 +121,4 @@
     <rect x="10" y="98" width="20" height="9" rx="1" class="bar-std"/>
     <text x="38" y="106" class="legend-text">std::sort</text>
   </g>
-
 </svg>
