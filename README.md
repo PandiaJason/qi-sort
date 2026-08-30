@@ -8,9 +8,13 @@ Hardware-aware adaptive radix sort (`qi::apex`) is a high-performance sorting en
 
 ---
 
-## Usage
+## Models & Usage
 
-`qi::apex` is a header-only, zero-dependency C++17 library. Just include `qi_apex.hpp` and call `qi::apex::sort`:
+The library provides two specialized header-only C++17 engines:
+
+### 1. `qi::apex` — Hardware-Aware L1-Bound Engine (`#include "qi_apex.hpp"`)
+
+Designed for peak throughput on numeric arrays by strictly confining histogram memory to the CPU L1-Data cache:
 
 ```cpp
 #include "qi_apex.hpp"
@@ -36,6 +40,22 @@ int main() {
 
     // 5. Multi-Threaded Parallel Execution (17.5 ms for 10,000,000 keys)
     qi::apex::parallel_sort(data.data(), data.size());
+}
+```
+
+### 2. `qi::sort` — Autonomous Adaptive Sensing Router (`#include "qi_radix.hpp"`)
+
+Runs a ~50ns pure-integer bitwise probe to classify entropy and automatically dispatches to Counting Sort, Radix-8, Radix-11, or Radix-16:
+
+```cpp
+#include "qi_radix.hpp"
+#include <vector>
+
+int main() {
+    std::vector<uint32_t> data = {500, 12, 99, 1024, 0, 42};
+    
+    // Auto-detects distribution and routes to optimal kernel
+    qi::sort(data);
 }
 ```
 
@@ -168,11 +188,11 @@ qisort.SortU32(data)
 ## License & Attribution
 
 Distributed for free under the **GPL-2.0 License**.  
-Developed by **Jason Pandian** (2026).
+Developed by **Jason Pandian** (Sole Author, 2026).
 
 ```bibtex
 @software{pandia2026qiapex,
-  title   = {qi::apex: Hardware-Aware Adaptive Radix Sorting Engine},
+  title   = {qi::apex & qi::sort: Hardware-Aware Adaptive Radix Sorting Engine},
   author  = {Pandian, Jason},
   year    = {2026},
   url     = {https://github.com/PandiaJason/qi-sort},

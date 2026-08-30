@@ -1,10 +1,16 @@
 #ifndef QI_RADIX_HPP
 #define QI_RADIX_HPP
 
+//  (C) Copyright Jason Pandian 2026.
+//  Distributed under the GPL-2.0 License.
+
 /*
 ===============================================================================
 QI Sort: Quick Index Radix Sort (Header-Only C++17 Engine)
 ===============================================================================
+Author: Jason Pandian
+License: GPL-2.0
+Repository: https://github.com/PandiaJason/qi-sort
 
 A modular, production-ready C++17 header-only library for ultra-fast adaptive
 sorting of uint32_t, int32_t, uint64_t, int64_t, float, double, Key-Payload pairs,
