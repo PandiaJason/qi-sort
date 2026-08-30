@@ -1,10 +1,14 @@
-# PROJECT DOCUMENTATION — qi-sort
+# PROJECT DOCUMENTATION — Quick Index Sort (`qi-sort`)
 
 ## Project Overview
 
-**qi-sort** (High-Performance Adaptive Radix Sorting Engine) is a production-grade, zero-dependency, header-only C++17 library with native bindings for **Go**, **Python**, **Java**, and **C-ABI**.
+**Quick Index Sort (`qi-sort`)** is an algorithmic sorting family engineered for modern CPU microarchitectures and memory hierarchies. The library is a production-grade, zero-dependency, header-only C++17 project with native bindings for **Go**, **Python**, **Java**, and **C-ABI**.
 
-It introduces **runtime bitwise state and occupancy probing** to characterize numeric datasets before sorting, dynamically selecting the optimal sorting kernel (Counting Sort, L1-bound Radix-11, Prefetched Radix-16, or Radix-8) to maximize throughput while protecting CPU cache residency.
+The family centers on two primary production radix sorting models:
+1. **`qi::apex`**: The flagship hardware-aware radix engine, strictly bounded to 20 KB L1-Data cache with 8-way ILP unrolling and $PF=48$ prefetch.
+2. **`qi::sort`**: The autonomous adaptive sensing router, utilizing a 50ns bitwise integer probe to dynamically dispatch between Counting Sort, Radix-8, Radix-11, and Radix-16.
+
+Other exploratory sorting models remain under active research in the `archive/research-and-benchmarks` branch.
 
 ---
 

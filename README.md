@@ -1,16 +1,23 @@
-# `qi::apex`
+# Quick Index Sort (`qi-sort`)
 
-Hardware-aware adaptive radix sort (`qi::apex`) is a high-performance sorting engine designed for modern CPU microarchitectures. It combines ultra-lightweight distribution sensing with strict L1-data-cache-bounded radix passes and vectorized counting sort, achieving linear $O(n)$ time on structured patterns and outperforming comparison-based algorithms (`std::sort`, `pdqsort`) by **6×–20×** on numeric keys. All code is available for free under the GPL-2.0 license.
+Quick Index Sort (`qi-sort`) is an algorithmic sorting family engineered for modern CPU microarchitectures and memory hierarchies. The library provides two primary production radix sorting models—**`qi::apex`** and **`qi::sort`**—while additional specialized models remain under active research. All code is available for free under the GPL-2.0 license.
 
-| Best | Average | Worst | Memory | Stable | Deterministic |
-|:---:|:---:|:---:|:---:|:---:|:---:|
-| $n$ | $n$ | $n$ | $n$ | No | Yes |
+| Model | Primary Architecture | Best | Average | Worst | Memory | Stable | Deterministic |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **`qi::apex`** | Strict 20 KB L1-D Bounded Radix (Flagship) | $n$ | $n$ | $n$ | $n$ | No | Yes |
+| **`qi::sort`** | Autonomous 50ns Adaptive Sensing Router | $n$ | $n$ | $n$ | $n$ | No | Yes |
 
 ---
 
-## Models & Usage
+## The `qi-sort` Model Family
 
-The library provides two specialized header-only C++17 engines:
+1. **`qi::apex` (Flagship Microarchitectural Engine)**: Strictly confines histogram tables to 20 KB (100% L1-Data cache resident), saturating CPU execution units via 8-way instruction-level parallelism (ILP) and 48-element lookahead software prefetching ($PF=48$).
+2. **`qi::sort` (Autonomous Adaptive Router)**: Runs a 50-nanosecond integer probe to sense bit range (`bitOr`) and duplicate density (`lsbOccupied`), automatically routing execution to Counting Sort, Radix-8, Radix-11, or Radix-16.
+3. **Research Frontier Models**: Experimental models exploring learned spline indexing, wave-particle partitioning, and non-radix field sorting remain under active research in the `archive/research-and-benchmarks` branch.
+
+---
+
+## Usage
 
 ### 1. `qi::apex` — Hardware-Aware L1-Bound Engine (`#include "qi_apex.hpp"`)
 
