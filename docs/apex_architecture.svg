@@ -1,175 +1,172 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 440" width="100%" height="100%">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 480" width="100%" height="100%">
   <defs>
     <!-- Glowing Effect for Apex -->
-    <filter id="neonGlow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#D2F831" flood-opacity="0.4"/>
+    <filter id="neonGlow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#D2F831" flood-opacity="0.5"/>
     </filter>
 
     <style>
       .bg { fill: #000000; }
-      .card { fill: #09090B; stroke: #262626; stroke-width: 1.2; rx: 8px; }
-      .card-active { fill: #0C1103; stroke: #D2F831; stroke-width: 1.5; rx: 8px; }
+      .col-box { fill: #09090B; stroke: #262626; stroke-width: 1.2; rx: 10px; }
+      .col-active { fill: #0D1204; stroke: #D2F831; stroke-width: 1.6; rx: 10px; }
       
-      .title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 18px; font-weight: 700; fill: #FFFFFF; letter-spacing: -0.2px; }
-      .subtitle { font-family: "SF Mono", Monaco, Menlo, Consolas, monospace; font-size: 11px; fill: #D2F831; }
+      .title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 20px; font-weight: 700; fill: #FFFFFF; letter-spacing: -0.2px; }
+      .subtitle { font-family: "SF Mono", Monaco, Menlo, Consolas, monospace; font-size: 11.5px; fill: #D2F831; }
       
-      .step-title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 13px; font-weight: 700; fill: #FFFFFF; }
-      .step-sub { font-family: "SF Mono", Monaco, Menlo, Consolas, monospace; font-size: 11px; font-weight: 600; }
-      .body-text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 11px; fill: #CCCCCC; }
+      .col-title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 700; fill: #FFFFFF; }
+      .col-sub { font-family: "SF Mono", Monaco, Menlo, Consolas, monospace; font-size: 10.5px; font-weight: 600; }
       
-      .arrow { stroke: #D2F831; stroke-width: 1.8; fill: none; }
+      .badge-std { fill: #18181B; stroke: #333333; stroke-width: 1; rx: 4px; }
+      .badge-ilp { fill: #18181B; stroke: #E8F8B6; stroke-width: 1; rx: 4px; }
+      .badge-apex { fill: #111808; stroke: #D2F831; stroke-width: 1.2; rx: 6px; }
+      
+      .mono-text { font-family: "SF Mono", Monaco, Menlo, Consolas, monospace; font-size: 11px; }
+      .body-text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 11.5px; fill: #CCCCCC; }
+      
+      .arrow-line { stroke: #D2F831; stroke-width: 1.8; fill: none; }
       .arrow-head { fill: #D2F831; }
     </style>
   </defs>
 
-  <!-- 100% Pure Pitch Black Background -->
-  <rect width="880" height="440" class="bg"/>
+  <!-- 100% Pure Black Background -->
+  <rect width="920" height="480" class="bg"/>
 
-  <!-- Logo Pill -->
-  <g transform="translate(32, 20)">
-    <circle cx="10" cy="10" r="9" fill="#E8F8B6" opacity="0.4"/>
-    <circle cx="10" cy="10" r="6" fill="#D2F831" filter="url(#neonGlow)"/>
+  <!-- Logo Pill Accent -->
+  <g transform="translate(35, 22)">
+    <circle cx="11" cy="11" r="10" fill="#E8F8B6" opacity="0.4"/>
+    <circle cx="11" cy="11" r="6.5" fill="#D2F831" filter="url(#neonGlow)"/>
   </g>
 
   <!-- Title Header -->
-  <text x="60" y="30" class="title">qi::apex Architecture</text>
-  <text x="60" y="46" class="subtitle">20 KB L1-Data Bound Microarchitectural Execution Pipeline</text>
+  <text x="68" y="34" class="title">qi::apex Microarchitecture</text>
+  <text x="68" y="52" class="subtitle">Hardware-Aware 20 KB L1-Bound Radix Pipeline · 3-Pass 32-bit</text>
 
-  <!-- ==================== TOP FLOW: 4 MINIMAL PIPELINE STAGES ==================== -->
-
-  <!-- STAGE 1: Memory Stream & Prefetch -->
-  <g transform="translate(32, 70)">
-    <rect width="180" height="180" class="card"/>
-    <rect x="12" y="12" width="22" height="6" rx="3" fill="#F2F2F2"/>
-    <text x="12" y="36" class="step-title">1. Memory Stream</text>
-    <text x="12" y="52" class="step-sub" fill="#F2F2F2">DRAM / LLC Ingest</text>
-    
-    <rect x="12" y="68" width="156" height="42" rx="4" fill="#18181B" stroke="#333333"/>
-    <text x="20" y="86" font-family="'SF Mono', monospace" font-size="10.5" fill="#F2F2F2">PF = 48 Prefetch</text>
-    <text x="20" y="101" font-family="'SF Mono', monospace" font-size="9.5" fill="#888888">__builtin_prefetch()</text>
-
-    <text x="12" y="132" class="body-text">• Zero DRAM latency stalls</text>
-    <text x="12" y="148" class="body-text">• Double-buffered ping-pong</text>
-    <text x="12" y="164" class="body-text">• 0 extra heap allocations</text>
+  <!-- Top Badges -->
+  <g transform="translate(640, 24)">
+    <rect width="115" height="24" rx="12" fill="#18181B" stroke="#333333"/>
+    <text x="57" y="16" class="mono-text" font-size="10" fill="#F2F2F2" text-anchor="middle">PF = 48 Stream</text>
+  </g>
+  <g transform="translate(765, 24)">
+    <rect width="120" height="24" rx="12" fill="#18181B" stroke="#D2F831" stroke-width="1.2"/>
+    <text x="60" y="16" class="mono-text" font-size="10" fill="#D2F831" text-anchor="middle">8-Way ILP Core</text>
   </g>
 
-  <!-- Arrow 1 -> 2 -->
-  <g transform="translate(216, 155)">
-    <path d="M 0 0 L 22 0" class="arrow"/>
+  <!-- ==================== COLUMN 1: MEMORY STREAMING ==================== -->
+  <g transform="translate(35, 75)">
+    <rect width="240" height="375" class="col-box"/>
+    <rect x="16" y="14" width="24" height="6" rx="3" fill="#F2F2F2"/>
+    <text x="16" y="38" class="col-title">1. Memory Streaming</text>
+    <text x="16" y="54" class="col-sub" fill="#F2F2F2">DRAM / LLC Linear Ingest</text>
+
+    <!-- Sub-block 1: Input DRAM -->
+    <rect x="16" y="75" width="208" height="60" class="badge-std"/>
+    <text x="28" y="98" class="mono-text" fill="#F2F2F2" font-weight="600">DRAM Input Vector</text>
+    <text x="28" y="118" class="body-text">Linear continuous read</text>
+
+    <!-- Arrow Down -->
+    <path d="M 120 135 L 120 162" class="arrow-line"/>
+    <polygon points="120,166 116,158 124,158" class="arrow-head"/>
+
+    <!-- Sub-block 2: Prefetcher -->
+    <rect x="16" y="170" width="208" height="75" rx="6" fill="#18181B" stroke="#E8F8B6" stroke-width="1"/>
+    <text x="28" y="194" class="mono-text" fill="#E8F8B6" font-weight="600">PF = 48 Prefetch Stream</text>
+    <text x="28" y="214" class="mono-text" font-size="10" fill="#888888">__builtin_prefetch(&amp;k[i+48])</text>
+    <text x="28" y="232" class="body-text" fill="#E8F8B6">Zero DRAM latency stall</text>
+
+    <!-- Arrow Down -->
+    <path d="M 120 245 L 120 272" class="arrow-line"/>
+    <polygon points="120,276 116,268 124,268" class="arrow-head"/>
+
+    <!-- Sub-block 3: Double Buffering -->
+    <rect x="16" y="280" width="208" height="70" class="badge-std"/>
+    <text x="28" y="304" class="mono-text" fill="#F2F2F2" font-weight="600">Double Buffer Ping-Pong</text>
+    <text x="28" y="324" class="body-text">Buffer A $\leftrightarrow$ Buffer B</text>
+    <text x="28" y="340" class="mono-text" font-size="10" fill="#888888">0 extra heap allocations</text>
+  </g>
+
+  <!-- Arrow Col 1 -> Col 2 -->
+  <g transform="translate(285, 255)">
+    <path d="M 0 0 L 22 0" class="arrow-line"/>
     <polygon points="26,0 20,-4 20,4" class="arrow-head"/>
   </g>
 
-  <!-- STAGE 2: 8-Way ILP CPU Core -->
-  <g transform="translate(246, 70)">
-    <rect width="180" height="180" class="card"/>
-    <rect x="12" y="12" width="22" height="6" rx="3" fill="#E8F8B6"/>
-    <text x="12" y="36" class="step-title">2. 8-Way ILP Loop</text>
-    <text x="12" y="52" class="step-sub" fill="#E8F8B6">Register Unrolling</text>
+  <!-- ==================== COLUMN 2: 8-WAY ILP CPU CORE ==================== -->
+  <g transform="translate(320, 75)">
+    <rect width="255" height="375" class="col-box"/>
+    <rect x="16" y="14" width="24" height="6" rx="3" fill="#E8F8B6"/>
+    <text x="16" y="38" class="col-title">2. 8-Way ILP CPU Core</text>
+    <text x="16" y="54" class="col-sub" fill="#E8F8B6">Independent Register Pipes</text>
 
-    <!-- Mini 8 registers matrix -->
-    <g transform="translate(12, 68)">
-      <rect x="0" y="0" width="34" height="18" rx="2" fill="#18181B" stroke="#444444"/>
-      <text x="6" y="13" font-family="'SF Mono', monospace" font-size="9" fill="#E8F8B6">c0</text>
-      <rect x="40" y="0" width="34" height="18" rx="2" fill="#18181B" stroke="#444444"/>
-      <text x="46" y="13" font-family="'SF Mono', monospace" font-size="9" fill="#E8F8B6">c1</text>
-      <rect x="80" y="0" width="34" height="18" rx="2" fill="#18181B" stroke="#444444"/>
-      <text x="86" y="13" font-family="'SF Mono', monospace" font-size="9" fill="#E8F8B6">c2</text>
-      <rect x="120" y="0" width="34" height="18" rx="2" fill="#18181B" stroke="#444444"/>
-      <text x="126" y="13" font-family="'SF Mono', monospace" font-size="9" fill="#E8F8B6">c3</text>
+    <!-- Registers Matrix (2x4) -->
+    <g transform="translate(16, 75)">
+      <!-- Row 0 -->
+      <rect x="0" y="0" width="106" height="32" class="badge-ilp"/>
+      <text x="12" y="21" class="mono-text" fill="#E8F8B6" font-weight="600">c0: k[i+0]</text>
+      <rect x="116" y="0" width="106" height="32" class="badge-ilp"/>
+      <text x="128" y="21" class="mono-text" fill="#E8F8B6" font-weight="600">c1: k[i+1]</text>
 
-      <rect x="0" y="22" width="34" height="18" rx="2" fill="#18181B" stroke="#444444"/>
-      <text x="6" y="35" font-family="'SF Mono', monospace" font-size="9" fill="#E8F8B6">c4</text>
-      <rect x="40" y="22" width="34" height="18" rx="2" fill="#18181B" stroke="#444444"/>
-      <text x="46" y="35" font-family="'SF Mono', monospace" font-size="9" fill="#E8F8B6">c5</text>
-      <rect x="80" y="22" width="34" height="18" rx="2" fill="#18181B" stroke="#444444"/>
-      <text x="86" y="35" font-family="'SF Mono', monospace" font-size="9" fill="#E8F8B6">c6</text>
-      <rect x="120" y="22" width="34" height="18" rx="2" fill="#18181B" stroke="#444444"/>
-      <text x="126" y="35" font-family="'SF Mono', monospace" font-size="9" fill="#E8F8B6">c7</text>
+      <!-- Row 1 -->
+      <rect x="0" y="38" width="106" height="32" class="badge-ilp"/>
+      <text x="12" y="59" class="mono-text" fill="#E8F8B6" font-weight="600">c2: k[i+2]</text>
+      <rect x="116" y="38" width="106" height="32" class="badge-ilp"/>
+      <text x="128" y="59" class="mono-text" fill="#E8F8B6" font-weight="600">c3: k[i+3]</text>
+
+      <!-- Row 2 -->
+      <rect x="0" y="76" width="106" height="32" class="badge-ilp"/>
+      <text x="12" y="97" class="mono-text" fill="#E8F8B6" font-weight="600">c4: k[i+4]</text>
+      <rect x="116" y="76" width="106" height="32" class="badge-ilp"/>
+      <text x="128" y="97" class="mono-text" fill="#E8F8B6" font-weight="600">c5: k[i+5]</text>
+
+      <!-- Row 3 -->
+      <rect x="0" y="114" width="106" height="32" class="badge-ilp"/>
+      <text x="12" y="135" class="mono-text" fill="#E8F8B6" font-weight="600">c6: k[i+6]</text>
+      <rect x="116" y="114" width="106" height="32" class="badge-ilp"/>
+      <text x="128" y="135" class="mono-text" fill="#E8F8B6" font-weight="600">c7: k[i+7]</text>
     </g>
 
-    <text x="12" y="132" class="body-text">• 8 parallel loads / cycle</text>
-    <text x="12" y="148" class="body-text">• Eliminates pipeline stalls</text>
-    <text x="12" y="164" class="body-text">• Saturates ALU ports</text>
+    <!-- Core Features -->
+    <rect x="16" y="240" width="222" height="110" class="badge-std"/>
+    <text x="28" y="266" class="mono-text" fill="#F2F2F2" font-weight="600">Superscalar ALU Saturation</text>
+    <text x="28" y="288" class="body-text">• 8 parallel loads / cycle</text>
+    <text x="28" y="308" class="body-text">• Zero RAW dependency hazards</text>
+    <text x="28" y="328" class="body-text">• Unrolled inner counting loop</text>
+    <text x="28" y="348" class="mono-text" font-size="10.5" fill="#D2F831">314+ MKeys/s sustained (1T)</text>
   </g>
 
-  <!-- Arrow 2 -> 3 -->
-  <g transform="translate(430, 155)">
-    <path d="M 0 0 L 22 0" class="arrow"/>
+  <!-- Arrow Col 2 -> Col 3 -->
+  <g transform="translate(585, 255)">
+    <path d="M 0 0 L 22 0" class="arrow-line"/>
     <polygon points="26,0 20,-4 20,4" class="arrow-head"/>
   </g>
 
-  <!-- STAGE 3: Strict 20 KB L1 Cache Resident -->
-  <g transform="translate(460, 70)">
-    <rect width="200" height="180" class="card-active" filter="url(#neonGlow)"/>
-    <rect x="14" y="12" width="24" height="6" rx="3" fill="#D2F831"/>
-    <text x="14" y="36" class="step-title">3. 20 KB L1-Bound</text>
-    <text x="14" y="52" class="step-sub" fill="#D2F831">3-Pass Multi-Stage Radix</text>
+  <!-- ==================== COLUMN 3: STRICT 20 KB L1-BOUND RADIX ==================== -->
+  <g transform="translate(618, 75)">
+    <rect width="268" height="375" class="col-active" filter="url(#neonGlow)"/>
+    <rect x="16" y="14" width="24" height="6" rx="3" fill="#D2F831"/>
+    <text x="16" y="38" class="col-title">3. Strict 20 KB L1-Bound</text>
+    <text x="16" y="54" class="col-sub" fill="#D2F831">100% L1-Data Resident</text>
 
-    <rect x="14" y="68" width="172" height="42" rx="4" fill="#111808" stroke="#D2F831" stroke-width="0.8"/>
-    <text x="22" y="85" font-family="'SF Mono', monospace" font-size="10" fill="#D2F831">Pass 0 &amp; 1: Radix-11 (16 KB)</text>
-    <text x="22" y="100" font-family="'SF Mono', monospace" font-size="10" fill="#D2F831">Pass 2:     Radix-10 (8 KB)</text>
+    <!-- Pass 0 -->
+    <rect x="16" y="75" width="236" height="52" class="badge-apex"/>
+    <text x="28" y="96" class="mono-text" fill="#D2F831" font-weight="600">Pass 0 (Bits 0–10)</text>
+    <text x="28" y="114" class="body-text">Radix-11 (16 KB) · 2,048 bins</text>
 
-    <text x="14" y="132" class="body-text" fill="#FFFFFF">• 100% L1-Data cache resident</text>
-    <text x="14" y="148" class="body-text" fill="#FFFFFF">• Zero L2 / L3 cache evictions</text>
-    <text x="14" y="164" class="body-text" fill="#D2F831">• 5.5× faster than std::sort</text>
-  </g>
+    <!-- Pass 1 -->
+    <rect x="16" y="135" width="236" height="52" class="badge-apex"/>
+    <text x="28" y="156" class="mono-text" fill="#D2F831" font-weight="600">Pass 1 (Bits 11–21)</text>
+    <text x="28" y="174" class="body-text">Radix-11 (16 KB) · 2,048 bins</text>
 
-  <!-- Arrow 3 -> 4 -->
-  <g transform="translate(664, 155)">
-    <path d="M 0 0 L 22 0" class="arrow"/>
-    <polygon points="26,0 20,-4 20,4" class="arrow-head"/>
-  </g>
+    <!-- Pass 2 -->
+    <rect x="16" y="195" width="236" height="52" class="badge-apex"/>
+    <text x="28" y="216" class="mono-text" fill="#D2F831" font-weight="600">Pass 2 (Bits 22–31)</text>
+    <text x="28" y="234" class="body-text">Radix-10 (8 KB) · 1,024 bins</text>
 
-  <!-- STAGE 4: Sorted Output -->
-  <g transform="translate(694, 70)">
-    <rect width="154" height="180" class="card"/>
-    <rect x="12" y="12" width="22" height="6" rx="3" fill="#D2F831"/>
-    <text x="12" y="36" class="step-title">4. Sorted Array</text>
-    <text x="12" y="52" class="step-sub" fill="#D2F831">Peak Throughput</text>
-
-    <rect x="12" y="68" width="130" height="42" rx="4" fill="#18181B" stroke="#333333"/>
-    <text x="20" y="86" font-family="'SF Mono', monospace" font-size="10" fill="#D2F831">314.7 MKeys/s (1T)</text>
-    <text x="20" y="101" font-family="'SF Mono', monospace" font-size="10" fill="#E8F8B6">1,124 MKeys/s (MT)</text>
-
-    <text x="12" y="132" class="body-text">• Deterministic O(N)</text>
-    <text x="12" y="148" class="body-text">• In-place output</text>
-    <text x="12" y="164" class="body-text">• Verified bit-exact</text>
-  </g>
-
-  <!-- ==================== BOTTOM SECTION: MINIMAL CACHE FOOTPRINT COMPARISON ==================== -->
-  <g transform="translate(32, 275)">
-    <rect width="816" height="140" class="card"/>
-    
-    <text x="18" y="24" class="step-title">Hardware Cache Residency Comparison</text>
-    <text x="18" y="40" class="body-text">Why qi::apex outperforms standard Radix-16 and comparison sorters on modern CPU architectures:</text>
-
-    <!-- Bar 1: qi::apex -->
-    <g transform="translate(18, 56)">
-      <text x="0" y="12" font-family="-apple-system, sans-serif" font-size="11.5" font-weight="600" fill="#D2F831">qi::apex (20 KB)</text>
-      <rect x="140" y="2" width="80" height="12" rx="2" fill="#D2F831"/>
-      <text x="230" y="12" font-family="'SF Mono', monospace" font-size="10.5" fill="#D2F831">100% L1-D Cache Resident (Zero L2 Cache Thrashing)</text>
-    </g>
-
-    <!-- Bar 2: qi::sort -->
-    <g transform="translate(18, 76)">
-      <text x="0" y="12" font-family="-apple-system, sans-serif" font-size="11.5" font-weight="600" fill="#E8F8B6">qi::sort (16–256 KB)</text>
-      <rect x="140" y="2" width="120" height="12" rx="2" fill="#E8F8B6"/>
-      <text x="270" y="12" font-family="'SF Mono', monospace" font-size="10.5" fill="#E8F8B6">Autonomous 50ns Adaptive Router (Counting / R-8 / R-11 / R-16)</text>
-    </g>
-
-    <!-- Bar 3: pdqsort / ska / std -->
-    <g transform="translate(18, 96)">
-      <text x="0" y="12" font-family="-apple-system, sans-serif" font-size="11.5" font-weight="600" fill="#F2F2F2">pdqsort / ska_sort</text>
-      <rect x="140" y="2" width="220" height="12" rx="2" fill="#F2F2F2" opacity="0.8"/>
-      <text x="370" y="12" font-family="'SF Mono', monospace" font-size="10.5" fill="#F2F2F2">O(N log N) Branch Mispredictions / In-Place Partitioning Overheads</text>
-    </g>
-
-    <!-- Bar 4: Plain Radix-16 -->
-    <g transform="translate(18, 116)">
-      <text x="0" y="12" font-family="-apple-system, sans-serif" font-size="11.5" font-weight="600" fill="#888888">Plain Radix-16 (512 KB)</text>
-      <rect x="140" y="2" width="480" height="12" rx="2" fill="#888888" opacity="0.4"/>
-      <text x="630" y="12" font-family="'SF Mono', monospace" font-size="10.5" fill="#888888">Exceeds L1 $\to$ L2/L3 Cache Stalls</text>
-    </g>
+    <!-- Cache Guarantee Box -->
+    <rect x="16" y="260" width="236" height="90" rx="6" fill="#18181B" stroke="#333333"/>
+    <text x="26" y="284" class="mono-text" fill="#FFFFFF" font-weight="600">Hardware Guarantee</text>
+    <text x="26" y="304" class="body-text">• Max Footprint: <tspan fill="#D2F831" font-weight="600">20 KB &lt; 32 KB L1</tspan></text>
+    <text x="26" y="322" class="body-text">• Zero L2/L3 cache evictions</text>
+    <text x="26" y="340" class="mono-text" font-size="10.5" fill="#D2F831">5.5× speedup vs std::sort</text>
   </g>
 
 </svg>
