@@ -1,22 +1,23 @@
-# `qi::apex` — Hardware-Aware Adaptive Radix Sorting Engine
+# `qi::apex`
 
-`qi::apex` is a header-only, zero-dependency C++17 sorting engine designed for modern CPU microarchitectures. It combines lightweight distribution sensing with L1-data-cache-bounded radix passes and vectorized counting sort, achieving linear $O(N)$ time on structured patterns and outperforming comparison-based algorithms (`std::sort`, `pdqsort`) by **6×–20×** on numeric keys.
+Hardware-aware adaptive radix sort (`qi::apex`) is a high-performance sorting engine designed for modern CPU microarchitectures. It combines ultra-lightweight distribution sensing with strict L1-data-cache-bounded radix passes and vectorized counting sort, achieving linear $O(n)$ time on structured patterns and outperforming comparison-based algorithms (`std::sort`, `pdqsort`) by **6×–20×** on numeric keys. All code is available for free under the GPL-2.0 license.
 
-Bindings are available for **Python** (`pip install qi-sort`), **Go**, and **Java (JNI)**. An official **Boost.Sort** submission module is provided under `boost/sort/apex_sort/`.
+| Best | Average | Worst | Memory | Stable | Deterministic |
+|:---:|:---:|:---:|:---:|:---:|:---:|
+| $n$ | $n$ | $n$ | $n$ | No | Yes |
 
 ---
 
-## ⚡ Quickstart
+## Usage
 
-`qi::apex` is header-only and requires only standard C++17:
+`qi::apex` is a header-only, zero-dependency C++17 library. Just call `qi::apex::sort` on any contiguous array:
 
 ```cpp
 #include "qi_apex.hpp"
 #include <vector>
-#include <iostream>
 
 int main() {
-    // 1. Unsigned 32-bit integers (36.5 ms for 10M keys)
+    // 1. Unsigned 32-bit integers (36.5 ms for 10,000,000 keys)
     std::vector<uint32_t> data = {42, 10, 100, 5, 9999, 12};
     qi::apex::sort(data.data(), data.size());
 
@@ -33,24 +34,28 @@ int main() {
     std::vector<uint64_t> row_ids = {101, 102, 103};
     qi::apex::sort_pairs(keys.data(), row_ids.data(), keys.size());
 
-    // 5. Multi-Threaded Parallel Execution (16.8 ms for 10M keys)
+    // 5. Multi-Threaded Parallel Execution (17.5 ms for 10,000,000 keys)
     qi::apex::parallel_sort(data.data(), data.size());
 }
 ```
 
+If you are using Boost, `boost::sort::apex_sort` is provided as a drop-in replacement for `boost::sort::pdqsort` and `boost::sort::spreadsort` under `boost/sort/apex_sort/apex_sort.hpp`.
+
 ---
 
-## 📊 Benchmark Results
+## Benchmark
+
+A comparison of `qi::apex`, Orson Peters' `pdqsort`, Steven Ross's `spreadsort`, and GCC/Clang's `std::sort` with various input distributions:
 
 <p align="center">
   <img src="docs/benchmark_chart.svg" alt="qi::apex Benchmark Chart" width="100%"/>
 </p>
 
-Benchmarked on **Apple Silicon M1 Pro** using `clang++ -O3 -std=c++17`. All timings are the best of 3 runs on **10,000,000 keys (40 MB RAM)**. Competitor implementations use unmodified source code (`pdqsort.hpp` from Orson Peters and `spreadsort` from Boost.Sort).
+*Compiled with `clang++ -std=c++17 -O3 -m64 -march=native` on Apple Silicon M1 Pro. All timings are the best of 3 runs on $N = 10,000,000$ keys (40 MB RAM).*
 
-### Single-Threaded (1T) Comparison ($N = 10,000,000$ keys)
+### Single-Threaded (1T) Execution ($N = 10,000,000$ keys)
 
-| Distribution | `std::sort` | `pdqsort` | `spreadsort` | `qi::sort` | `qi::apex` (1T) | Speedup vs `std::sort` | Speedup vs `pdqsort` |
+| Distribution | `std::sort` | `pdqsort` | `spreadsort` | `qi::sort` | **`qi::apex` (1T)** | Speedup vs `std::sort` | Speedup vs `pdqsort` |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **Uniform Random 32-bit** | 230.06 ms | 220.88 ms | 84.97 ms | 37.68 ms | **`36.59 ms`** | **6.3×** | **6.0×** |
 | **Byte Duplicates (0–255)** | 81.33 ms | 58.35 ms | 147.76 ms | **`4.09 ms`** | **`4.13 ms`** | **19.7×** | **14.1×** |
@@ -61,57 +66,85 @@ Benchmarked on **Apple Silicon M1 Pro** using `clang++ -O3 -std=c++17`. All timi
 | **Nearly Sorted (~98%)** | 191.40 ms | 170.06 ms | 145.57 ms | 192.99 ms | **`64.33 ms`** | **3.0×** | **2.6×** |
 | **Pipe Organ (Mirrored Ramp)**| 583.26 ms | 248.56 ms | 143.59 ms | 135.83 ms | **`134.05 ms`**| **4.4×** | **1.9×** |
 
-### Multi-Threaded Parallel Scaling ($N = 10,000,000$ keys)
+### Multi-Threaded (MT) Scaling ($N = 10,000,000$ keys)
 
-| Workload | `std::sort` (1T) | `pdqsort` (1T) | `qi::apex` (1T) | **`qi::apex` (Parallel)** | Parallel Throughput |
+| Workload | `std::sort` (1T) | `pdqsort` (1T) | `qi::apex` (1T) | **`qi::apex` (Parallel MT)** | Parallel Throughput |
 | :--- | :---: | :---: | :---: | :---: | :---: |
 | **10M Uniform Random 32-bit** | 230.06 ms | 220.88 ms | 36.59 ms | **`17.59 ms`** | **568.5 MKeys/s** |
 | **10M 16-bit Domain (0–65K)** | 135.34 ms | 110.47 ms | 21.76 ms | **`13.89 ms`** | **720.0 MKeys/s** |
 | **10M Low-Cardinality (4 vals)**| 50.73 ms | 16.65 ms | 12.30 ms | **`9.36 ms`** | **1,068.3 MKeys/s** |
 
-*(Note: On systems with AVX-512 vector register files such as Intel Xeon Platinum, in-register SIMD algorithms like Google VQSort achieve peak throughput on uniform random noise; `qi::apex` achieves high throughput universally across Apple Silicon, ARM, AMD, and Intel architectures without requiring specialized vector instruction sets.)*
+*(Note: On systems equipped with AVX-512 vector register files such as Intel Xeon Platinum, in-register SIMD sorters like Google VQSort hold the throughput lead on uniform random noise; `qi::apex` achieves high throughput universally across Apple Silicon, ARM, AMD, and Intel architectures without requiring specialized vector instruction sets.)*
 
 ---
 
-## 🧠 The Algorithm
+## Visualization
+
+A visualization of `qi::apex` executing an adaptive sort. The pipeline illustrates the ~50ns inline bitwise distribution sensing, strict 20 KB L1-data cache residency, and 8-way instruction-level parallel scatter loops:
 
 <p align="center">
   <img src="docs/algorithm_visualizer.svg" alt="qi::apex Execution Pipeline" width="100%"/>
 </p>
 
-`qi::apex` uses an adaptive multi-tier dispatch model tuned to CPU cache hierarchies and execution units:
+---
 
-```text
-                           Input Array
-                                │
-                                ▼
-                    ┌───────────────────────┐
-                    │ 50ns Bitwise Probe    │
-                    │ bitOr + lsbOccupied   │
-                    └───────────┬───────────┘
-                                │
-         ┌──────────────┬───────┴───────┬──────────────┐
-         ▼              ▼               ▼              ▼
-     O(N) Exit    Counting Sort     Radix-16       Radix-11
-   Sorted/Reverse (bitOr <= 0xFFF)  (Low entropy) (Full 32-bit)
-   (sub-ms exit)   (1-pass L1-D)    (2 passes)    (3 passes, 20KB L1)
-```
+## The Best Case
 
-### 1. Strict 20 KB L1-Data Cache Bounding
-Standard 16-bit radix sorts allocate 256 KB histogram tables ($65,536 \times 4\text{ bytes}$), overflowing the 32 KB/48 KB L1 caches of x86 and ARM processors and causing cache line evictions. `qi::apex` uses an **11-bit radix width** ($2,048$ bins per pass). Three combined histograms take exactly **20 KB**, fitting entirely within L1-Data cache for all passes.
+`qi::apex` is designed to run in linear $O(n)$ time for common structural patterns. Linear time is achieved for inputs that are pre-sorted, reverse-sorted, contain low cardinality / duplicate keys, or fall within narrow domains.
 
-### 2. 8-Way Instruction-Level Parallelism (ILP)
-Counting and scatter loops are unrolled 8 ways across independent accumulators, breaking RAW (Read-After-Write) dependency chains and saturating multiple superscalar execution ports simultaneously.
+There are three separate mechanisms at play to achieve this:
 
-### 3. Pipelined Software Prefetching ($PF=48$)
-Scatter passes issue software prefetch instructions (`__builtin_prefetch`) 48 elements ahead of the active write pointer, hiding DRAM write-allocate latency and maximizing memory bus bandwidth.
-
-### 4. 1ns Monotonic Fast-Paths
-Strided pre-checks detect pre-sorted and reverse-sorted arrays in 2–3 CPU cycles, triggering an $O(N)$ in-place reversal or immediate return.
+1. **Monotonic Short-Circuits:** Before partitioning, `qi::apex` runs a strided sample check across 64 elements. If the sample indicates ascending order, a linear verification pass confirms sortedness and returns immediately in $O(n)$ time ($4.41\text{ ms}$ for 10M keys). If descending, it reverses in-place in $6.33\text{ ms}$. Random data is rejected in 2–3 CPU cycles.
+2. **Vectorized Counting Sort (Values $\le 4,095$):** If the bitwise OR probe reveals values within 12 bits, `qi::apex` bypasses radix scatter and runs a single-pass counting sort entirely within L1 cache, running at **2,400+ MKeys/s** ($4.13\text{ ms}$ for 10M keys).
+3. **Radix-16 for Heavy Duplicates:** When duplicate density is high (few unique buckets occupied), `qi::apex` automatically switches to a 2-pass Radix-16 kernel ($65,536$ bins), sorting the data in two fast passes.
 
 ---
 
-## 📦 Language Bindings
+## The Average Case
+
+On uniform random data where no narrow patterns are detected, `qi::apex` executes an **L1-cache-bounded Radix-11** algorithm ($2,048$ bins per pass, 3 passes total for 32-bit keys).
+
+`qi::apex` achieves its speedup over traditional radix sorts through three microarchitectural optimizations:
+
+### 1. Strict 20 KB L1-Data Cache Bounding
+Traditional 16-bit radix sorts allocate 256 KB histogram tables, exceeding the 32 KB/48 KB L1-Data caches of modern processors and causing severe cache thrashing. `qi::apex` bounds its three combined histogram tables to **exactly 20 KB** ($8\text{ KB} + 8\text{ KB} + 4\text{ KB}$), guaranteeing 100% L1-Data cache residency.
+
+### 2. 8-Way Instruction-Level Parallelism (ILP)
+Counting and scatter loops are unrolled 8 ways across independent accumulators. This eliminates Read-After-Write (RAW) pipeline hazards and saturates multiple superscalar execution ports simultaneously:
+
+```cpp
+// 8-Way Unrolled Counting Loop
+for (; i + 7 < n; i += 8) {
+    u32 v0 = data[i],   v1 = data[i+1], v2 = data[i+2], v3 = data[i+3];
+    u32 v4 = data[i+4], v5 = data[i+5], v6 = data[i+6], v7 = data[i+7];
+
+    c0[v0 & 0x7FF]++; c1[(v0 >> 11) & 0x7FF]++; c2[v0 >> 22]++;
+    c0[v1 & 0x7FF]++; c1[(v1 >> 11) & 0x7FF]++; c2[v1 >> 22]++;
+    c0[v2 & 0x7FF]++; c1[(v2 >> 11) & 0x7FF]++; c2[v2 >> 22]++;
+    c0[v3 & 0x7FF]++; c1[(v3 >> 11) & 0x7FF]++; c2[v3 >> 22]++;
+    c0[v4 & 0x7FF]++; c1[(v4 >> 11) & 0x7FF]++; c2[v4 >> 22]++;
+    c0[v5 & 0x7FF]++; c1[(v5 >> 11) & 0x7FF]++; c2[v5 >> 22]++;
+    c0[v6 & 0x7FF]++; c1[(v6 >> 11) & 0x7FF]++; c2[v6 >> 22]++;
+    c0[v7 & 0x7FF]++; c1[(v7 >> 11) & 0x7FF]++; c2[v7 >> 22]++;
+}
+```
+
+### 3. Pipelined Software Prefetching ($PF=48$)
+Scatter passes issue `__builtin_prefetch` instructions 48 elements ahead of the active write stream. This hides DRAM write-allocate latency and maximizes memory bus throughput.
+
+---
+
+## The Worst Case
+
+Unlike comparison-based quicksort (which can degrade to $O(n^2)$ on adversarial pivot choices), `qi::apex` is an LSD radix sort with a strictly deterministic runtime:
+
+$$T(n) = O(k \cdot n)$$
+
+Where $k$ is the number of digit passes ($k = 3$ for 32-bit keys, $k = 4$ for 64-bit keys). The worst-case runtime on completely random, adversarial data remains strictly linear with respect to the number of bytes sorted ($36.59\text{ ms}$ for 10M keys).
+
+---
+
+## Language Bindings
 
 ### Python (`pip install qi-sort`)
 Zero-copy NumPy array sorting via dynamic C ABI loading:
@@ -142,9 +175,9 @@ boost::sort::apex_sort(data.begin(), data.end());
 
 ---
 
-## 📄 License & Attribution
+## License & Attribution
 
-Distributed under the **GPL-2.0 License**.  
+Distributed for free under the **GPL-2.0 License**.  
 Developed by **Jason Pandian** (2026).
 
 ```bibtex
