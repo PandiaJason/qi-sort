@@ -79,3 +79,7 @@ llm_stream_agentic_demo
 master_bench
 hard_arena
 demo_hf
+
+# Local Research & Draft Paper (Ignored from Git)
+paper/
+*.pdf
