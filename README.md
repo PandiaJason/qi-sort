@@ -12,6 +12,8 @@ Hardware-aware adaptive radix sort (`qi::apex`) is a high-performance sorting en
 
 `qi::apex` is a header-only, zero-dependency C++17 library. Just call `qi::apex::sort` on any contiguous array:
 
+### Standard C++ Usage (`qi::apex`)
+
 ```cpp
 #include "qi_apex.hpp"
 #include <vector>
@@ -39,7 +41,24 @@ int main() {
 }
 ```
 
-If you are using Boost, `boost::sort::apex_sort` is provided as a drop-in replacement for `boost::sort::pdqsort` and `boost::sort::spreadsort` under `boost/sort/apex_sort/apex_sort.hpp`.
+### Boost.Sort Compatible Header
+
+`boost::sort::apex_sort` is provided as a drop-in iterator replacement for `std::sort`, `boost::sort::pdqsort`, and `boost::sort::spreadsort`:
+
+```cpp
+#include "boost/sort/apex_sort/apex_sort.hpp"
+#include <vector>
+
+int main() {
+    std::vector<uint32_t> data = {5, 2, 8, 1, 9, 3};
+
+    // 1. Single-threaded Boost.Sort
+    boost::sort::apex_sort(data.begin(), data.end());
+
+    // 2. Multi-threaded Parallel Boost.Sort
+    boost::sort::parallel_apex_sort(data.begin(), data.end());
+}
+```
 
 ---
 
