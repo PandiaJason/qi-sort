@@ -10,9 +10,7 @@ Hardware-aware adaptive radix sort (`qi::apex`) is a high-performance sorting en
 
 ## Usage
 
-`qi::apex` is a header-only, zero-dependency C++17 library. Just call `qi::apex::sort` on any contiguous array:
-
-### Standard C++ Usage (`qi::apex`)
+`qi::apex` is a header-only, zero-dependency C++17 library. Just include `qi_apex.hpp` and call `qi::apex::sort`:
 
 ```cpp
 #include "qi_apex.hpp"
@@ -38,25 +36,6 @@ int main() {
 
     // 5. Multi-Threaded Parallel Execution (17.5 ms for 10,000,000 keys)
     qi::apex::parallel_sort(data.data(), data.size());
-}
-```
-
-### Boost.Sort Compatible Header
-
-`boost::sort::apex_sort` is provided as a drop-in iterator replacement for `std::sort`, `boost::sort::pdqsort`, and `boost::sort::spreadsort`:
-
-```cpp
-#include "boost/sort/apex_sort/apex_sort.hpp"
-#include <vector>
-
-int main() {
-    std::vector<uint32_t> data = {5, 2, 8, 1, 9, 3};
-
-    // 1. Single-threaded Boost.Sort
-    boost::sort::apex_sort(data.begin(), data.end());
-
-    // 2. Multi-threaded Parallel Boost.Sort
-    boost::sort::parallel_apex_sort(data.begin(), data.end());
 }
 ```
 
@@ -99,10 +78,10 @@ A comparison of `qi::apex`, Orson Peters' `pdqsort`, Steven Ross's `spreadsort`,
 
 ## Visualization
 
-A visualization of `qi::apex` sorting a ~100 element array. The animation shows the transition from randomized input entropy through 3-pass L1-bound radix partitioning into a fully sorted array:
+A visualization of `qi::apex` sorting a ~140 element array. The animation shows the transition from randomized input entropy through 50ns sensing and 3-pass L1-bound radix partitioning into a fully sorted array:
 
 <p align="center">
-  <img src="docs/sorting_visualizer.svg" alt="qi::apex Array Sorting Simulation" width="100%"/>
+  <img src="docs/sorting_visualization.gif" alt="qi::apex Array Sorting Simulation" width="100%"/>
 </p>
 
 ---
@@ -182,14 +161,6 @@ import "github.com/PandiaJason/qi-sort/bindings/go/qisort"
 
 data := []uint32{42, 10, 100, 5, 9999}
 qisort.SortU32(data)
-```
-
-### Boost.Sort Compatible Header
-```cpp
-#include "boost/sort/apex_sort/apex_sort.hpp"
-
-std::vector<uint32_t> data = {5, 2, 8, 1};
-boost::sort::apex_sort(data.begin(), data.end());
 ```
 
 ---
