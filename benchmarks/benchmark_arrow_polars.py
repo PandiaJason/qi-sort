@@ -54,7 +54,7 @@ def run_database_benchmark():
         m_apex = (N / 1e6) / (t_apex / 1000)
         assert np.all(arr_apex[:-1] <= arr_apex[1:]), "qi::apex sort failed!"
         speedup_apex = t_np / t_apex
-        print(f"{'★ qi::apex Single-Core Column Sorter':<38} {t_apex:<16.2f} {m_apex:<22.2f} {speedup_apex:.2f}x FASTER")
+        print(f"{'qi::apex Single-Core Column Sorter':<38} {t_apex:<16.2f} {m_apex:<22.2f} {speedup_apex:.2f}x FASTER")
 
         # 3. qi::apex Multi-Core Parallel
         arr_par = raw_keys.copy()
@@ -62,7 +62,7 @@ def run_database_benchmark():
         m_par = (N / 1e6) / (t_par / 1000)
         assert np.all(arr_par[:-1] <= arr_par[1:]), "qi::apex parallel sort failed!"
         speedup_par = t_np / t_par
-        print(f"{'★ qi::apex Parallel Column Sorter':<38} {t_par:<16.2f} {m_par:<22.2f} {speedup_par:.2f}x FASTER")
+        print(f"{'qi::apex Parallel Column Sorter':<38} {t_par:<16.2f} {m_par:<22.2f} {speedup_par:.2f}x FASTER")
 
         # 4. Polars (if available)
         if has_polars:
@@ -78,7 +78,7 @@ def run_database_benchmark():
             t_qi_polars = time_op(run_qi_polars)
             m_qi_polars = (N / 1e6) / (t_qi_polars / 1000)
             speedup_polars = t_polars / t_qi_polars
-            print(f"{'★ qi::apex Accelerated Polars':<38} {t_qi_polars:<16.2f} {m_qi_polars:<22.2f} {speedup_polars:.2f}x FASTER")
+            print(f"{'qi::apex Accelerated Polars':<38} {t_qi_polars:<16.2f} {m_qi_polars:<22.2f} {speedup_polars:.2f}x FASTER")
 
         # 5. PyArrow (if available)
         if has_arrow:
@@ -94,10 +94,10 @@ def run_database_benchmark():
             t_qi_arrow = time_op(run_qi_arrow)
             m_qi_arrow = (N / 1e6) / (t_qi_arrow / 1000)
             speedup_arrow = t_pyarrow / t_qi_arrow
-            print(f"{'★ qi::apex Accelerated PyArrow':<38} {t_qi_arrow:<16.2f} {m_qi_arrow:<22.2f} {speedup_arrow:.2f}x FASTER")
+            print(f"{'qi::apex Accelerated PyArrow':<38} {t_qi_arrow:<16.2f} {m_qi_arrow:<22.2f} {speedup_arrow:.2f}x FASTER")
 
     print("\n" + "=" * 90)
-    print("  🎉 DATABASE & COLUMNAR BENCHMARK COMPLETE WITH 100% SUCCESS!")
+    print("  DATABASE & COLUMNAR BENCHMARK COMPLETE WITH 100% SUCCESS!")
     print("=" * 90)
 
 if __name__ == '__main__':

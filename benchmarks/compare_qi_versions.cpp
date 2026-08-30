@@ -369,11 +369,11 @@ int main() {
         else std::cout << "  (DIFFERENT)\n";
 
         std::cout << "\n  CORRECTNESS:\n";
-        std::cout << "    v1 sorted correctly:     " << (v1_ok ? "✓ PASS" : "✗ FAIL") << "\n";
-        std::cout << "    v2 sorted correctly:     " << (v2_ok ? "✓ PASS" : "✗ FAIL") << "\n";
-        std::cout << "    v1 matches std::sort:    " << (v1_ref ? "✓ PASS" : "✗ FAIL") << "\n";
-        std::cout << "    v2 matches std::sort:    " << (v2_ref ? "✓ PASS" : "✗ FAIL") << "\n";
-        std::cout << "    v1 == v2 (identical):    " << (match ? "✓ PASS" : "✗ FAIL") << "\n";
+        std::cout << "    v1 sorted correctly:     " << (v1_ok ? "[PASS]" : "[FAIL]") << "\n";
+        std::cout << "    v2 sorted correctly:     " << (v2_ok ? "[PASS]" : "[FAIL]") << "\n";
+        std::cout << "    v1 matches std::sort:    " << (v1_ref ? "[PASS]" : "[FAIL]") << "\n";
+        std::cout << "    v2 matches std::sort:    " << (v2_ref ? "[PASS]" : "[FAIL]") << "\n";
+        std::cout << "    v1 == v2 (identical):    " << (match ? "[PASS]" : "[FAIL]") << "\n";
 
         std::cout << "\n  PERFORMANCE (7-Trial Median):\n";
         std::cout << "    Original v1 (e85e530):  " << std::fixed << std::setprecision(2) << m1 << " ms  ("

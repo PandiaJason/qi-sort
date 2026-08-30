@@ -199,7 +199,7 @@ int main() {
          << setw(12) << "R-11 (ms)"
          << setw(12) << "qi (ms)"
          << setw(12) << "ent (ms)"
-         << "QI✓  Ent✓\n";
+         << "QI[PASS]  Ent[PASS]\n";
     cout << string(120,'-') << "\n";
 
     for (auto& r : rows) {
@@ -211,8 +211,8 @@ int main() {
              << setw(12) << r.msR11
              << setw(12) << r.msQi
              << setw(12) << r.msEntropy
-             << (r.qiCorrect  ? "  ✓" : "  ✗")
-             << (r.entCorrect ? "   ✓" : "   ✗") << "\n";
+             << (r.qiCorrect  ? "  [PASS]" : "  [FAIL]")
+             << (r.entCorrect ? "   [PASS]" : "   [FAIL]") << "\n";
     }
 
     int nondecisive = (int)sets.size() - ties;

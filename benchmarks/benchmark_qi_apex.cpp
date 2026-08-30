@@ -147,7 +147,7 @@ int main() {
             double t = time_ms([&]() { data = original; qi::apex::sort(data.data(), N); });
             bool ok = std::is_sorted(data.begin(), data.end());
             double mkeys = (N / 1e6) / (t / 1000.0);
-            std::cout << std::left << std::setw(44) << "★ qi::apex (Single-Core Champion)"
+            std::cout << std::left << std::setw(44) << "qi::apex (Single-Core Champion)"
                       << std::setw(16) << std::fixed << std::setprecision(2) << t
                       << std::setw(24) << mkeys
                       << (ok ? "PASS" : "FAIL") << "\n";
@@ -159,7 +159,7 @@ int main() {
             double t = time_ms([&]() { data = original; qi::apex::parallel_sort(data.data(), N); });
             bool ok = std::is_sorted(data.begin(), data.end());
             double mkeys = (N / 1e6) / (t / 1000.0);
-            std::cout << std::left << std::setw(44) << "★ qi::apex (Multi-Core PARALLEL)"
+            std::cout << std::left << std::setw(44) << "qi::apex (Multi-Core PARALLEL)"
                       << std::setw(16) << std::fixed << std::setprecision(2) << t
                       << std::setw(24) << mkeys
                       << (ok ? "PASS" : "FAIL") << "\n";
@@ -199,7 +199,7 @@ int main() {
             double t = time_ms([&]() { data = original; qi::apex::sort(data.data(), N); });
             bool ok = std::is_sorted(data.begin(), data.end());
             double mkeys = (N / 1e6) / (t / 1000.0);
-            std::cout << std::left << std::setw(44) << "★ qi::apex (Adaptive Counting Sort)"
+            std::cout << std::left << std::setw(44) << "qi::apex (Adaptive Counting Sort)"
                       << std::setw(16) << std::fixed << std::setprecision(2) << t
                       << std::setw(24) << mkeys
                       << (ok ? "PASS" : "FAIL") << "\n\n";
@@ -236,7 +236,7 @@ int main() {
             double t = time_ms([&]() { data = original; qi::apex::sort(data.data(), N); });
             bool ok = std::is_sorted(data.begin(), data.end());
             double mkeys = (N / 1e6) / (t / 1000.0);
-            std::cout << std::left << std::setw(44) << "★ qi::apex (1ns Monotonic Short-Circuit)"
+            std::cout << std::left << std::setw(44) << "qi::apex (1ns Monotonic Short-Circuit)"
                       << std::setw(16) << std::fixed << std::setprecision(2) << t
                       << std::setw(24) << mkeys
                       << (ok ? "PASS" : "FAIL") << "\n\n";

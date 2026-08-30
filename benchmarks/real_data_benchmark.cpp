@@ -251,13 +251,13 @@ int main() {
     vector<Dataset> sets;
 
     auto nyc = loadNYCTaxi("/tmp/nyc_taxi_sample.csv");
-    if (nyc.n > 0) { cout << "  ✓ NYC Taxi:     " << nyc.n << " timestamps\n"; sets.push_back(move(nyc)); }
+    if (nyc.n > 0) { cout << "  [PASS] NYC Taxi:     " << nyc.n << " timestamps\n"; sets.push_back(move(nyc)); }
 
     auto dict = loadDictionary("/usr/share/dict/words");
-    if (dict.n > 0) { cout << "  ✓ Dictionary:   " << dict.n << " CRC-32 hashes\n"; sets.push_back(move(dict)); }
+    if (dict.n > 0) { cout << "  [PASS] Dictionary:   " << dict.n << " CRC-32 hashes\n"; sets.push_back(move(dict)); }
 
     auto airports = loadAirports("/tmp/airports.csv");
-    if (airports.n > 0) { cout << "  ✓ Airports:     " << airports.n << " elevation values\n"; sets.push_back(move(airports)); }
+    if (airports.n > 0) { cout << "  [PASS] Airports:     " << airports.n << " elevation values\n"; sets.push_back(move(airports)); }
 
     cout << "\nRunning benchmarks...\n\n";
 
@@ -298,7 +298,7 @@ int main() {
         row("qi::sort [pick="+r.qiPick+"]", r.msQi);
 
         cout << string(76, '-') << "\n";
-        cout << "Correctness: " << (r.correct ? "✓ PASS" : "✗ FAIL") << "\n\n\n";
+        cout << "Correctness: " << (r.correct ? "[PASS]" : "[FAIL]") << "\n\n\n";
     }
 
     // ── Aggregate summary ──────────────────────────────────────────────────

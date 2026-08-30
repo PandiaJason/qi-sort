@@ -52,7 +52,7 @@ void testSize(size_t N, mt19937_64& rng) {
         auto data = original;
         double t = time_ms([&]() { data = original; qi::apex::sort(data.data(), N); });
         bool ok = is_sorted(data.begin(), data.end());
-        cout << left << setw(38) << "★ qi::apex (Current Champion)"
+        cout << left << setw(38) << "qi::apex (Current Champion)"
              << setw(16) << fixed << setprecision(2) << t
              << setw(24) << (N / 1e6) / (t / 1000.0)
              << (ok ? "PASS" : "FAIL") << "\n";
@@ -63,7 +63,7 @@ void testSize(size_t N, mt19937_64& rng) {
         auto data = original;
         double t = time_ms([&]() { data = original; qi::hyper_apex::sort(data.data(), N); });
         bool ok = is_sorted(data.begin(), data.end());
-        cout << left << setw(38) << "⚡ qi::hyper_apex (2-Pass Zero-Memcpy)"
+        cout << left << setw(38) << "qi::hyper_apex (2-Pass Zero-Memcpy)"
              << setw(16) << fixed << setprecision(2) << t
              << setw(24) << (N / 1e6) / (t / 1000.0)
              << (ok ? "PASS" : "FAIL") << "\n";

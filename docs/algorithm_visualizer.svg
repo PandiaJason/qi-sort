@@ -144,7 +144,7 @@
 
     <g transform="translate(20, 245)">
       <text x="0" y="18" class="box-desc">Total L1 Footprint:</text>
-      <text x="0" y="38" class="code-font" font-size="13" font-weight="700">★ Exactly 20 KB</text>
+      <text x="0" y="38" class="code-font" font-size="13" font-weight="700">Exactly 20 KB</text>
       <text x="0" y="56" class="subtitle">100% Fits 32KB/48KB L1</text>
       <text x="0" y="74" class="subtitle">0 DRAM Cache Stalls</text>
     </g>

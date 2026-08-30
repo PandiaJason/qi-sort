@@ -190,7 +190,7 @@ int main() {
                       << std::setw(12) << std::fixed << std::setprecision(2) << t << " ms  "
                       << std::setw(16) << (std::to_string(static_cast<int>(throughput)) + " MKeys/s")
                       << std::setw(20) << (std::to_string(vs_qi).substr(0, 4) + "x vs qi scalar")
-                      << (ok ? "[✓ OK]" : "[✗ FAIL]") << "\n";
+                      << (ok ? "[[OK]]" : "[[FAIL]]") << "\n";
         };
 
         std::cout << std::left << std::setw(22) << "  Category"
