@@ -15,6 +15,10 @@
 2. **`qi::sort` (Autonomous Adaptive Router)**: Runs a 50-nanosecond integer probe to sense bit range (`bitOr`) and duplicate density (`lsbOccupied`), automatically routing execution to Counting Sort, Radix-8, Radix-11, or Radix-16.
 3. **Research Frontier Models**: Experimental models exploring learned spline indexing, wave-particle partitioning, and non-radix field sorting remain under active research in the `archive/research-and-benchmarks` branch.
 
+<p align="center">
+  <img src="docs/apex_architecture.svg" alt="qi::apex Microarchitectural Pipeline" width="100%"/>
+</p>
+
 ---
 
 ## Usage
