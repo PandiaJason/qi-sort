@@ -86,15 +86,15 @@ int main() {
 
 ## Benchmark
 
-A comparison of `qi::apex`, Orson Peters' `pdqsort`, Malte Skarupke's `ska_sort`, and GCC/Clang's `std::sort` with various input distributions:
+A comprehensive empirical evaluation of `qi::apex`, `qi::sort`, Orson Peters' `pdqsort`, Malte Skarupke's `ska_sort`, and GCC/Clang's `std::sort` across multiple CPU architectures on $N = 10,000,000$ keys (40 MB RAM):
+
+### 1. Apple Silicon M1 Pro Benchmark ($N = 10,000,000$ keys)
 
 <p align="center">
-  <img src="docs/benchmark_chart.svg" alt="qi::apex Benchmark Chart" width="100%"/>
+  <img src="docs/benchmark_chart.svg" alt="Apple Silicon M1 Pro Benchmark Chart" width="100%"/>
 </p>
 
-*Compiled with `clang++ -std=c++17 -O3 -m64 -march=native` on Apple Silicon M1 Pro. All timings are the best of 3 runs on $N = 10,000,000$ keys (40 MB RAM).*
-
-### Single-Threaded (1T) Execution — Apple Silicon M1 Pro ($N = 10,000,000$ keys)
+*Compiled with `clang++ -std=c++17 -O3 -m64 -march=native` on Apple Silicon M1 Pro. All timings are the best of 3 runs.*
 
 | Distribution | `std::sort` | `pdqsort` | `ska_sort` | `qi::sort` | **`qi::apex` (1T)** | Speedup vs `std::sort` | Speedup vs `pdqsort` |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -107,13 +107,13 @@ A comparison of `qi::apex`, Orson Peters' `pdqsort`, Malte Skarupke's `ska_sort`
 | **Nearly Sorted (~98%)** | 102.78 ms | 98.79 ms | 167.83 ms | 102.69 ms | **`112.08 ms`** | **0.9×** | **0.9×** |
 | **Pipe Organ (Mirrored Ramp)**| 584.27 ms | 244.09 ms | 159.67 ms | 137.71 ms | **`134.51 ms`**| **4.3×** | **1.8×** |
 
-### Single-Threaded (1T) Execution — Intel Xeon Platinum 8481C ($N = 10,000,000$ keys, x86-64 Server)
+### 2. Intel Xeon Platinum 8481C Benchmark ($N = 10,000,000$ keys, x86-64 Server)
 
 <p align="center">
   <img src="docs/xeon_benchmark_chart.svg" alt="Intel Xeon Platinum 8481C Benchmark Chart" width="100%"/>
 </p>
 
-*Compiled with `g++ -std=c++17 -O3 -march=native` on enterprise server.*
+*Compiled with `g++ -std=c++17 -O3 -march=native` on enterprise server. Best of timed runs.*
 
 | Distribution | `std::sort` | `pdqsort` | `ska_sort` | `qi::sort` | **`qi::apex` (1T)** | 1T Winner | Speedup vs `std::sort` |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
