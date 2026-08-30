@@ -7,7 +7,7 @@
     <style>
       .bg { fill: #000000; }
       .chart-box { fill: #000000; stroke: #FFFFFF; stroke-width: 1.5; }
-      .title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 20px; font-weight: 700; fill: #FFFFFF; text-anchor: middle; letter-spacing: -0.2px; }
+      .title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 19px; font-weight: 700; fill: #FFFFFF; text-anchor: middle; letter-spacing: -0.2px; }
       .axis-title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 13.5px; fill: #FFFFFF; font-weight: 600; text-anchor: middle; }
       .y-label { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 12px; fill: #FFFFFF; font-weight: 600; text-anchor: end; }
       .x-label { font-family: "SF Mono", Monaco, Menlo, Consolas, monospace; font-size: 12px; fill: #FFFFFF; text-anchor: middle; font-weight: 500; }
@@ -31,8 +31,8 @@
     <circle cx="12" cy="12" r="7" fill="#D2F831" filter="url(#neonGlow)"/>
   </g>
 
-  <!-- Title Only (No Subtitle) -->
-  <text x="450" y="34" class="title">Sorting 10⁷ elements</text>
+  <!-- Title with Processor Name in Brackets -->
+  <text x="450" y="34" class="title">Sorting 10⁷ elements (Apple Silicon M1 Pro)</text>
 
   <rect x="215" y="52" width="505" height="435" class="chart-box"/>
   <line x1="215.0" y1="52" x2="215.0" y2="487" class="grid"/>
@@ -54,7 +54,7 @@
   <line x1="720.0" y1="487" x2="720.0" y2="494" class="tick"/>
   <text x="720.0" y="510" class="x-label">200</text>
 
-  <text x="467.5" y="533" class="axis-title">Cycles per element (Apple Silicon M1 Pro @ 3.2GHz)</text>
+  <text x="467.5" y="533" class="axis-title">Cycles per element (Lower is better)</text>
   <text x="205" y="83.2" class="y-label">Uniform Random 32-bit</text>
   <rect x="215" y="62.7" width="33.3" height="6.5" rx="1" class="bar-apex"/>
   <rect x="215" y="70.2" width="31.0" height="6.5" rx="1" class="bar-qisort"/>
