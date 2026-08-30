@@ -1,8 +1,8 @@
-# PROJECT DOCUMENTATION — Quick Index Sort (`qi-sort`)
+# PROJECT DOCUMENTATION — qi-sort: Quick Index Radix Sort
 
 ## Project Overview
 
-**Quick Index Sort (`qi-sort`)** is an algorithmic sorting family engineered for modern CPU microarchitectures and memory hierarchies. The library is a production-grade, zero-dependency, header-only C++17 project with native bindings for **Go**, **Python**, **Java**, and **C-ABI**.
+**qi-sort: Quick Index Radix Sort** is an algorithmic sorting family engineered for modern CPU microarchitectures and memory hierarchies. The library is a production-grade, zero-dependency, header-only C++17 project with native bindings for **Go**, **Python**, **Java**, and **C-ABI**.
 
 The family centers on two primary production radix sorting models:
 1. **`qi::apex`**: The flagship hardware-aware radix engine, strictly bounded to 20 KB L1-Data cache with 8-way ILP unrolling and $PF=48$ prefetch.

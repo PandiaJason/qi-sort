@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "qi_sort"
 version = "0.4.0"
-description = "qi-sort & qi::apex: High-Performance Adaptive Sorting Suite for Modern Hardware"
+description = "qi-sort: Quick Index Radix Sort"
 readme = "README.md"
 requires-python = ">=3.8"
 license = { text = "GPL-2.0-only" }

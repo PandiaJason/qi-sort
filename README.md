@@ -1,6 +1,6 @@
-# Quick Index Sort (`qi-sort`)
+# qi-sort: Quick Index Radix Sort
 
-Quick Index Sort (`qi-sort`) is an algorithmic sorting family engineered for modern CPU microarchitectures and memory hierarchies. The library provides two primary production radix sorting models—**`qi::apex`** and **`qi::sort`**—while additional specialized models remain under active research. All code is available for free under the GPL-2.0 license.
+**qi-sort** (Quick Index Radix Sort) is an algorithmic sorting family engineered for modern CPU microarchitectures and memory hierarchies. The library provides two primary production radix sorting models—**`qi::apex`** and **`qi::sort`**—while additional specialized models remain under active research. All code is available for free under the GPL-2.0 license.
 
 | Model | Primary Architecture | Best | Average | Worst | Memory | Stable | Deterministic |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -198,8 +198,8 @@ Distributed for free under the **GPL-2.0 License**.
 Developed by **Jason Pandian** (Sole Author, 2026).
 
 ```bibtex
-@software{pandia2026qiapex,
-  title   = {qi::apex & qi::sort: Hardware-Aware Adaptive Radix Sorting Engine},
+@software{pandian2026qisort,
+  title   = {qi-sort: Quick Index Radix Sort},
   author  = {Pandian, Jason},
   year    = {2026},
   url     = {https://github.com/PandiaJason/qi-sort},
