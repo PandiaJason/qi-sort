@@ -17,17 +17,17 @@
 
 ---
 
-## 3-Column Microarchitecture
+## `qi::apex` Microarchitecture
 
 The execution engine of **`qi::apex`** is structured into three microarchitectural stages engineered to eliminate CPU pipeline stalls and cache evictions:
 
 <p align="center">
-  <img src="docs/apex_architecture.svg" alt="qi::apex 3-Column Microarchitectural Pipeline" width="100%"/>
+  <img src="docs/apex_architecture.svg" alt="qi::apex Microarchitectural Pipeline" width="100%"/>
 </p>
 
-1. **1. Memory Streaming**: Linear continuous DRAM/LLC ingest with $PF=48$ software lookahead prefetching (`__builtin_prefetch(&k[i+48])`) and zero-overhead double buffering.
-2. **2. 8-Way ILP CPU Core**: 8 independent register accumulators (`c0`–`c7`) saturating superscalar ALU execution ports and eliminating Read-After-Write (RAW) pipeline hazards.
-3. **3. Strict 20 KB L1-Bound Radix**: 3-pass multi-stage radix (Pass 0: Radix-11, Pass 1: Radix-11, Pass 2: Radix-10) with histogram memory strictly bounded to 20 KB (100% L1-Data cache resident, zero L2/L3 evictions).
+1. **Memory Streaming**: Linear continuous DRAM/LLC ingest with $PF=48$ software lookahead prefetching (`__builtin_prefetch(&k[i+48])`) and zero-overhead double buffering.
+2. **8-Way ILP CPU Core**: 8 independent register accumulators (`c0`–`c7`) saturating superscalar ALU execution ports and eliminating Read-After-Write (RAW) pipeline hazards.
+3. **Strict 20 KB L1-Bound Radix**: 3-pass multi-stage radix (Pass 0: Radix-11, Pass 1: Radix-11, Pass 2: Radix-10) with histogram memory strictly bounded to 20 KB (100% L1-Data cache resident, zero L2/L3 evictions).
 
 ---
 
