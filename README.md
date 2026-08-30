@@ -42,6 +42,10 @@ int main() {
 
 ## 📊 Benchmark Results
 
+<p align="center">
+  <img src="docs/benchmark_chart.svg" alt="qi::apex Benchmark Chart" width="100%"/>
+</p>
+
 Benchmarked on **Apple Silicon M1 Pro** using `clang++ -O3 -std=c++17`. All timings are the best of 3 runs on **10,000,000 keys (40 MB RAM)**. Competitor implementations use unmodified source code (`pdqsort.hpp` from Orson Peters and `spreadsort` from Boost.Sort).
 
 ### Single-Threaded (1T) Comparison ($N = 10,000,000$ keys)
@@ -70,6 +74,10 @@ Benchmarked on **Apple Silicon M1 Pro** using `clang++ -O3 -std=c++17`. All timi
 ---
 
 ## 🧠 The Algorithm
+
+<p align="center">
+  <img src="docs/algorithm_visualizer.svg" alt="qi::apex Execution Pipeline" width="100%"/>
+</p>
 
 `qi::apex` uses an adaptive multi-tier dispatch model tuned to CPU cache hierarchies and execution units:
 

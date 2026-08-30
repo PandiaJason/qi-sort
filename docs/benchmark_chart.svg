@@ -1,0 +1,150 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 950 560" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0d1117"/>
+      <stop offset="100%" stop-color="#161b22"/>
+    </linearGradient>
+    <linearGradient id="apexGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2ea043"/>
+      <stop offset="100%" stop-color="#56d364"/>
+    </linearGradient>
+    <linearGradient id="apexParGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1f6feb"/>
+      <stop offset="100%" stop-color="#58a6ff"/>
+    </linearGradient>
+    <linearGradient id="pdqGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#8957e5"/>
+      <stop offset="100%" stop-color="#bc8cff"/>
+    </linearGradient>
+    <linearGradient id="stdGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#da3633"/>
+      <stop offset="100%" stop-color="#f85149"/>
+    </linearGradient>
+    <style>
+      .title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 20px; font-weight: 700; fill: #f0f6fc; }
+      .subtitle { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 13px; fill: #8b949e; }
+      .axis-label { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 600; fill: #c9d1d9; }
+      .bar-val { font-family: "SF Mono", Monaco, Menlo, Consolas, monospace; font-size: 11px; font-weight: 600; fill: #ffffff; }
+      .legend-text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 12px; fill: #c9d1d9; font-weight: 500; }
+      .grid { stroke: #30363d; stroke-dasharray: 3,3; stroke-width: 1; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="950" height="560" rx="12" fill="url(#bgGrad)" stroke="#30363d" stroke-width="1.5"/>
+
+  <!-- Header -->
+  <text x="35" y="42" class="title">qi::apex vs Competitors — Execution Time on 10,000,000 Keys</text>
+  <text x="35" y="64" class="subtitle">Lower is Better · Tested on Apple Silicon M1 Pro · clang++ -O3 -std=c++17</text>
+
+  <!-- Legend -->
+  <g transform="translate(480, 30)">
+    <rect x="0" y="0" width="14" height="14" rx="3" fill="url(#apexParGrad)"/>
+    <text x="20" y="12" class="legend-text">qi::apex (Parallel)</text>
+    
+    <rect x="145" y="0" width="14" height="14" rx="3" fill="url(#apexGrad)"/>
+    <text x="165" y="12" class="legend-text">qi::apex (1T)</text>
+    
+    <rect x="270" y="0" width="14" height="14" rx="3" fill="url(#pdqGrad)"/>
+    <text x="290" y="12" class="legend-text">pdqsort (1T)</text>
+    
+    <rect x="380" y="0" width="14" height="14" rx="3" fill="url(#stdGrad)"/>
+    <text x="400" y="12" class="legend-text">std::sort (1T)</text>
+  </g>
+
+  <!-- Grid Lines -->
+  <line x1="220" y1="95" x2="900" y2="95" stroke="#30363d" stroke-width="1"/>
+  <line x1="220" y1="500" x2="900" y2="500" stroke="#30363d" stroke-width="1"/>
+  <line x1="390" y1="95" x2="390" y2="500" class="grid"/>
+  <line x1="560" y1="95" x2="560" y2="500" class="grid"/>
+  <line x1="730" y1="95" x2="730" y2="500" class="grid"/>
+  <line x1="900" y1="95" x2="900" y2="500" class="grid"/>
+
+  <!-- X Axis Labels (Time in ms) -->
+  <text x="220" y="520" class="subtitle" text-anchor="middle">0 ms</text>
+  <text x="390" y="520" class="subtitle" text-anchor="middle">60 ms</text>
+  <text x="560" y="520" class="subtitle" text-anchor="middle">120 ms</text>
+  <text x="730" y="520" class="subtitle" text-anchor="middle">180 ms</text>
+  <text x="900" y="520" class="subtitle" text-anchor="middle">240 ms</text>
+
+  <!-- ROW 1: Uniform Random 32-bit -->
+  <g transform="translate(0, 105)">
+    <text x="205" y="32" class="axis-label" text-anchor="end">Uniform Random 32-bit</text>
+    <rect x="220" y="4"  width="50"  height="11" rx="2" fill="url(#apexParGrad)"/>
+    <text x="278" y="13" class="bar-val">17.6 ms</text>
+    
+    <rect x="220" y="18" width="104" height="11" rx="2" fill="url(#apexGrad)"/>
+    <text x="332" y="27" class="bar-val">36.6 ms (6.3x)</text>
+    
+    <rect x="220" y="32" width="625" height="11" rx="2" fill="url(#pdqGrad)"/>
+    <text x="852" y="41" class="bar-val">220.9 ms</text>
+    
+    <rect x="220" y="46" width="651" height="11" rx="2" fill="url(#stdGrad)"/>
+    <text x="878" y="55" class="bar-val">230.1 ms</text>
+  </g>
+
+  <!-- ROW 2: Byte Duplicates (0-255) -->
+  <g transform="translate(0, 185)">
+    <text x="205" y="32" class="axis-label" text-anchor="end">Byte Dups (0–255)</text>
+    <rect x="220" y="4"  width="21"  height="11" rx="2" fill="url(#apexParGrad)"/>
+    <text x="249" y="13" class="bar-val">7.5 ms</text>
+    
+    <rect x="220" y="18" width="12"  height="11" rx="2" fill="url(#apexGrad)"/>
+    <text x="240" y="27" class="bar-val">4.1 ms (19.7x)</text>
+    
+    <rect x="220" y="32" width="165" height="11" rx="2" fill="url(#pdqGrad)"/>
+    <text x="393" y="41" class="bar-val">58.4 ms</text>
+    
+    <rect x="220" y="46" width="230" height="11" rx="2" fill="url(#stdGrad)"/>
+    <text x="458" y="55" class="bar-val">81.3 ms</text>
+  </g>
+
+  <!-- ROW 3: Sawtooth Periodic Patterns -->
+  <g transform="translate(0, 265)">
+    <text x="205" y="32" class="axis-label" text-anchor="end">Periodic Sawtooth (1K)</text>
+    <rect x="220" y="4"  width="19"  height="11" rx="2" fill="url(#apexParGrad)"/>
+    <text x="247" y="13" class="bar-val">6.8 ms</text>
+    
+    <rect x="220" y="18" width="12"  height="11" rx="2" fill="url(#apexGrad)"/>
+    <text x="240" y="27" class="bar-val">4.0 ms (26.4x)</text>
+    
+    <rect x="220" y="32" width="239" height="11" rx="2" fill="url(#pdqGrad)"/>
+    <text x="467" y="41" class="bar-val">84.4 ms</text>
+    
+    <rect x="220" y="46" width="302" height="11" rx="2" fill="url(#stdGrad)"/>
+    <text x="530" y="55" class="bar-val">106.5 ms</text>
+  </g>
+
+  <!-- ROW 4: 16-bit Domain Range (0-65K) -->
+  <g transform="translate(0, 345)">
+    <text x="205" y="32" class="axis-label" text-anchor="end">16-bit Domain (0–65K)</text>
+    <rect x="220" y="4"  width="39"  height="11" rx="2" fill="url(#apexParGrad)"/>
+    <text x="267" y="13" class="bar-val">13.9 ms</text>
+    
+    <rect x="220" y="18" width="62"  height="11" rx="2" fill="url(#apexGrad)"/>
+    <text x="290" y="27" class="bar-val">21.8 ms (6.2x)</text>
+    
+    <rect x="220" y="32" width="313" height="11" rx="2" fill="url(#pdqGrad)"/>
+    <text x="541" y="41" class="bar-val">110.5 ms</text>
+    
+    <rect x="220" y="46" width="383" height="11" rx="2" fill="url(#stdGrad)"/>
+    <text x="611" y="55" class="bar-val">135.3 ms</text>
+  </g>
+
+  <!-- ROW 5: Pre-Sorted Monotonic -->
+  <g transform="translate(0, 425)">
+    <text x="205" y="32" class="axis-label" text-anchor="end">Already Sorted ($O(N)$)</text>
+    <rect x="220" y="4"  width="13"  height="11" rx="2" fill="url(#apexParGrad)"/>
+    <text x="241" y="13" class="bar-val">4.4 ms</text>
+    
+    <rect x="220" y="18" width="13"  height="11" rx="2" fill="url(#apexGrad)"/>
+    <text x="241" y="27" class="bar-val">4.4 ms (2.4x)</text>
+    
+    <rect x="220" y="32" width="22"  height="11" rx="2" fill="url(#pdqGrad)"/>
+    <text x="250" y="41" class="bar-val">7.7 ms</text>
+    
+    <rect x="220" y="46" width="30"  height="11" rx="2" fill="url(#stdGrad)"/>
+    <text x="258" y="55" class="bar-val">10.5 ms</text>
+  </g>
+
+</svg>
