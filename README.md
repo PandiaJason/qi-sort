@@ -82,22 +82,22 @@ A comparison of `qi::apex`, Orson Peters' `pdqsort`, Malte Skarupke's `ska_sort`
 
 | Distribution | `std::sort` | `pdqsort` | `ska_sort` | `qi::sort` | **`qi::apex` (1T)** | Speedup vs `std::sort` | Speedup vs `pdqsort` |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Uniform Random 32-bit** | 230.06 ms | 220.88 ms | 84.97 ms | 37.68 ms | **`36.59 ms`** | **6.3×** | **6.0×** |
-| **Byte Duplicates (0–255)** | 81.33 ms | 58.35 ms | 147.76 ms | **`4.09 ms`** | **`4.13 ms`** | **19.7×** | **14.1×** |
-| **Periodic Sawtooth (1K)** | 106.49 ms | 84.38 ms | 145.16 ms | **`4.07 ms`** | **`4.03 ms`** | **26.4×** | **20.9×** |
-| **16-bit Range (0–65,535)** | 135.34 ms | 110.47 ms | 115.44 ms | 40.19 ms | **`21.76 ms`** | **6.2×** | **5.1×** |
-| **Already Sorted Monotonic** | 10.46 ms | 7.66 ms | 146.58 ms | **`4.40 ms`** | **`4.41 ms`** | **2.4×** | **1.7×** |
-| **Reverse Sorted Monotonic** | 17.59 ms | 13.63 ms | 151.34 ms | 6.39 ms | **`6.33 ms`** | **2.8×** | **2.2×** |
-| **Nearly Sorted (~98%)** | 191.40 ms | 170.06 ms | 145.57 ms | 192.99 ms | **`64.33 ms`** | **3.0×** | **2.6×** |
-| **Pipe Organ (Mirrored Ramp)**| 583.26 ms | 248.56 ms | 143.59 ms | 135.83 ms | **`134.05 ms`**| **4.4×** | **1.9×** |
+| **Uniform Random 32-bit** | 228.73 ms | 220.54 ms | 180.27 ms | 38.42 ms | **`41.23 ms`** | **5.5×** | **5.3×** |
+| **Byte Duplicates (0–255)** | 78.72 ms | 59.74 ms | 77.43 ms | 4.35 ms | **`3.99 ms`** | **19.7×** | **15.0×** |
+| **Periodic Sawtooth (1K)** | 106.26 ms | 84.55 ms | 97.71 ms | 4.14 ms | **`3.98 ms`** | **26.7×** | **21.3×** |
+| **16-bit Range (0–65,535)** | 137.16 ms | 111.96 ms | 70.33 ms | 40.13 ms | **`21.85 ms`** | **6.3×** | **5.1×** |
+| **Already Sorted Monotonic** | 10.52 ms | 7.72 ms | 136.02 ms | 4.31 ms | **`4.30 ms`** | **2.4×** | **1.8×** |
+| **Reverse Sorted Monotonic** | 17.71 ms | 12.97 ms | 144.87 ms | 6.53 ms | **`6.29 ms`** | **2.8×** | **2.1×** |
+| **Nearly Sorted (~98%)** | 102.78 ms | 98.79 ms | 167.83 ms | 102.69 ms | **`112.08 ms`** | **0.9×** | **0.9×** |
+| **Pipe Organ (Mirrored Ramp)**| 584.27 ms | 244.09 ms | 159.67 ms | 137.71 ms | **`134.51 ms`**| **4.3×** | **1.8×** |
 
 ### Multi-Threaded (MT) Scaling ($N = 10,000,000$ keys)
 
 | Workload | `std::sort` (1T) | `pdqsort` (1T) | `qi::apex` (1T) | **`qi::apex` (Parallel MT)** | Parallel Throughput |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **10M Uniform Random 32-bit** | 230.06 ms | 220.88 ms | 36.59 ms | **`17.59 ms`** | **568.5 MKeys/s** |
-| **10M 16-bit Domain (0–65K)** | 135.34 ms | 110.47 ms | 21.76 ms | **`13.89 ms`** | **720.0 MKeys/s** |
-| **10M Low-Cardinality (4 vals)**| 50.73 ms | 16.65 ms | 12.30 ms | **`9.36 ms`** | **1,068.3 MKeys/s** |
+| **10M Uniform Random 32-bit** | 228.73 ms | 220.54 ms | 41.23 ms | **`15.21 ms`** | **657.5 MKeys/s** |
+| **10M 16-bit Domain (0–65K)** | 137.16 ms | 111.96 ms | 21.85 ms | **`14.60 ms`** | **684.8 MKeys/s** |
+| **10M Low-Cardinality (4 vals)**| 38.95 ms | 16.98 ms | 12.64 ms | **`8.89 ms`** | **1,124.7 MKeys/s** |
 
 *(Note: On systems equipped with AVX-512 vector register files such as Intel Xeon Platinum, in-register SIMD sorters like Google VQSort hold the throughput lead on uniform random noise; `qi::apex` achieves high throughput universally across Apple Silicon, ARM, AMD, and Intel architectures without requiring specialized vector instruction sets.)*
 
