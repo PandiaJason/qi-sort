@@ -7,8 +7,8 @@
 
     <style>
       .bg { fill: #000000; }
-      .col-box { fill: #09090B; stroke: #262626; stroke-width: 1.2; rx: 10px; }
-      .col-active { fill: #0D1204; stroke: #D2F831; stroke-width: 1.6; rx: 10px; }
+      .col-box { fill: #09090B; stroke: #FFFFFF; stroke-width: 1.2; rx: 10px; }
+      .col-active { fill: #0D1204; stroke: #D2F831; stroke-width: 1.8; rx: 10px; }
       
       .title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 20px; font-weight: 700; fill: #FFFFFF; letter-spacing: -0.2px; }
       .subtitle { font-family: "SF Mono", Monaco, Menlo, Consolas, monospace; font-size: 11.5px; fill: #D2F831; }
@@ -16,8 +16,8 @@
       .col-title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 700; fill: #FFFFFF; }
       .col-sub { font-family: "SF Mono", Monaco, Menlo, Consolas, monospace; font-size: 10.5px; font-weight: 600; }
       
-      .badge-std { fill: #18181B; stroke: #333333; stroke-width: 1; rx: 4px; }
-      .badge-ilp { fill: #18181B; stroke: #E8F8B6; stroke-width: 1; rx: 4px; }
+      .badge-std { fill: #18181B; stroke: #FFFFFF; stroke-width: 0.8; rx: 4px; }
+      .badge-ilp { fill: #18181B; stroke: #E8F8B6; stroke-width: 0.9; rx: 4px; }
       .badge-apex { fill: #111808; stroke: #D2F831; stroke-width: 1.2; rx: 6px; }
       
       .mono-text { font-family: "SF Mono", Monaco, Menlo, Consolas, monospace; font-size: 11px; }
@@ -41,9 +41,9 @@
   <text x="68" y="34" class="title">qi::apex Microarchitecture</text>
   <text x="68" y="52" class="subtitle">Hardware-Aware 20 KB L1-Bound Radix Pipeline · 3-Pass 32-bit</text>
 
-  <!-- Top Badges -->
+  <!-- Top Badges with Crisp Borders -->
   <g transform="translate(640, 24)">
-    <rect width="115" height="24" rx="12" fill="#18181B" stroke="#333333"/>
+    <rect width="115" height="24" rx="12" fill="#18181B" stroke="#FFFFFF" stroke-width="1"/>
     <text x="57" y="16" class="mono-text" font-size="10" fill="#F2F2F2" text-anchor="middle">PF = 48 Stream</text>
   </g>
   <g transform="translate(765, 24)">
@@ -68,7 +68,7 @@
     <polygon points="120,166 116,158 124,158" class="arrow-head"/>
 
     <!-- Sub-block 2: Prefetcher -->
-    <rect x="16" y="170" width="208" height="75" rx="6" fill="#18181B" stroke="#E8F8B6" stroke-width="1"/>
+    <rect x="16" y="170" width="208" height="75" rx="6" fill="#18181B" stroke="#E8F8B6" stroke-width="1.2"/>
     <text x="28" y="194" class="mono-text" fill="#E8F8B6" font-weight="600">PF = 48 Prefetch Stream</text>
     <text x="28" y="214" class="mono-text" font-size="10" fill="#888888">__builtin_prefetch(&amp;k[i+48])</text>
     <text x="28" y="232" class="body-text" fill="#E8F8B6">Zero DRAM latency stall</text>
@@ -126,7 +126,7 @@
 
     <!-- Core Features -->
     <rect x="16" y="240" width="222" height="110" class="badge-std"/>
-    <text x="28" y="266" class="mono-text" fill="#F2F2F2" font-weight="600">Superscalar ALU Saturation</text>
+    <text x="28" y="266" class="mono-text" fill="#FFFFFF" font-weight="600">Superscalar ALU Saturation</text>
     <text x="28" y="288" class="body-text">• 8 parallel loads / cycle</text>
     <text x="28" y="308" class="body-text">• Zero RAW dependency hazards</text>
     <text x="28" y="328" class="body-text">• Unrolled inner counting loop</text>
@@ -162,7 +162,7 @@
     <text x="28" y="234" class="body-text">Radix-10 (8 KB) · 1,024 bins</text>
 
     <!-- Cache Guarantee Box -->
-    <rect x="16" y="260" width="236" height="90" rx="6" fill="#18181B" stroke="#333333"/>
+    <rect x="16" y="260" width="236" height="90" rx="6" fill="#18181B" stroke="#FFFFFF" stroke-width="0.8"/>
     <text x="26" y="284" class="mono-text" fill="#FFFFFF" font-weight="600">Hardware Guarantee</text>
     <text x="26" y="304" class="body-text">• Max Footprint: <tspan fill="#D2F831" font-weight="600">20 KB &lt; 32 KB L1</tspan></text>
     <text x="26" y="322" class="body-text">• Zero L2/L3 cache evictions</text>
