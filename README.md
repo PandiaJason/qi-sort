@@ -80,10 +80,10 @@ A comparison of `qi::apex`, Orson Peters' `pdqsort`, Steven Ross's `spreadsort`,
 
 ## Visualization
 
-A visualization of `qi::apex` executing an adaptive sort. The pipeline illustrates the ~50ns inline bitwise distribution sensing, strict 20 KB L1-data cache residency, and 8-way instruction-level parallel scatter loops:
+A visualization of `qi::apex` sorting a ~100 element array. The animation shows the transition from randomized input entropy through 3-pass L1-bound radix partitioning into a fully sorted array:
 
 <p align="center">
-  <img src="docs/algorithm_visualizer.svg" alt="qi::apex Execution Pipeline" width="100%"/>
+  <img src="docs/sorting_visualizer.svg" alt="qi::apex Array Sorting Simulation" width="100%"/>
 </p>
 
 ---

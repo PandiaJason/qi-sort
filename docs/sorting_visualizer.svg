@@ -1,0 +1,1028 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 420" width="100%" height="100%">
+  <defs>
+    <linearGradient id="limeBar" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#D5F53D"/>
+      <stop offset="100%" stop-color="#9BC81E"/>
+    </linearGradient>
+    <linearGradient id="ivoryBar" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FAF9F6"/>
+      <stop offset="100%" stop-color="#D4D3CE"/>
+    </linearGradient>
+    <style>
+      .bg { fill: #000000; }
+      .title-text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 700; fill: #D5F53D; }
+      .sub-text { font-family: 'SF Mono', Monaco, Menlo, Consolas, monospace; font-size: 11px; fill: #F4FBD2; }
+    </style>
+  </defs>
+
+  <!-- Black Canvas (matching Sound of Sorting visualizer) -->
+  <rect width="800" height="420" class="bg" rx="8"/>
+  <rect x="10.0" y="58.0" width="6.0" height="342.0" fill="url(#limeBar)" rx="1">
+    <animate attributeName="height" 
+             values="342.0; 342.0; 334.0; 18.0; 18.0; 342.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="58.0; 58.0; 66.0; 382.0; 382.0; 58.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="17.8" y="328.0" width="6.0" height="72.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="72.0; 72.0; 54.0; 27.0; 27.0; 72.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="328.0; 328.0; 346.0; 373.0; 373.0; 328.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="25.6" y="373.0" width="6.0" height="27.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="27.0; 27.0; 14.0; 28.0; 28.0; 27.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="373.0; 373.0; 386.0; 372.0; 372.0; 373.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="33.4" y="245.0" width="6.0" height="155.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="155.0; 155.0; 120.0; 30.0; 30.0; 155.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="245.0; 245.0; 280.0; 370.0; 370.0; 245.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="41.2" y="260.0" width="6.0" height="140.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="140.0; 140.0; 120.0; 31.0; 31.0; 140.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="260.0; 260.0; 280.0; 369.0; 369.0; 260.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="49.0" y="271.0" width="6.0" height="129.0" fill="url(#limeBar)" rx="1">
+    <animate attributeName="height" 
+             values="129.0; 129.0; 148.0; 37.0; 37.0; 129.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="271.0; 271.0; 252.0; 363.0; 363.0; 271.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="56.8" y="314.0" width="6.0" height="86.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="86.0; 86.0; 87.0; 38.0; 38.0; 86.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="314.0; 314.0; 313.0; 362.0; 362.0; 314.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="64.6" y="333.0" width="6.0" height="67.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="67.0; 67.0; 54.0; 50.0; 50.0; 67.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="333.0; 333.0; 346.0; 350.0; 350.0; 333.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="72.4" y="39.0" width="6.0" height="361.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="361.0; 361.0; 367.0; 51.0; 51.0; 361.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="39.0; 39.0; 33.0; 349.0; 349.0; 39.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="80.2" y="106.0" width="6.0" height="294.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="294.0; 294.0; 308.0; 55.0; 55.0; 294.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="106.0; 106.0; 92.0; 345.0; 345.0; 106.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="88.0" y="341.0" width="6.0" height="59.0" fill="url(#limeBar)" rx="1">
+    <animate attributeName="height" 
+             values="59.0; 59.0; 68.0; 55.0; 55.0; 59.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="341.0; 341.0; 332.0; 345.0; 345.0; 341.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="95.8" y="83.0" width="6.0" height="317.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="317.0; 317.0; 294.0; 59.0; 59.0; 317.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="83.0; 83.0; 106.0; 341.0; 341.0; 83.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="103.6" y="169.0" width="6.0" height="231.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="231.0; 231.0; 207.0; 62.0; 62.0; 231.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="169.0; 169.0; 193.0; 338.0; 338.0; 169.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="111.4" y="369.0" width="6.0" height="31.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="31.0; 31.0; 7.0; 62.0; 62.0; 31.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="369.0; 369.0; 393.0; 338.0; 338.0; 369.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="119.2" y="370.0" width="6.0" height="30.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="30.0; 30.0; 0.0; 64.0; 64.0; 30.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="370.0; 370.0; 400.0; 336.0; 336.0; 370.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="127.0" y="338.0" width="6.0" height="62.0" fill="url(#limeBar)" rx="1">
+    <animate attributeName="height" 
+             values="62.0; 62.0; 54.0; 66.0; 66.0; 62.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="338.0; 338.0; 346.0; 334.0; 334.0; 338.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="134.8" y="274.0" width="6.0" height="126.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="126.0; 126.0; 127.0; 67.0; 67.0; 126.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="274.0; 274.0; 273.0; 333.0; 333.0; 274.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="142.6" y="266.0" width="6.0" height="134.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="134.0; 134.0; 148.0; 67.0; 67.0; 134.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="266.0; 266.0; 252.0; 333.0; 333.0; 266.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="150.4" y="127.0" width="6.0" height="273.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="273.0; 273.0; 261.0; 72.0; 72.0; 273.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="127.0; 127.0; 139.0; 328.0; 328.0; 127.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="158.2" y="77.0" width="6.0" height="323.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="323.0; 323.0; 341.0; 78.0; 78.0; 323.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="77.0; 77.0; 59.0; 322.0; 322.0; 77.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="166.0" y="372.0" width="6.0" height="28.0" fill="url(#limeBar)" rx="1">
+    <animate attributeName="height" 
+             values="28.0; 28.0; 21.0; 86.0; 86.0; 28.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="372.0; 372.0; 379.0; 314.0; 314.0; 372.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="173.8" y="98.0" width="6.0" height="302.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="302.0; 302.0; 294.0; 94.0; 94.0; 302.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="98.0; 98.0; 106.0; 306.0; 306.0; 98.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="181.6" y="284.0" width="6.0" height="116.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="116.0; 116.0; 87.0; 96.0; 96.0; 116.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="284.0; 284.0; 313.0; 304.0; 304.0; 284.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="189.4" y="53.0" width="6.0" height="347.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="347.0; 347.0; 334.0; 98.0; 98.0; 347.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="53.0; 53.0; 66.0; 302.0; 302.0; 53.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="197.2" y="26.0" width="6.0" height="374.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="374.0; 374.0; 388.0; 98.0; 98.0; 374.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="26.0; 26.0; 12.0; 302.0; 302.0; 26.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="205.0" y="106.0" width="6.0" height="294.0" fill="url(#limeBar)" rx="1">
+    <animate attributeName="height" 
+             values="294.0; 294.0; 308.0; 102.0; 102.0; 294.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="106.0; 106.0; 92.0; 298.0; 298.0; 106.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="212.8" y="171.0" width="6.0" height="229.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="229.0; 229.0; 228.0; 113.0; 113.0; 229.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="171.0; 171.0; 172.0; 287.0; 287.0; 171.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="220.6" y="273.0" width="6.0" height="127.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="127.0; 127.0; 134.0; 116.0; 116.0; 127.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="273.0; 273.0; 266.0; 284.0; 284.0; 273.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="228.4" y="156.0" width="6.0" height="244.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="244.0; 244.0; 268.0; 122.0; 122.0; 244.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="156.0; 156.0; 132.0; 278.0; 278.0; 156.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="236.2" y="84.0" width="6.0" height="316.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="316.0; 316.0; 287.0; 125.0; 125.0; 316.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="84.0; 84.0; 113.0; 275.0; 275.0; 84.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="244.0" y="243.0" width="6.0" height="157.0" fill="url(#limeBar)" rx="1">
+    <animate attributeName="height" 
+             values="157.0; 157.0; 134.0; 126.0; 126.0; 157.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="243.0; 243.0; 266.0; 274.0; 274.0; 243.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="251.8" y="382.0" width="6.0" height="18.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="18.0; 18.0; 21.0; 127.0; 127.0; 18.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="382.0; 382.0; 379.0; 273.0; 273.0; 382.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="259.6" y="304.0" width="6.0" height="96.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="96.0; 96.0; 87.0; 127.0; 127.0; 96.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="304.0; 304.0; 313.0; 273.0; 273.0; 304.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="267.4" y="28.0" width="6.0" height="372.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="372.0; 372.0; 374.0; 129.0; 129.0; 372.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="28.0; 28.0; 26.0; 271.0; 271.0; 28.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="275.2" y="169.0" width="6.0" height="231.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="231.0; 231.0; 207.0; 131.0; 131.0; 231.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="169.0; 169.0; 193.0; 269.0; 269.0; 169.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="283.0" y="211.0" width="6.0" height="189.0" fill="url(#limeBar)" rx="1">
+    <animate attributeName="height" 
+             values="189.0; 189.0; 188.0; 134.0; 134.0; 189.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="211.0; 211.0; 212.0; 266.0; 266.0; 211.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="290.8" y="243.0" width="6.0" height="157.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="157.0; 157.0; 134.0; 134.0; 134.0; 157.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="243.0; 243.0; 266.0; 266.0; 266.0; 243.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="298.6" y="306.0" width="6.0" height="94.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="94.0; 94.0; 108.0; 140.0; 140.0; 94.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="306.0; 306.0; 292.0; 260.0; 260.0; 306.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="306.4" y="275.0" width="6.0" height="125.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="125.0; 125.0; 120.0; 140.0; 140.0; 125.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="275.0; 275.0; 280.0; 260.0; 260.0; 275.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="314.2" y="213.0" width="6.0" height="187.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="187.0; 187.0; 174.0; 150.0; 150.0; 187.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="213.0; 213.0; 226.0; 250.0; 250.0; 213.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="322.0" y="333.0" width="6.0" height="67.0" fill="url(#limeBar)" rx="1">
+    <animate attributeName="height" 
+             values="67.0; 67.0; 54.0; 151.0; 151.0; 67.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="333.0; 333.0; 346.0; 249.0; 249.0; 333.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="329.8" y="338.0" width="6.0" height="62.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="62.0; 62.0; 54.0; 153.0; 153.0; 62.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="338.0; 338.0; 346.0; 247.0; 247.0; 338.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="337.6" y="191.0" width="6.0" height="209.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="209.0; 209.0; 228.0; 155.0; 155.0; 209.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="191.0; 191.0; 172.0; 245.0; 245.0; 191.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="345.4" y="336.0" width="6.0" height="64.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="64.0; 64.0; 68.0; 157.0; 157.0; 64.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="336.0; 336.0; 332.0; 243.0; 243.0; 336.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="353.2" y="202.0" width="6.0" height="198.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="198.0; 198.0; 181.0; 157.0; 157.0; 198.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="202.0; 202.0; 219.0; 243.0; 243.0; 202.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="361.0" y="209.0" width="6.0" height="191.0" fill="url(#limeBar)" rx="1">
+    <animate attributeName="height" 
+             values="191.0; 191.0; 167.0; 157.0; 157.0; 191.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="209.0; 209.0; 233.0; 243.0; 243.0; 209.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="368.8" y="76.0" width="6.0" height="324.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="324.0; 324.0; 348.0; 163.0; 163.0; 324.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="76.0; 76.0; 52.0; 237.0; 237.0; 76.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="376.6" y="250.0" width="6.0" height="150.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="150.0; 150.0; 120.0; 165.0; 165.0; 150.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="250.0; 250.0; 280.0; 235.0; 235.0; 250.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="384.4" y="363.0" width="6.0" height="37.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="37.0; 37.0; 14.0; 181.0; 181.0; 37.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="363.0; 363.0; 386.0; 219.0; 219.0; 363.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="392.2" y="150.0" width="6.0" height="250.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="250.0; 250.0; 240.0; 187.0; 187.0; 250.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="150.0; 150.0; 160.0; 213.0; 213.0; 150.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="400.0" y="111.0" width="6.0" height="289.0" fill="url(#limeBar)" rx="1">
+    <animate attributeName="height" 
+             values="289.0; 289.0; 308.0; 189.0; 189.0; 289.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="111.0; 111.0; 92.0; 211.0; 211.0; 111.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="407.8" y="322.0" width="6.0" height="78.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="78.0; 78.0; 61.0; 191.0; 191.0; 78.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="322.0; 322.0; 339.0; 209.0; 209.0; 322.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="415.6" y="192.0" width="6.0" height="208.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="208.0; 208.0; 221.0; 196.0; 196.0; 208.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="192.0; 192.0; 179.0; 204.0; 204.0; 192.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="423.4" y="345.0" width="6.0" height="55.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="55.0; 55.0; 40.0; 198.0; 198.0; 55.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="345.0; 345.0; 360.0; 202.0; 202.0; 345.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="431.2" y="103.0" width="6.0" height="297.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="297.0; 297.0; 294.0; 200.0; 200.0; 297.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="103.0; 103.0; 106.0; 200.0; 200.0; 103.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="439.0" y="235.0" width="6.0" height="165.0" fill="url(#limeBar)" rx="1">
+    <animate attributeName="height" 
+             values="165.0; 165.0; 160.0; 201.0; 201.0; 165.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="235.0; 235.0; 240.0; 199.0; 199.0; 235.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="446.8" y="64.0" width="6.0" height="336.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="336.0; 336.0; 327.0; 204.0; 204.0; 336.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="64.0; 64.0; 73.0; 196.0; 196.0; 64.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="454.6" y="69.0" width="6.0" height="331.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="331.0; 331.0; 327.0; 208.0; 208.0; 331.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="69.0; 69.0; 73.0; 192.0; 192.0; 69.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="462.4" y="200.0" width="6.0" height="200.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="200.0; 200.0; 200.0; 209.0; 209.0; 200.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="200.0; 200.0; 200.0; 191.0; 191.0; 200.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="470.2" y="90.0" width="6.0" height="310.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="310.0; 310.0; 280.0; 209.0; 209.0; 310.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="90.0; 90.0; 120.0; 191.0; 191.0; 90.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="478.0" y="287.0" width="6.0" height="113.0" fill="url(#limeBar)" rx="1">
+    <animate attributeName="height" 
+             values="113.0; 113.0; 101.0; 209.0; 209.0; 113.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="287.0; 287.0; 299.0; 191.0; 191.0; 287.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="485.8" y="25.0" width="6.0" height="375.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="375.0; 375.0; 360.0; 229.0; 229.0; 375.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="25.0; 25.0; 40.0; 171.0; 171.0; 25.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="493.6" y="350.0" width="6.0" height="50.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="50.0; 50.0; 40.0; 231.0; 231.0; 50.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="350.0; 350.0; 360.0; 169.0; 169.0; 350.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="501.4" y="362.0" width="6.0" height="38.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="38.0; 38.0; 21.0; 231.0; 231.0; 38.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="362.0; 362.0; 379.0; 169.0; 169.0; 362.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="509.2" y="47.0" width="6.0" height="353.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="353.0; 353.0; 341.0; 244.0; 244.0; 353.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="47.0; 47.0; 59.0; 156.0; 156.0; 47.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="517.0" y="269.0" width="6.0" height="131.0" fill="url(#limeBar)" rx="1">
+    <animate attributeName="height" 
+             values="131.0; 131.0; 127.0; 247.0; 247.0; 131.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="269.0; 269.0; 273.0; 153.0; 153.0; 269.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="524.8" y="237.0" width="6.0" height="163.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="163.0; 163.0; 181.0; 250.0; 250.0; 163.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="237.0; 237.0; 219.0; 150.0; 150.0; 237.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="532.6" y="345.0" width="6.0" height="55.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="55.0; 55.0; 40.0; 251.0; 251.0; 55.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="345.0; 345.0; 360.0; 149.0; 149.0; 345.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="540.4" y="266.0" width="6.0" height="134.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="134.0; 134.0; 148.0; 273.0; 273.0; 134.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="266.0; 266.0; 252.0; 127.0; 127.0; 266.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="548.2" y="334.0" width="6.0" height="66.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="66.0; 66.0; 47.0; 288.0; 288.0; 66.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="334.0; 334.0; 353.0; 112.0; 112.0; 334.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="556.0" y="191.0" width="6.0" height="209.0" fill="url(#limeBar)" rx="1">
+    <animate attributeName="height" 
+             values="209.0; 209.0; 228.0; 289.0; 289.0; 209.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="191.0; 191.0; 172.0; 111.0; 111.0; 191.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="563.8" y="243.0" width="6.0" height="157.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="157.0; 157.0; 134.0; 294.0; 294.0; 157.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="243.0; 243.0; 266.0; 106.0; 106.0; 243.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="571.6" y="153.0" width="6.0" height="247.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="247.0; 247.0; 254.0; 294.0; 294.0; 247.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="153.0; 153.0; 146.0; 106.0; 106.0; 153.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="579.4" y="60.0" width="6.0" height="340.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="340.0; 340.0; 320.0; 297.0; 297.0; 340.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="60.0; 60.0; 80.0; 103.0; 103.0; 60.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="587.2" y="199.0" width="6.0" height="201.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="201.0; 201.0; 207.0; 300.0; 300.0; 201.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="199.0; 199.0; 193.0; 100.0; 100.0; 199.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="595.0" y="302.0" width="6.0" height="98.0" fill="url(#limeBar)" rx="1">
+    <animate attributeName="height" 
+             values="98.0; 98.0; 101.0; 302.0; 302.0; 98.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="302.0; 302.0; 299.0; 98.0; 98.0; 302.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="602.8" y="196.0" width="6.0" height="204.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="204.0; 204.0; 228.0; 310.0; 310.0; 204.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="196.0; 196.0; 172.0; 90.0; 90.0; 196.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="610.6" y="204.0" width="6.0" height="196.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="196.0; 196.0; 167.0; 316.0; 316.0; 196.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="204.0; 204.0; 233.0; 84.0; 84.0; 204.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="618.4" y="278.0" width="6.0" height="122.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="122.0; 122.0; 134.0; 317.0; 317.0; 122.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="278.0; 278.0; 266.0; 83.0; 83.0; 278.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="626.2" y="42.0" width="6.0" height="358.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="358.0; 358.0; 341.0; 323.0; 323.0; 358.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="42.0; 42.0; 59.0; 77.0; 77.0; 42.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="634.0" y="249.0" width="6.0" height="151.0" fill="url(#limeBar)" rx="1">
+    <animate attributeName="height" 
+             values="151.0; 151.0; 127.0; 324.0; 324.0; 151.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="249.0; 249.0; 273.0; 76.0; 76.0; 249.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="641.8" y="26.0" width="6.0" height="374.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="374.0; 374.0; 388.0; 326.0; 326.0; 374.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="26.0; 26.0; 12.0; 74.0; 74.0; 26.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="649.6" y="36.0" width="6.0" height="364.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="364.0; 364.0; 388.0; 331.0; 331.0; 364.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="36.0; 36.0; 12.0; 69.0; 69.0; 36.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="657.4" y="54.0" width="6.0" height="346.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="346.0; 346.0; 327.0; 336.0; 336.0; 346.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="54.0; 54.0; 73.0; 64.0; 64.0; 54.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="665.2" y="349.0" width="6.0" height="51.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="51.0; 51.0; 47.0; 340.0; 340.0; 51.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="349.0; 349.0; 353.0; 60.0; 60.0; 349.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="673.0" y="74.0" width="6.0" height="326.0" fill="url(#limeBar)" rx="1">
+    <animate attributeName="height" 
+             values="326.0; 326.0; 327.0; 340.0; 340.0; 326.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="74.0; 74.0; 73.0; 60.0; 60.0; 74.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="680.8" y="60.0" width="6.0" height="340.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="340.0; 340.0; 320.0; 342.0; 342.0; 340.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="60.0; 60.0; 80.0; 58.0; 58.0; 60.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="688.6" y="298.0" width="6.0" height="102.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="102.0; 102.0; 94.0; 342.0; 342.0; 102.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="298.0; 298.0; 306.0; 58.0; 58.0; 298.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="696.4" y="112.0" width="6.0" height="288.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="288.0; 288.0; 301.0; 346.0; 346.0; 288.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="112.0; 112.0; 99.0; 54.0; 54.0; 112.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="704.2" y="260.0" width="6.0" height="140.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="140.0; 140.0; 120.0; 347.0; 347.0; 140.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="260.0; 260.0; 280.0; 53.0; 53.0; 260.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="712.0" y="302.0" width="6.0" height="98.0" fill="url(#limeBar)" rx="1">
+    <animate attributeName="height" 
+             values="98.0; 98.0; 101.0; 353.0; 353.0; 98.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="302.0; 302.0; 299.0; 47.0; 47.0; 302.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="719.8" y="149.0" width="6.0" height="251.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="251.0; 251.0; 247.0; 358.0; 358.0; 251.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="149.0; 149.0; 153.0; 42.0; 42.0; 149.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="727.6" y="191.0" width="6.0" height="209.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="209.0; 209.0; 228.0; 361.0; 361.0; 209.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="191.0; 191.0; 172.0; 39.0; 39.0; 191.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="735.4" y="247.0" width="6.0" height="153.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="153.0; 153.0; 141.0; 364.0; 364.0; 153.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="247.0; 247.0; 259.0; 36.0; 36.0; 247.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="743.2" y="58.0" width="6.0" height="342.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="342.0; 342.0; 334.0; 365.0; 365.0; 342.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="58.0; 58.0; 66.0; 35.0; 35.0; 58.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="751.0" y="33.0" width="6.0" height="367.0" fill="url(#limeBar)" rx="1">
+    <animate attributeName="height" 
+             values="367.0; 367.0; 374.0; 367.0; 367.0; 367.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="33.0; 33.0; 26.0; 33.0; 33.0; 33.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="758.8" y="100.0" width="6.0" height="300.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="300.0; 300.0; 280.0; 372.0; 372.0; 300.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="100.0; 100.0; 120.0; 28.0; 28.0; 100.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="766.6" y="273.0" width="6.0" height="127.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="127.0; 127.0; 134.0; 374.0; 374.0; 127.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="273.0; 273.0; 266.0; 26.0; 26.0; 273.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="774.4" y="35.0" width="6.0" height="365.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="365.0; 365.0; 360.0; 374.0; 374.0; 365.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="35.0; 35.0; 40.0; 26.0; 26.0; 35.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="782.2" y="219.0" width="6.0" height="181.0" fill="url(#ivoryBar)" rx="1">
+    <animate attributeName="height" 
+             values="181.0; 181.0; 167.0; 375.0; 375.0; 181.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+    <animate attributeName="y" 
+             values="219.0; 219.0; 233.0; 25.0; 25.0; 219.0" 
+             keyTimes="0; 0.15; 0.45; 0.75; 0.90; 1.0" 
+             dur="4.5s" repeatCount="indefinite" />
+  </rect>
+
+  <!-- Scan Sweep Highlight -->
+  <rect x="10" y="402" width="16" height="3" fill="#D5F53D">
+    <animate attributeName="x" values="10; 770; 10" dur="4.5s" repeatCount="indefinite" />
+  </rect>
+
+  <text x="20" y="28" class="title-text">qi::apex — L1-Bound Execution Visualizer</text>
+  <text x="20" y="46" class="sub-text">N = 100 elements · 3-Pass L1 Radix Sorting</text>
+</svg>

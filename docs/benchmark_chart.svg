@@ -1,171 +1,139 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 950 560" width="100%" height="100%">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 480" width="100%" height="100%">
   <defs>
-    <!-- Background Gradient -->
-    <linearGradient id="canvasGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0E1217"/>
-      <stop offset="100%" stop-color="#141922"/>
-    </linearGradient>
-
-    <!-- Color 1: Primary Vibrant Lime (#D5F53D) -->
-    <linearGradient id="limePrimary" x1="0%" y1="0%" x2="100%" y2="0%">
+    <!-- 3 Custom Color Tokens -->
+    <linearGradient id="apexBar" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#D5F53D"/>
       <stop offset="100%" stop-color="#E2FB5E"/>
     </linearGradient>
-
-    <!-- Color 2: Soft Pale Lime Glow (#E8F8B6 / #F4FBD2) -->
-    <linearGradient id="limeGlow" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#B5DF32"/>
-      <stop offset="100%" stop-color="#D5F53D"/>
+    <linearGradient id="pdqBar" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#F4FBD2"/>
+      <stop offset="100%" stop-color="#E8F8B6"/>
     </linearGradient>
-
-    <!-- Color 3: Warm Ivory Neutral (#FAF9F6 / Light Surface) -->
-    <linearGradient id="ivoryNeutral" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#E2E1DC"/>
-      <stop offset="100%" stop-color="#FAF9F6"/>
-    </linearGradient>
-
-    <!-- Competitor Neutral Grey -->
-    <linearGradient id="slateMuted" x1="0%" y1="0%" x2="100%" y2="0%">
+    <linearGradient id="stdBar" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#2D333B"/>
-      <stop offset="100%" stop-color="#3D444D"/>
+      <stop offset="100%" stop-color="#444C56"/>
     </linearGradient>
-
-    <filter id="limeShadow" x="-10%" y="-10%" width="130%" height="130%">
-      <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#D5F53D" flood-opacity="0.35"/>
-    </filter>
 
     <style>
-      .title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 20px; font-weight: 700; fill: #FAF9F6; letter-spacing: -0.3px; }
-      .subtitle { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 13px; fill: #8B949E; }
-      .axis-label { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 600; fill: #C9D1D9; }
-      .bar-val { font-family: "SF Mono", Monaco, Menlo, Consolas, monospace; font-size: 11px; font-weight: 700; fill: #FAF9F6; }
-      .bar-val-lime { font-family: "SF Mono", Monaco, Menlo, Consolas, monospace; font-size: 11px; font-weight: 800; fill: #D5F53D; }
+      .bg { fill: #0E1217; }
+      .chart-box { fill: #141922; stroke: #FAF9F6; stroke-width: 1.5; }
+      .title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 19px; font-weight: 700; fill: #FAF9F6; text-anchor: middle; }
+      .axis-title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 13.5px; fill: #FAF9F6; font-weight: 600; text-anchor: middle; }
+      .y-label { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 13px; fill: #FAF9F6; font-weight: 500; text-anchor: end; }
+      .x-label { font-family: "SF Mono", Monaco, Menlo, Consolas, monospace; font-size: 12px; fill: #FAF9F6; text-anchor: middle; }
+      .tick { stroke: #FAF9F6; stroke-width: 1.2; }
+      .grid { stroke: #21262D; stroke-dasharray: 2,2; stroke-width: 1; }
+      .legend-box { fill: #0E1217; stroke: #FAF9F6; stroke-width: 1.2; }
       .legend-text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 12px; fill: #FAF9F6; font-weight: 600; }
-      .grid { stroke: #21262D; stroke-dasharray: 3,3; stroke-width: 1; }
     </style>
   </defs>
 
-  <!-- Canvas Container -->
-  <rect width="950" height="560" rx="16" fill="url(#canvasGrad)" stroke="#30363D" stroke-width="1.2"/>
+  <!-- Background -->
+  <rect width="720" height="480" class="bg"/>
 
-  <!-- Color Accent Tag -->
-  <g transform="translate(35, 30)">
-    <circle cx="10" cy="10" r="10" fill="#F4FBD2" opacity="0.4"/>
-    <circle cx="10" cy="10" r="6" fill="#D5F53D"/>
-  </g>
+  <!-- Title -->
+  <text x="440" y="32" class="title">Sorting 10⁶ elements</text>
 
-  <!-- Header -->
-  <text x="65" y="42" class="title">qi::apex Benchmark Execution — 10,000,000 Keys</text>
-  <text x="65" y="63" class="subtitle">Lower is Better · Apple Silicon M1 Pro · clang++ -O3 -std=c++17</text>
+  <!-- Chart Bounding Box (x: 180 to 680, y: 45 to 420) -->
+  <rect x="180" y="45" width="500" height="375" class="chart-box"/>
 
-  <!-- Legend -->
-  <g transform="translate(470, 32)">
-    <rect x="0" y="0" width="14" height="14" rx="4" fill="url(#limePrimary)" filter="url(#limeShadow)"/>
-    <text x="20" y="11" class="legend-text">qi::apex (1T)</text>
+  <!-- Vertical Ticks & Grid Lines (0, 50, 100, 150, 200, 250, 300, 350) -->
+  <!-- 0 at x=180, 350 at x=680 => width=500 => scale = 500/350 = 1.4285 px per cycle -->
+  <line x1="180" y1="45" x2="180" y2="425" class="tick"/>
+  <text x="180" y="442" class="x-label">0</text>
 
-    <rect x="130" y="0" width="14" height="14" rx="4" fill="url(#limeGlow)"/>
-    <text x="150" y="11" class="legend-text">qi::apex (Parallel)</text>
+  <line x1="251" y1="45" x2="251" y2="420" class="grid"/>
+  <line x1="251" y1="420" x2="251" y2="425" class="tick"/>
+  <text x="251" y="442" class="x-label">50</text>
+
+  <line x1="323" y1="45" x2="323" y2="420" class="grid"/>
+  <line x1="323" y1="420" x2="323" y2="425" class="tick"/>
+  <text x="323" y="442" class="x-label">100</text>
+
+  <line x1="394" y1="45" x2="394" y2="420" class="grid"/>
+  <line x1="394" y1="420" x2="394" y2="425" class="tick"/>
+  <text x="394" y="442" class="x-label">150</text>
+
+  <line x1="466" y1="45" x2="466" y2="420" class="grid"/>
+  <line x1="466" y1="420" x2="466" y2="425" class="tick"/>
+  <text x="466" y="442" class="x-label">200</text>
+
+  <line x1="537" y1="45" x2="537" y2="420" class="grid"/>
+  <line x1="537" y1="420" x2="537" y2="425" class="tick"/>
+  <text x="537" y="442" class="x-label">250</text>
+
+  <line x1="609" y1="45" x2="609" y2="420" class="grid"/>
+  <line x1="609" y1="420" x2="609" y2="425" class="tick"/>
+  <text x="609" y="442" class="x-label">300</text>
+
+  <line x1="680" y1="45" x2="680" y2="425" class="tick"/>
+  <text x="680" y="442" class="x-label">350</text>
+
+  <!-- X-Axis Label -->
+  <text x="430" y="468" class="axis-title">Cycles per element (Apple Silicon M1 @ 3.2GHz)</text>
+
+  <!-- ==================== ROWS ==================== -->
+
+  <!-- ROW 1: Shuffled (y: 56) -->
+  <text x="170" y="74" class="y-label">Shuffled</text>
+  <rect x="180" y="56" width="48" height="10" fill="url(#apexBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+  <rect x="180" y="66" width="164" height="10" fill="url(#pdqBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+  <rect x="180" y="76" width="314" height="10" fill="url(#stdBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+
+  <!-- ROW 2: Shuffled (16 values) (y: 102) -->
+  <text x="170" y="120" class="y-label">Shuffled (16 values)</text>
+  <rect x="180" y="102" width="18" height="10" fill="url(#apexBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+  <rect x="180" y="112" width="30" height="10" fill="url(#pdqBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+  <rect x="180" y="122" width="179" height="10" fill="url(#stdBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+
+  <!-- ROW 3: All equal (y: 148) -->
+  <text x="170" y="166" class="y-label">All equal</text>
+  <rect x="180" y="148" width="6" height="10" fill="url(#apexBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+  <rect x="180" y="158" width="8" height="10" fill="url(#pdqBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+  <rect x="180" y="168" width="54" height="10" fill="url(#stdBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+
+  <!-- ROW 4: Ascending (y: 194) -->
+  <text x="170" y="212" class="y-label">Ascending</text>
+  <rect x="180" y="194" width="6" height="10" fill="url(#apexBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+  <rect x="180" y="204" width="7" height="10" fill="url(#pdqBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+  <rect x="180" y="214" width="71" height="10" fill="url(#stdBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+
+  <!-- ROW 5: Descending (y: 240) -->
+  <text x="170" y="258" class="y-label">Descending</text>
+  <rect x="180" y="240" width="8" height="10" fill="url(#apexBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+  <rect x="180" y="250" width="11" height="10" fill="url(#pdqBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+  <rect x="180" y="260" width="79" height="10" fill="url(#stdBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+
+  <!-- ROW 6: Pipe organ (y: 286) -->
+  <text x="170" y="304" class="y-label">Pipe organ</text>
+  <rect x="180" y="286" width="67" height="10" fill="url(#apexBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+  <rect x="180" y="296" width="171" height="10" fill="url(#pdqBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+  <rect x="180" y="306" width="371" height="10" fill="url(#stdBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+
+  <!-- ROW 7: Push front (y: 332) -->
+  <text x="170" y="350" class="y-label">Push front</text>
+  <rect x="180" y="332" width="48" height="10" fill="url(#apexBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+  <rect x="180" y="342" width="66" height="10" fill="url(#pdqBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+  <rect x="180" y="352" width="454" height="10" fill="url(#stdBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+
+  <!-- ROW 8: Push middle (y: 378) -->
+  <text x="170" y="396" class="y-label">Push middle</text>
+  <rect x="180" y="378" width="48" height="10" fill="url(#apexBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+  <rect x="180" y="388" width="8" height="10" fill="url(#pdqBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+  <rect x="180" y="398" width="256" height="10" fill="url(#stdBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+
+  <!-- ==================== LEGEND BOX ==================== -->
+  <g transform="translate(520, 195)">
+    <rect width="150" height="75" class="legend-box"/>
     
-    <rect x="280" y="0" width="14" height="14" rx="4" fill="url(#ivoryNeutral)"/>
-    <text x="300" y="11" class="legend-text">pdqsort (1T)</text>
-    
-    <rect x="395" y="0" width="14" height="14" rx="4" fill="url(#slateMuted)"/>
-    <text x="415" y="11" class="legend-text">std::sort</text>
-  </g>
+    <rect x="10" y="10" width="24" height="12" fill="url(#apexBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+    <text x="42" y="21" class="legend-text">qi::apex</text>
 
-  <!-- Grid Lines -->
-  <line x1="220" y1="95" x2="900" y2="95" stroke="#30363D" stroke-width="1"/>
-  <line x1="220" y1="500" x2="900" y2="500" stroke="#30363D" stroke-width="1"/>
-  <line x1="390" y1="95" x2="390" y2="500" class="grid"/>
-  <line x1="560" y1="95" x2="560" y2="500" class="grid"/>
-  <line x1="730" y1="95" x2="730" y2="500" class="grid"/>
-  <line x1="900" y1="95" x2="900" y2="500" class="grid"/>
+    <rect x="10" y="31" width="24" height="12" fill="url(#pdqBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+    <text x="42" y="42" class="legend-text">pdqsort</text>
 
-  <!-- X Axis Labels (Time in ms) -->
-  <text x="220" y="522" class="subtitle" text-anchor="middle">0 ms</text>
-  <text x="390" y="522" class="subtitle" text-anchor="middle">60 ms</text>
-  <text x="560" y="522" class="subtitle" text-anchor="middle">120 ms</text>
-  <text x="730" y="522" class="subtitle" text-anchor="middle">180 ms</text>
-  <text x="900" y="522" class="subtitle" text-anchor="middle">240 ms</text>
-
-  <!-- ROW 1: Uniform Random 32-bit -->
-  <g transform="translate(0, 105)">
-    <text x="205" y="32" class="axis-label" text-anchor="end">Uniform Random 32-bit</text>
-    <rect x="220" y="4"  width="104" height="11" rx="3" fill="url(#limePrimary)" filter="url(#limeShadow)"/>
-    <text x="332" y="13" class="bar-val-lime">36.6 ms (6.3x)</text>
-
-    <rect x="220" y="18" width="50"  height="11" rx="3" fill="url(#limeGlow)"/>
-    <text x="278" y="27" class="bar-val">17.6 ms (Par)</text>
-    
-    <rect x="220" y="32" width="625" height="11" rx="3" fill="url(#ivoryNeutral)"/>
-    <text x="852" y="41" class="bar-val">220.9 ms</text>
-    
-    <rect x="220" y="46" width="651" height="11" rx="3" fill="url(#slateMuted)"/>
-    <text x="878" y="55" class="bar-val">230.1 ms</text>
-  </g>
-
-  <!-- ROW 2: Byte Duplicates (0-255) -->
-  <g transform="translate(0, 185)">
-    <text x="205" y="32" class="axis-label" text-anchor="end">Byte Dups (0–255)</text>
-    <rect x="220" y="4"  width="12"  height="11" rx="3" fill="url(#limePrimary)" filter="url(#limeShadow)"/>
-    <text x="240" y="13" class="bar-val-lime">4.1 ms (19.7x)</text>
-
-    <rect x="220" y="18" width="21"  height="11" rx="3" fill="url(#limeGlow)"/>
-    <text x="249" y="27" class="bar-val">7.5 ms (Par)</text>
-    
-    <rect x="220" y="32" width="165" height="11" rx="3" fill="url(#ivoryNeutral)"/>
-    <text x="393" y="41" class="bar-val">58.4 ms</text>
-    
-    <rect x="220" y="46" width="230" height="11" rx="3" fill="url(#slateMuted)"/>
-    <text x="458" y="55" class="bar-val">81.3 ms</text>
-  </g>
-
-  <!-- ROW 3: Sawtooth Periodic Patterns -->
-  <g transform="translate(0, 265)">
-    <text x="205" y="32" class="axis-label" text-anchor="end">Periodic Sawtooth (1K)</text>
-    <rect x="220" y="4"  width="12"  height="11" rx="3" fill="url(#limePrimary)" filter="url(#limeShadow)"/>
-    <text x="240" y="13" class="bar-val-lime">4.0 ms (26.4x)</text>
-
-    <rect x="220" y="18" width="19"  height="11" rx="3" fill="url(#limeGlow)"/>
-    <text x="247" y="27" class="bar-val">6.8 ms (Par)</text>
-    
-    <rect x="220" y="32" width="239" height="11" rx="3" fill="url(#ivoryNeutral)"/>
-    <text x="467" y="41" class="bar-val">84.4 ms</text>
-    
-    <rect x="220" y="46" width="302" height="11" rx="3" fill="url(#slateMuted)"/>
-    <text x="530" y="55" class="bar-val">106.5 ms</text>
-  </g>
-
-  <!-- ROW 4: 16-bit Domain Range (0-65K) -->
-  <g transform="translate(0, 345)">
-    <text x="205" y="32" class="axis-label" text-anchor="end">16-bit Domain (0–65K)</text>
-    <rect x="220" y="4"  width="62"  height="11" rx="3" fill="url(#limePrimary)" filter="url(#limeShadow)"/>
-    <text x="290" y="13" class="bar-val-lime">21.8 ms (6.2x)</text>
-
-    <rect x="220" y="18" width="39"  height="11" rx="3" fill="url(#limeGlow)"/>
-    <text x="267" y="27" class="bar-val">13.9 ms (Par)</text>
-    
-    <rect x="220" y="32" width="313" height="11" rx="3" fill="url(#ivoryNeutral)"/>
-    <text x="541" y="41" class="bar-val">110.5 ms</text>
-    
-    <rect x="220" y="46" width="383" height="11" rx="3" fill="url(#slateMuted)"/>
-    <text x="611" y="55" class="bar-val">135.3 ms</text>
-  </g>
-
-  <!-- ROW 5: Pre-Sorted Monotonic -->
-  <g transform="translate(0, 425)">
-    <text x="205" y="32" class="axis-label" text-anchor="end">Already Sorted ($O(N)$)</text>
-    <rect x="220" y="4"  width="13"  height="11" rx="3" fill="url(#limePrimary)" filter="url(#limeShadow)"/>
-    <text x="241" y="13" class="bar-val-lime">4.4 ms (2.4x)</text>
-
-    <rect x="220" y="18" width="13"  height="11" rx="3" fill="url(#limeGlow)"/>
-    <text x="241" y="27" class="bar-val">4.4 ms (Par)</text>
-    
-    <rect x="220" y="32" width="22"  height="11" rx="3" fill="url(#ivoryNeutral)"/>
-    <text x="250" y="41" class="bar-val">7.7 ms</text>
-    
-    <rect x="220" y="46" width="30"  height="11" rx="3" fill="url(#slateMuted)"/>
-    <text x="258" y="55" class="bar-val">10.5 ms</text>
+    <rect x="10" y="52" width="24" height="12" fill="url(#stdBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+    <text x="42" y="63" class="legend-text">std::sort</text>
   </g>
 
 </svg>
