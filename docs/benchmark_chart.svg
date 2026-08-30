@@ -1,13 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 480" width="100%" height="100%">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 740 520" width="100%" height="100%">
   <defs>
-    <!-- 3 Custom Color Tokens -->
+    <!-- Color Tokens -->
     <linearGradient id="apexBar" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#D5F53D"/>
       <stop offset="100%" stop-color="#E2FB5E"/>
     </linearGradient>
+    <linearGradient id="qiSortBar" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#BEE838"/>
+      <stop offset="100%" stop-color="#D5F53D"/>
+    </linearGradient>
     <linearGradient id="pdqBar" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#F4FBD2"/>
-      <stop offset="100%" stop-color="#E8F8B6"/>
+      <stop offset="100%" stop-color="#FAF9F6"/>
     </linearGradient>
     <linearGradient id="stdBar" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#2D333B"/>
@@ -19,121 +23,132 @@
       .chart-box { fill: #141922; stroke: #FAF9F6; stroke-width: 1.5; }
       .title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 19px; font-weight: 700; fill: #FAF9F6; text-anchor: middle; }
       .axis-title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 13.5px; fill: #FAF9F6; font-weight: 600; text-anchor: middle; }
-      .y-label { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 13px; fill: #FAF9F6; font-weight: 500; text-anchor: end; }
+      .y-label { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 12.5px; fill: #FAF9F6; font-weight: 500; text-anchor: end; }
       .x-label { font-family: "SF Mono", Monaco, Menlo, Consolas, monospace; font-size: 12px; fill: #FAF9F6; text-anchor: middle; }
       .tick { stroke: #FAF9F6; stroke-width: 1.2; }
       .grid { stroke: #21262D; stroke-dasharray: 2,2; stroke-width: 1; }
       .legend-box { fill: #0E1217; stroke: #FAF9F6; stroke-width: 1.2; }
-      .legend-text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 12px; fill: #FAF9F6; font-weight: 600; }
+      .legend-text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 11.5px; fill: #FAF9F6; font-weight: 600; }
     </style>
   </defs>
 
   <!-- Background -->
-  <rect width="720" height="480" class="bg"/>
+  <rect width="740" height="520" class="bg"/>
 
   <!-- Title -->
-  <text x="440" y="32" class="title">Sorting 10⁶ elements</text>
+  <text x="450" y="32" class="title">Sorting 10⁶ elements</text>
 
-  <!-- Chart Bounding Box (x: 180 to 680, y: 45 to 420) -->
-  <rect x="180" y="45" width="500" height="375" class="chart-box"/>
+  <!-- Chart Bounding Box (x: 180 to 700, y: 45 to 455) -->
+  <rect x="180" y="45" width="520" height="410" class="chart-box"/>
 
   <!-- Vertical Ticks & Grid Lines (0, 50, 100, 150, 200, 250, 300, 350) -->
-  <!-- 0 at x=180, 350 at x=680 => width=500 => scale = 500/350 = 1.4285 px per cycle -->
-  <line x1="180" y1="45" x2="180" y2="425" class="tick"/>
-  <text x="180" y="442" class="x-label">0</text>
+  <!-- scale = 520 / 350 = 1.4857 px per cycle -->
+  <line x1="180" y1="45" x2="180" y2="460" class="tick"/>
+  <text x="180" y="477" class="x-label">0</text>
 
-  <line x1="251" y1="45" x2="251" y2="420" class="grid"/>
-  <line x1="251" y1="420" x2="251" y2="425" class="tick"/>
-  <text x="251" y="442" class="x-label">50</text>
+  <line x1="254" y1="45" x2="254" y2="455" class="grid"/>
+  <line x1="254" y1="455" x2="254" y2="460" class="tick"/>
+  <text x="254" y="477" class="x-label">50</text>
 
-  <line x1="323" y1="45" x2="323" y2="420" class="grid"/>
-  <line x1="323" y1="420" x2="323" y2="425" class="tick"/>
-  <text x="323" y="442" class="x-label">100</text>
+  <line x1="329" y1="45" x2="329" y2="455" class="grid"/>
+  <line x1="329" y1="455" x2="329" y2="460" class="tick"/>
+  <text x="329" y="477" class="x-label">100</text>
 
-  <line x1="394" y1="45" x2="394" y2="420" class="grid"/>
-  <line x1="394" y1="420" x2="394" y2="425" class="tick"/>
-  <text x="394" y="442" class="x-label">150</text>
+  <line x1="403" y1="45" x2="403" y2="455" class="grid"/>
+  <line x1="403" y1="455" x2="403" y2="460" class="tick"/>
+  <text x="403" y="477" class="x-label">150</text>
 
-  <line x1="466" y1="45" x2="466" y2="420" class="grid"/>
-  <line x1="466" y1="420" x2="466" y2="425" class="tick"/>
-  <text x="466" y="442" class="x-label">200</text>
+  <line x1="477" y1="45" x2="477" y2="455" class="grid"/>
+  <line x1="477" y1="455" x2="477" y2="460" class="tick"/>
+  <text x="477" y="477" class="x-label">200</text>
 
-  <line x1="537" y1="45" x2="537" y2="420" class="grid"/>
-  <line x1="537" y1="420" x2="537" y2="425" class="tick"/>
-  <text x="537" y="442" class="x-label">250</text>
+  <line x1="551" y1="45" x2="551" y2="455" class="grid"/>
+  <line x1="551" y1="455" x2="551" y2="460" class="tick"/>
+  <text x="551" y="477" class="x-label">250</text>
 
-  <line x1="609" y1="45" x2="609" y2="420" class="grid"/>
-  <line x1="609" y1="420" x2="609" y2="425" class="tick"/>
-  <text x="609" y="442" class="x-label">300</text>
+  <line x1="626" y1="45" x2="626" y2="455" class="grid"/>
+  <line x1="626" y1="455" x2="626" y2="460" class="tick"/>
+  <text x="626" y="477" class="x-label">300</text>
 
-  <line x1="680" y1="45" x2="680" y2="425" class="tick"/>
-  <text x="680" y="442" class="x-label">350</text>
+  <line x1="700" y1="45" x2="700" y2="460" class="tick"/>
+  <text x="700" y="477" class="x-label">350</text>
 
   <!-- X-Axis Label -->
-  <text x="430" y="468" class="axis-title">Cycles per element (Apple Silicon M1 @ 3.2GHz)</text>
+  <text x="440" y="502" class="axis-title">Cycles per element (Apple Silicon M1 @ 3.2GHz)</text>
 
-  <!-- ==================== ROWS ==================== -->
+  <!-- ==================== ROWS (Height per row = 51px) ==================== -->
 
-  <!-- ROW 1: Shuffled (y: 56) -->
-  <text x="170" y="74" class="y-label">Shuffled</text>
-  <rect x="180" y="56" width="48" height="10" fill="url(#apexBar)" stroke="#FAF9F6" stroke-width="0.8"/>
-  <rect x="180" y="66" width="164" height="10" fill="url(#pdqBar)" stroke="#FAF9F6" stroke-width="0.8"/>
-  <rect x="180" y="76" width="314" height="10" fill="url(#stdBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+  <!-- ROW 1: Shuffled (y: 54) -->
+  <text x="170" y="77" class="y-label">Shuffled</text>
+  <rect x="180" y="54" width="48" height="8" fill="url(#apexBar)" stroke="#FAF9F6" stroke-width="0.6"/>
+  <rect x="180" y="63" width="53" height="8" fill="url(#qiSortBar)" stroke="#FAF9F6" stroke-width="0.6"/>
+  <rect x="180" y="72" width="168" height="8" fill="url(#pdqBar)" stroke="#FAF9F6" stroke-width="0.6"/>
+  <rect x="180" y="81" width="322" height="8" fill="url(#stdBar)" stroke="#FAF9F6" stroke-width="0.6"/>
 
-  <!-- ROW 2: Shuffled (16 values) (y: 102) -->
-  <text x="170" y="120" class="y-label">Shuffled (16 values)</text>
-  <rect x="180" y="102" width="18" height="10" fill="url(#apexBar)" stroke="#FAF9F6" stroke-width="0.8"/>
-  <rect x="180" y="112" width="30" height="10" fill="url(#pdqBar)" stroke="#FAF9F6" stroke-width="0.8"/>
-  <rect x="180" y="122" width="179" height="10" fill="url(#stdBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+  <!-- ROW 2: Shuffled (16 values) (y: 105) -->
+  <text x="170" y="128" class="y-label">Shuffled (16 values)</text>
+  <rect x="180" y="105" width="18" height="8" fill="url(#apexBar)" stroke="#FAF9F6" stroke-width="0.6"/>
+  <rect x="180" y="114" width="18" height="8" fill="url(#qiSortBar)" stroke="#FAF9F6" stroke-width="0.6"/>
+  <rect x="180" y="123" width="32" height="8" fill="url(#pdqBar)" stroke="#FAF9F6" stroke-width="0.6"/>
+  <rect x="180" y="132" width="184" height="8" fill="url(#stdBar)" stroke="#FAF9F6" stroke-width="0.6"/>
 
-  <!-- ROW 3: All equal (y: 148) -->
-  <text x="170" y="166" class="y-label">All equal</text>
-  <rect x="180" y="148" width="6" height="10" fill="url(#apexBar)" stroke="#FAF9F6" stroke-width="0.8"/>
-  <rect x="180" y="158" width="8" height="10" fill="url(#pdqBar)" stroke="#FAF9F6" stroke-width="0.8"/>
-  <rect x="180" y="168" width="54" height="10" fill="url(#stdBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+  <!-- ROW 3: All equal (y: 156) -->
+  <text x="170" y="179" class="y-label">All equal</text>
+  <rect x="180" y="156" width="6" height="8" fill="url(#apexBar)" stroke="#FAF9F6" stroke-width="0.6"/>
+  <rect x="180" y="165" width="6" height="8" fill="url(#qiSortBar)" stroke="#FAF9F6" stroke-width="0.6"/>
+  <rect x="180" y="174" width="9" height="8" fill="url(#pdqBar)" stroke="#FAF9F6" stroke-width="0.6"/>
+  <rect x="180" y="183" width="56" height="8" fill="url(#stdBar)" stroke="#FAF9F6" stroke-width="0.6"/>
 
-  <!-- ROW 4: Ascending (y: 194) -->
-  <text x="170" y="212" class="y-label">Ascending</text>
-  <rect x="180" y="194" width="6" height="10" fill="url(#apexBar)" stroke="#FAF9F6" stroke-width="0.8"/>
-  <rect x="180" y="204" width="7" height="10" fill="url(#pdqBar)" stroke="#FAF9F6" stroke-width="0.8"/>
-  <rect x="180" y="214" width="71" height="10" fill="url(#stdBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+  <!-- ROW 4: Ascending (y: 207) -->
+  <text x="170" y="230" class="y-label">Ascending</text>
+  <rect x="180" y="207" width="6" height="8" fill="url(#apexBar)" stroke="#FAF9F6" stroke-width="0.6"/>
+  <rect x="180" y="216" width="6" height="8" fill="url(#qiSortBar)" stroke="#FAF9F6" stroke-width="0.6"/>
+  <rect x="180" y="225" width="8" height="8" fill="url(#pdqBar)" stroke="#FAF9F6" stroke-width="0.6"/>
+  <rect x="180" y="234" width="73" height="8" fill="url(#stdBar)" stroke="#FAF9F6" stroke-width="0.6"/>
 
-  <!-- ROW 5: Descending (y: 240) -->
-  <text x="170" y="258" class="y-label">Descending</text>
-  <rect x="180" y="240" width="8" height="10" fill="url(#apexBar)" stroke="#FAF9F6" stroke-width="0.8"/>
-  <rect x="180" y="250" width="11" height="10" fill="url(#pdqBar)" stroke="#FAF9F6" stroke-width="0.8"/>
-  <rect x="180" y="260" width="79" height="10" fill="url(#stdBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+  <!-- ROW 5: Descending (y: 258) -->
+  <text x="170" y="281" class="y-label">Descending</text>
+  <rect x="180" y="258" width="9" height="8" fill="url(#apexBar)" stroke="#FAF9F6" stroke-width="0.6"/>
+  <rect x="180" y="267" width="9" height="8" fill="url(#qiSortBar)" stroke="#FAF9F6" stroke-width="0.6"/>
+  <rect x="180" y="276" width="12" height="8" fill="url(#pdqBar)" stroke="#FAF9F6" stroke-width="0.6"/>
+  <rect x="180" y="285" width="81" height="8" fill="url(#stdBar)" stroke="#FAF9F6" stroke-width="0.6"/>
 
-  <!-- ROW 6: Pipe organ (y: 286) -->
-  <text x="170" y="304" class="y-label">Pipe organ</text>
-  <rect x="180" y="286" width="67" height="10" fill="url(#apexBar)" stroke="#FAF9F6" stroke-width="0.8"/>
-  <rect x="180" y="296" width="171" height="10" fill="url(#pdqBar)" stroke="#FAF9F6" stroke-width="0.8"/>
-  <rect x="180" y="306" width="371" height="10" fill="url(#stdBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+  <!-- ROW 6: Pipe organ (y: 309) -->
+  <text x="170" y="332" class="y-label">Pipe organ</text>
+  <rect x="180" y="309" width="69" height="8" fill="url(#apexBar)" stroke="#FAF9F6" stroke-width="0.6"/>
+  <rect x="180" y="318" width="68" height="8" fill="url(#qiSortBar)" stroke="#FAF9F6" stroke-width="0.6"/>
+  <rect x="180" y="327" width="176" height="8" fill="url(#pdqBar)" stroke="#FAF9F6" stroke-width="0.6"/>
+  <rect x="180" y="336" width="380" height="8" fill="url(#stdBar)" stroke="#FAF9F6" stroke-width="0.6"/>
 
-  <!-- ROW 7: Push front (y: 332) -->
-  <text x="170" y="350" class="y-label">Push front</text>
-  <rect x="180" y="332" width="48" height="10" fill="url(#apexBar)" stroke="#FAF9F6" stroke-width="0.8"/>
-  <rect x="180" y="342" width="66" height="10" fill="url(#pdqBar)" stroke="#FAF9F6" stroke-width="0.8"/>
-  <rect x="180" y="352" width="454" height="10" fill="url(#stdBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+  <!-- ROW 7: Push front (y: 360) -->
+  <text x="170" y="383" class="y-label">Push front</text>
+  <rect x="180" y="360" width="48" height="8" fill="url(#apexBar)" stroke="#FAF9F6" stroke-width="0.6"/>
+  <rect x="180" y="369" width="53" height="8" fill="url(#qiSortBar)" stroke="#FAF9F6" stroke-width="0.6"/>
+  <rect x="180" y="378" width="68" height="8" fill="url(#pdqBar)" stroke="#FAF9F6" stroke-width="0.6"/>
+  <rect x="180" y="387" width="465" height="8" fill="url(#stdBar)" stroke="#FAF9F6" stroke-width="0.6"/>
 
-  <!-- ROW 8: Push middle (y: 378) -->
-  <text x="170" y="396" class="y-label">Push middle</text>
-  <rect x="180" y="378" width="48" height="10" fill="url(#apexBar)" stroke="#FAF9F6" stroke-width="0.8"/>
-  <rect x="180" y="388" width="8" height="10" fill="url(#pdqBar)" stroke="#FAF9F6" stroke-width="0.8"/>
-  <rect x="180" y="398" width="256" height="10" fill="url(#stdBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+  <!-- ROW 8: Push middle (y: 411) -->
+  <text x="170" y="434" class="y-label">Push middle</text>
+  <rect x="180" y="411" width="48" height="8" fill="url(#apexBar)" stroke="#FAF9F6" stroke-width="0.6"/>
+  <rect x="180" y="420" width="53" height="8" fill="url(#qiSortBar)" stroke="#FAF9F6" stroke-width="0.6"/>
+  <rect x="180" y="429" width="9" height="8" fill="url(#pdqBar)" stroke="#FAF9F6" stroke-width="0.6"/>
+  <rect x="180" y="438" width="263" height="8" fill="url(#stdBar)" stroke="#FAF9F6" stroke-width="0.6"/>
 
   <!-- ==================== LEGEND BOX ==================== -->
-  <g transform="translate(520, 195)">
-    <rect width="150" height="75" class="legend-box"/>
+  <g transform="translate(535, 195)">
+    <rect width="155" height="96" class="legend-box"/>
     
-    <rect x="10" y="10" width="24" height="12" fill="url(#apexBar)" stroke="#FAF9F6" stroke-width="0.8"/>
-    <text x="42" y="21" class="legend-text">qi::apex</text>
+    <rect x="10" y="10" width="22" height="10" fill="url(#apexBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+    <text x="40" y="19" class="legend-text">qi::apex</text>
 
-    <rect x="10" y="31" width="24" height="12" fill="url(#pdqBar)" stroke="#FAF9F6" stroke-width="0.8"/>
-    <text x="42" y="42" class="legend-text">pdqsort</text>
+    <rect x="10" y="30" width="22" height="10" fill="url(#qiSortBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+    <text x="40" y="39" class="legend-text">qi::sort</text>
 
-    <rect x="10" y="52" width="24" height="12" fill="url(#stdBar)" stroke="#FAF9F6" stroke-width="0.8"/>
-    <text x="42" y="63" class="legend-text">std::sort</text>
+    <rect x="10" y="50" width="22" height="10" fill="url(#pdqBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+    <text x="40" y="59" class="legend-text">pdqsort</text>
+
+    <rect x="10" y="70" width="22" height="10" fill="url(#stdBar)" stroke="#FAF9F6" stroke-width="0.8"/>
+    <text x="40" y="79" class="legend-text">std::sort</text>
   </g>
 
 </svg>
