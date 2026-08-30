@@ -63,7 +63,7 @@ int main() {
 
 ## Benchmark
 
-A comparison of `qi::apex`, Orson Peters' `pdqsort`, Steven Ross's `spreadsort`, and GCC/Clang's `std::sort` with various input distributions:
+A comparison of `qi::apex`, Orson Peters' `pdqsort`, Malte Skarupke's `ska_sort`, and GCC/Clang's `std::sort` with various input distributions:
 
 <p align="center">
   <img src="docs/benchmark_chart.svg" alt="qi::apex Benchmark Chart" width="100%"/>
@@ -73,7 +73,7 @@ A comparison of `qi::apex`, Orson Peters' `pdqsort`, Steven Ross's `spreadsort`,
 
 ### Single-Threaded (1T) Execution ($N = 10,000,000$ keys)
 
-| Distribution | `std::sort` | `pdqsort` | `spreadsort` | `qi::sort` | **`qi::apex` (1T)** | Speedup vs `std::sort` | Speedup vs `pdqsort` |
+| Distribution | `std::sort` | `pdqsort` | `ska_sort` | `qi::sort` | **`qi::apex` (1T)** | Speedup vs `std::sort` | Speedup vs `pdqsort` |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **Uniform Random 32-bit** | 230.06 ms | 220.88 ms | 84.97 ms | 37.68 ms | **`36.59 ms`** | **6.3×** | **6.0×** |
 | **Byte Duplicates (0–255)** | 81.33 ms | 58.35 ms | 147.76 ms | **`4.09 ms`** | **`4.13 ms`** | **19.7×** | **14.1×** |

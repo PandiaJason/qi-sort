@@ -23,7 +23,4 @@ if(BUILD_QI_EXAMPLES)
 
     add_executable(spatial_morton_sort examples/spatial_morton_sort.cpp)
     target_link_libraries(spatial_morton_sort PRIVATE qi_sort)
-
-    add_executable(boost_sort_example examples/boost_sort_example.cpp)
-    target_link_libraries(boost_sort_example PRIVATE qi_sort)
 endif()

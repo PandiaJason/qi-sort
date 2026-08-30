@@ -8,8 +8,9 @@
 #include <cstdint>
 #include <cassert>
 
-// Include Boost sorters
-#include "../third_party/boost_real/boost_sort_real.hpp"
+// Include Competitor sorters
+#include "competitors/pdqsort.h"
+#include "competitors/ska_sort.hpp"
 
 // Include Flagship Engines
 #include "../include/qi_apex.hpp"
@@ -43,9 +44,9 @@ void runBenchmarkRow(const string& testName, vector<u32>& original) {
     double t_pdq = time_ms([&]() { d_pdq = original; pdqsort(d_pdq.begin(), d_pdq.end()); });
     assert(is_sorted(d_pdq.begin(), d_pdq.end()));
 
-    auto d_spread = original;
-    double t_spread = time_ms([&]() { d_spread = original; boost_compat::spreadsort(d_spread.begin(), d_spread.end()); });
-    assert(is_sorted(d_spread.begin(), d_spread.end()));
+    auto d_ska = original;
+    double t_ska = time_ms([&]() { d_ska = original; ska_sort(d_ska.begin(), d_ska.end()); });
+    assert(is_sorted(d_ska.begin(), d_ska.end()));
 
     auto d_qi = original;
     double t_qi = time_ms([&]() { d_qi = original; qi::sort(d_qi.data(), N); });
@@ -61,18 +62,18 @@ void runBenchmarkRow(const string& testName, vector<u32>& original) {
     assert(is_sorted(d_par.begin(), d_par.end()));
 
     // 1T Winner among tested sorters
-    double best_1t = min({t_std, t_pdq, t_spread, t_qi, t_apex});
+    double best_1t = min({t_std, t_pdq, t_ska, t_qi, t_apex});
     string winner_1t = "";
     if (best_1t == t_apex) winner_1t = "qi::apex (1T)";
     else if (best_1t == t_qi) winner_1t = "qi::sort (1T)";
     else if (best_1t == t_pdq) winner_1t = "pdqsort (1T)";
     else if (best_1t == t_std) winner_1t = "std::sort (1T)";
-    else winner_1t = "spreadsort (1T)";
+    else winner_1t = "ska_sort (1T)";
 
     cout << left << setw(30) << testName
          << setw(11) << fixed << setprecision(2) << t_std
          << setw(11) << t_pdq
-         << setw(11) << t_spread
+         << setw(11) << t_ska
          << setw(11) << t_qi
          << setw(11) << t_apex
          << setw(16) << winner_1t
@@ -82,7 +83,7 @@ void runBenchmarkRow(const string& testName, vector<u32>& original) {
 int main() {
     cout << "========================================================================================================================\n";
     cout << "  MASTER GLOBAL SORTING BENCHMARK SCORECARD\n";
-    cout << "  Comparing: std::sort vs pdqsort vs spreadsort vs qi::sort vs qi::apex\n";
+    cout << "  Comparing: std::sort vs pdqsort vs ska_sort vs qi::sort vs qi::apex\n";
     cout << "  Hardware: Apple Silicon M1 Pro | clang++ -O3 -std=c++17 | Best of 3 Runs\n";
     cout << "========================================================================================================================\n\n";
 
@@ -97,7 +98,7 @@ int main() {
     cout << left << setw(30) << "Workload Distribution"
          << setw(11) << "std::sort"
          << setw(11) << "pdqsort"
-         << setw(11) << "spread"
+         << setw(11) << "ska_sort"
          << setw(11) << "qi::sort"
          << setw(11) << "qi::apex"
          << setw(16) << "Winner (1T)"
@@ -157,7 +158,7 @@ int main() {
     cout << left << setw(30) << "Workload Distribution"
          << setw(11) << "std::sort"
          << setw(11) << "pdqsort"
-         << setw(11) << "spread"
+         << setw(11) << "ska_sort"
          << setw(11) << "qi::sort"
          << setw(11) << "qi::apex"
          << setw(16) << "Winner (1T)"
