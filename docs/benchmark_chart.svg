@@ -17,7 +17,7 @@
       .legend-box { fill: #000000; stroke: #FFFFFF; stroke-width: 1.2; }
       .legend-text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 11.5px; fill: #FFFFFF; font-weight: 600; }
       
-      /* Pure Neutral Achromatic Greys (Zero Blue Tint) */
+      /* Color Tokens (Zero Blue Tint, Pure Neutral White-Greys) */
       .bar-apex { fill: #D2F831; stroke: #FFFFFF; stroke-width: 0.6; } /* 1. Electric Lime */
       .bar-qisort { fill: #E8F8B6; stroke: #FFFFFF; stroke-width: 0.6; } /* 2. Soft Lime Glow */
       .bar-pdq { fill: #F2F2F2; stroke: #FFFFFF; stroke-width: 0.6; } /* 3. Pure Neutral White-Grey */
@@ -36,42 +36,34 @@
   </g>
 
   <!-- Title -->
-  <text x="440" y="36" class="title">Sorting 10⁶ elements</text>
+  <text x="440" y="36" class="title">Sorting 10⁷ elements</text>
 
   <!-- Chart Bounding Box (x: 180 to 720, y: 55 to 485) -->
   <rect x="180" y="55" width="540" height="430" class="chart-box"/>
 
-  <!-- Vertical Ticks & Grid Lines (0, 50, 100, 150, 200, 250, 300, 350) -->
-  <!-- scale = 540 / 350 = 1.5428 px per cycle -->
+  <!-- Vertical Ticks & Grid Lines (0, 40, 80, 120, 160, 200) -->
+  <!-- scale = 540 / 200 = 2.7 px per cycle -->
   <line x1="180" y1="55" x2="180" y2="492" class="tick"/>
   <text x="180" y="508" class="x-label">0</text>
 
-  <line x1="257" y1="55" x2="257" y2="485" class="grid"/>
-  <line x1="257" y1="485" x2="257" y2="492" class="tick"/>
-  <text x="257" y="508" class="x-label">50</text>
+  <line x1="288" y1="55" x2="288" y2="485" class="grid"/>
+  <line x1="288" y1="485" x2="288" y2="492" class="tick"/>
+  <text x="288" y="508" class="x-label">40</text>
 
-  <line x1="334" y1="55" x2="334" y2="485" class="grid"/>
-  <line x1="334" y1="485" x2="334" y2="492" class="tick"/>
-  <text x="334" y="508" class="x-label">100</text>
+  <line x1="396" y1="55" x2="396" y2="485" class="grid"/>
+  <line x1="396" y1="485" x2="396" y2="492" class="tick"/>
+  <text x="396" y="508" class="x-label">80</text>
 
-  <line x1="411" y1="55" x2="411" y2="485" class="grid"/>
-  <line x1="411" y1="485" x2="411" y2="492" class="tick"/>
-  <text x="411" y="508" class="x-label">150</text>
+  <line x1="504" y1="55" x2="504" y2="485" class="grid"/>
+  <line x1="504" y1="485" x2="504" y2="492" class="tick"/>
+  <text x="504" y="508" class="x-label">120</text>
 
-  <line x1="488" y1="55" x2="488" y2="485" class="grid"/>
-  <line x1="488" y1="485" x2="488" y2="492" class="tick"/>
-  <text x="488" y="508" class="x-label">200</text>
-
-  <line x1="565" y1="55" x2="565" y2="485" class="grid"/>
-  <line x1="565" y1="485" x2="565" y2="492" class="tick"/>
-  <text x="565" y="508" class="x-label">250</text>
-
-  <line x1="642" y1="55" x2="642" y2="485" class="grid"/>
-  <line x1="642" y1="485" x2="642" y2="492" class="tick"/>
-  <text x="642" y="508" class="x-label">300</text>
+  <line x1="612" y1="55" x2="612" y2="485" class="grid"/>
+  <line x1="612" y1="485" x2="612" y2="492" class="tick"/>
+  <text x="612" y="508" class="x-label">160</text>
 
   <line x1="720" y1="55" x2="720" y2="492" class="tick"/>
-  <text x="720" y="508" class="x-label">350</text>
+  <text x="720" y="508" class="x-label">200</text>
 
   <!-- X-Axis Label -->
   <text x="450" y="534" class="axis-title">Cycles per element (Apple Silicon M1 @ 3.2GHz)</text>
@@ -80,67 +72,67 @@
 
   <!-- ROW 1: Shuffled (y: 62) -->
   <text x="170" y="88" class="y-label">Shuffled</text>
-  <rect x="180" y="62" width="48" height="7" rx="1" class="bar-apex"/>
-  <rect x="180" y="70" width="53" height="7" rx="1" class="bar-qisort"/>
-  <rect x="180" y="78" width="174" height="7" rx="1" class="bar-pdq"/>
-  <rect x="180" y="86" width="102" height="7" rx="1" class="bar-ska"/>
-  <rect x="180" y="94" width="335" height="7" rx="1" class="bar-std"/>
+  <rect x="180" y="62" width="36" height="7" rx="1" class="bar-apex"/>
+  <rect x="180" y="70" width="33" height="7" rx="1" class="bar-qisort"/>
+  <rect x="180" y="78" width="191" height="7" rx="1" class="bar-pdq"/>
+  <rect x="180" y="86" width="156" height="7" rx="1" class="bar-ska"/>
+  <rect x="180" y="94" width="198" height="7" rx="1" class="bar-std"/>
 
   <!-- ROW 2: Shuffled (16 values) (y: 116) -->
   <text x="170" y="142" class="y-label">Shuffled (16 values)</text>
-  <rect x="180" y="116" width="18" height="7" rx="1" class="bar-apex"/>
-  <rect x="180" y="124" width="18" height="7" rx="1" class="bar-qisort"/>
-  <rect x="180" y="132" width="34" height="7" rx="1" class="bar-pdq"/>
-  <rect x="180" y="140" width="73" height="7" rx="1" class="bar-ska"/>
-  <rect x="180" y="148" width="192" height="7" rx="1" class="bar-std"/>
+  <rect x="180" y="116" width="19" height="7" rx="1" class="bar-apex"/>
+  <rect x="180" y="124" width="35" height="7" rx="1" class="bar-qisort"/>
+  <rect x="180" y="132" width="97" height="7" rx="1" class="bar-pdq"/>
+  <rect x="180" y="140" width="61" height="7" rx="1" class="bar-ska"/>
+  <rect x="180" y="148" width="119" height="7" rx="1" class="bar-std"/>
 
   <!-- ROW 3: All equal (y: 170) -->
   <text x="170" y="196" class="y-label">All equal</text>
-  <rect x="180" y="170" width="6" height="7" rx="1" class="bar-apex"/>
-  <rect x="180" y="178" width="6" height="7" rx="1" class="bar-qisort"/>
-  <rect x="180" y="186" width="9" height="7" rx="1" class="bar-pdq"/>
-  <rect x="180" y="194" width="71" height="7" rx="1" class="bar-ska"/>
-  <rect x="180" y="202" width="58" height="7" rx="1" class="bar-std"/>
+  <rect x="180" y="170" width="4" height="7" rx="1" class="bar-apex"/>
+  <rect x="180" y="178" width="4" height="7" rx="1" class="bar-qisort"/>
+  <rect x="180" y="186" width="52" height="7" rx="1" class="bar-pdq"/>
+  <rect x="180" y="194" width="67" height="7" rx="1" class="bar-ska"/>
+  <rect x="180" y="202" width="68" height="7" rx="1" class="bar-std"/>
 
   <!-- ROW 4: Ascending (y: 224) -->
   <text x="170" y="250" class="y-label">Ascending</text>
-  <rect x="180" y="224" width="6" height="7" rx="1" class="bar-apex"/>
-  <rect x="180" y="232" width="6" height="7" rx="1" class="bar-qisort"/>
-  <rect x="180" y="240" width="8" height="7" rx="1" class="bar-pdq"/>
-  <rect x="180" y="248" width="113" height="7" rx="1" class="bar-ska"/>
-  <rect x="180" y="256" width="76" height="7" rx="1" class="bar-std"/>
+  <rect x="180" y="224" width="4" height="7" rx="1" class="bar-apex"/>
+  <rect x="180" y="232" width="4" height="7" rx="1" class="bar-qisort"/>
+  <rect x="180" y="240" width="7" height="7" rx="1" class="bar-pdq"/>
+  <rect x="180" y="248" width="117" height="7" rx="1" class="bar-ska"/>
+  <rect x="180" y="256" width="9" height="7" rx="1" class="bar-std"/>
 
   <!-- ROW 5: Descending (y: 278) -->
   <text x="170" y="304" class="y-label">Descending</text>
-  <rect x="180" y="278" width="9" height="7" rx="1" class="bar-apex"/>
-  <rect x="180" y="286" width="9" height="7" rx="1" class="bar-qisort"/>
-  <rect x="180" y="294" width="13" height="7" rx="1" class="bar-pdq"/>
-  <rect x="180" y="302" width="120" height="7" rx="1" class="bar-ska"/>
-  <rect x="180" y="310" width="84" height="7" rx="1" class="bar-std"/>
+  <rect x="180" y="278" width="5" height="7" rx="1" class="bar-apex"/>
+  <rect x="180" y="286" width="6" height="7" rx="1" class="bar-qisort"/>
+  <rect x="180" y="294" width="11" height="7" rx="1" class="bar-pdq"/>
+  <rect x="180" y="302" width="125" height="7" rx="1" class="bar-ska"/>
+  <rect x="180" y="310" width="15" height="7" rx="1" class="bar-std"/>
 
   <!-- ROW 6: Pipe organ (y: 332) -->
   <text x="170" y="358" class="y-label">Pipe organ</text>
-  <rect x="180" y="332" width="72" height="7" rx="1" class="bar-apex"/>
-  <rect x="180" y="340" width="71" height="7" rx="1" class="bar-qisort"/>
-  <rect x="180" y="348" width="183" height="7" rx="1" class="bar-pdq"/>
-  <rect x="180" y="356" width="134" height="7" rx="1" class="bar-ska"/>
-  <rect x="180" y="364" width="395" height="7" rx="1" class="bar-std"/>
+  <rect x="180" y="332" width="116" height="7" rx="1" class="bar-apex"/>
+  <rect x="180" y="340" width="119" height="7" rx="1" class="bar-qisort"/>
+  <rect x="180" y="348" width="211" height="7" rx="1" class="bar-pdq"/>
+  <rect x="180" y="356" width="138" height="7" rx="1" class="bar-ska"/>
+  <rect x="180" y="364" width="505" height="7" rx="1" class="bar-std"/>
 
   <!-- ROW 7: Push front (y: 386) -->
   <text x="170" y="412" class="y-label">Push front</text>
-  <rect x="180" y="386" width="48" height="7" rx="1" class="bar-apex"/>
-  <rect x="180" y="394" width="53" height="7" rx="1" class="bar-qisort"/>
-  <rect x="180" y="402" width="71" height="7" rx="1" class="bar-pdq"/>
-  <rect x="180" y="410" width="139" height="7" rx="1" class="bar-ska"/>
-  <rect x="180" y="418" width="484" height="7" rx="1" class="bar-std"/>
+  <rect x="180" y="386" width="4" height="7" rx="1" class="bar-apex"/>
+  <rect x="180" y="394" width="4" height="7" rx="1" class="bar-qisort"/>
+  <rect x="180" y="402" width="73" height="7" rx="1" class="bar-pdq"/>
+  <rect x="180" y="410" width="145" height="7" rx="1" class="bar-ska"/>
+  <rect x="180" y="418" width="22" height="7" rx="1" class="bar-std"/>
 
   <!-- ROW 8: Push middle (y: 440) -->
   <text x="170" y="466" class="y-label">Push middle</text>
-  <rect x="180" y="440" width="48" height="7" rx="1" class="bar-apex"/>
-  <rect x="180" y="448" width="53" height="7" rx="1" class="bar-qisort"/>
-  <rect x="180" y="456" width="10" height="7" rx="1" class="bar-pdq"/>
-  <rect x="180" y="464" width="83" height="7" rx="1" class="bar-ska"/>
-  <rect x="180" y="472" width="274" height="7" rx="1" class="bar-std"/>
+  <rect x="180" y="440" width="4" height="7" rx="1" class="bar-apex"/>
+  <rect x="180" y="448" width="4" height="7" rx="1" class="bar-qisort"/>
+  <rect x="180" y="456" width="73" height="7" rx="1" class="bar-pdq"/>
+  <rect x="180" y="464" width="85" height="7" rx="1" class="bar-ska"/>
+  <rect x="180" y="472" width="92" height="7" rx="1" class="bar-std"/>
 
   <!-- ==================== LEGEND BOX ==================== -->
   <g transform="translate(555, 185)">
