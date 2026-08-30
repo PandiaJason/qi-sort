@@ -109,6 +109,10 @@ A comparison of `qi::apex`, Orson Peters' `pdqsort`, Malte Skarupke's `ska_sort`
 
 ### Single-Threaded (1T) Execution — Intel Xeon Platinum 8481C ($N = 10,000,000$ keys, x86-64 Server)
 
+<p align="center">
+  <img src="docs/xeon_benchmark_chart.svg" alt="Intel Xeon Platinum 8481C Benchmark Chart" width="100%"/>
+</p>
+
 *Compiled with `g++ -std=c++17 -O3 -march=native` on enterprise server.*
 
 | Distribution | `std::sort` | `pdqsort` | `ska_sort` | `qi::sort` | **`qi::apex` (1T)** | 1T Winner | Speedup vs `std::sort` |
