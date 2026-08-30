@@ -1,86 +1,81 @@
-# ──── Compiled Binaries (extensionless executables) ────
-ablation_test
-algo_test
-analytical_inspection
-arrow_dataframe_sorter
-basic_usage
-c_example
-compare_qi_versions
-cost_compare
-database_column_sort
-db_bench
-db_benchmark
-duckdb_block_sorter
-duckdb_orderby_benchmark
-duckdb_real_benchmark
-duckdb_rigorous_validation
-ex_analyze
-ex_basic
-ex_db
-ex_spatial
-global_bench
-google_vqsort_real_benchmark
-head2head
-hft_orderbook_sorter
-online_test
-parallel_bench
-postgres_real_benchmark
-qi_radix
-qi_radix_final
-qsort-db
-quick_bench
-radix_test
-real_bench
-real_qsort_bench
-redis_real_benchmark
-rocksdb_memtable_sorter
-rocksdb_real_benchmark
-spatial_morton_sort
-sqlite_real_benchmark
-test_all_new_features
-ultimate_production_benchmark
-verify
-verify_vqsort_head2head
-b_*
-bench_*
-challenge_bench
-debug_*
-test_*
-compare
-test_features
-real_data_benchmark
+# Prerequisites
+*.d
 
-# ──── Object Files & Libraries ────
+# Compiled Object files
+*.slo
+*.lo
 *.o
-*.a
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
 *.so
 *.dylib
 *.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
 *.lib
+
+# Executables
 *.exe
-
-# ──── Data Files ────
-*.bin
-
-# ──── Build Directories ────
+*.out
+*.app
 build/
-cmake-build-*/
-*.egg-info/
+bin/
 dist/
-
-# ──── IDE & OS Artifacts ────
-.DS_Store
-.vscode/
-.idea/
-*.dSYM/
-
-# ──── Python ────
+*.egg-info/
 __pycache__/
 *.pyc
-*.pyo
 
-# ──── Java ────
-*.class
-
-# ──── Redundant development files ────
-qi_radix_final.cpp
+# Local binary names
+postgres_real_benchmark
+arrow_dataframe_sorter
+qi_radix
+ex_basic
+qsort-db
+compare_qi_versions
+ex_analyze
+duckdb_real_benchmark
+rocksdb_real_benchmark
+algo_test
+c_example
+spatial_morton_sort
+redis_real_benchmark
+real_bench
+b_duck
+b_live_agent
+real_qsort_bench
+ex_spatial
+hft_orderbook_sorter
+sqlite_real_benchmark
+cost_compare
+google_vqsort_real_benchmark
+ablation_test
+db_benchmark
+parallel_bench
+quick_bench
+radix_test
+database_column_sort
+analytical_inspection
+verify_vqsort_head2head
+online_test
+duckdb_orderby_benchmark
+libqisort_jni.dylib
+duckdb_rigorous_validation
+ex_db
+rocksdb_memtable_sorter
+test_all_new_features
+llm_stream_agentic_demo
+master_bench
+hard_arena
+demo_hf
