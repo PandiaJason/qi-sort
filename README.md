@@ -94,7 +94,7 @@ A comparison of `qi::apex`, Orson Peters' `pdqsort`, Malte Skarupke's `ska_sort`
 
 *Compiled with `clang++ -std=c++17 -O3 -m64 -march=native` on Apple Silicon M1 Pro. All timings are the best of 3 runs on $N = 10,000,000$ keys (40 MB RAM).*
 
-### Single-Threaded (1T) Execution ($N = 10,000,000$ keys)
+### Single-Threaded (1T) Execution — Apple Silicon M1 Pro ($N = 10,000,000$ keys)
 
 | Distribution | `std::sort` | `pdqsort` | `ska_sort` | `qi::sort` | **`qi::apex` (1T)** | Speedup vs `std::sort` | Speedup vs `pdqsort` |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -106,6 +106,21 @@ A comparison of `qi::apex`, Orson Peters' `pdqsort`, Malte Skarupke's `ska_sort`
 | **Reverse Sorted Monotonic** | 17.71 ms | 12.97 ms | 144.87 ms | 6.53 ms | **`6.29 ms`** | **2.8×** | **2.1×** |
 | **Nearly Sorted (~98%)** | 102.78 ms | 98.79 ms | 167.83 ms | 102.69 ms | **`112.08 ms`** | **0.9×** | **0.9×** |
 | **Pipe Organ (Mirrored Ramp)**| 584.27 ms | 244.09 ms | 159.67 ms | 137.71 ms | **`134.51 ms`**| **4.3×** | **1.8×** |
+
+### Single-Threaded (1T) Execution — Intel Xeon Platinum 8481C ($N = 10,000,000$ keys, x86-64 Server)
+
+*Compiled with `g++ -std=c++17 -O3 -march=native` on enterprise server.*
+
+| Distribution | `std::sort` | `pdqsort` | `ska_sort` | `qi::sort` | **`qi::apex` (1T)** | 1T Winner | Speedup vs `std::sort` |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Uniform Random 32-bit** | 886.0 ms | 309.2 ms | 277.3 ms | **`73.6 ms`** | 74.0 ms | **`qi::sort`** | **12.0×** |
+| **Byte Duplicates (0–255)** | 383.9 ms | 79.2 ms | 98.8 ms | **`8.5 ms`** | 9.1 ms | **`qi::sort`** | **45.0×** |
+| **Periodic Sawtooth (1K)** | 278.7 ms | 109.3 ms | 109.3 ms | 7.4 ms | **`7.3 ms`** | **`qi::apex`** | **38.0×** |
+| **16-bit Range (0–65K)** | 689.0 ms | 147.2 ms | 94.7 ms | 56.3 ms | **`49.1 ms`** | **`qi::apex`** | **14.0×** |
+| **Already Sorted Monotonic** | 194.7 ms | 10.1 ms | 128.4 ms | **`5.0 ms`** | **`5.0 ms`** | **`qi::sort` / `qi::apex`** | **39.0×** |
+| **Reverse Sorted Monotonic** | 121.4 ms | 16.8 ms | 136.3 ms | 11.3 ms | **`8.2 ms`** | **`qi::apex`** | **15.0×** |
+| **Nearly Sorted (~98%)** | 232.9 ms | **`132.5 ms`** | 203.2 ms | 234.2 ms | 176.5 ms | `pdqsort` | 1.3× |
+| **Pipe Organ (Mirrored Ramp)**| 1063.3 ms | 329.7 ms | **`163.6 ms`** | 186.9 ms | 187.5 ms | `ska_sort` | 5.7× |
 
 ### Multi-Threaded (MT) Scaling ($N = 10,000,000$ keys)
 
